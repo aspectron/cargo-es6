@@ -48,8 +48,8 @@ impl Builder {
 
         let node_modules = load_node_modules(&self.ctx).await?;
 
-        for (_,module) in node_modules.iter() {
-
+        for module in node_modules.modules.iter() {
+            println!("{}", module.absolute.display());
             println!("name: `{}` files: {} exports: {}", module.name, module.files.len(), module.exports.len());
         }
 

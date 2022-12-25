@@ -20,7 +20,7 @@ impl Module {
         let folder = folder.as_ref();
         let path = path.as_ref();
 
-        println!("loading: `{}` -> `{}`",folder.display(),path.display());
+        // println!("loading: `{}` -> `{}`",folder.display(),path.display());
 
         let text = async_std::fs::read_to_string(folder.join(path)).await?;
 
