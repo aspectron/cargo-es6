@@ -1,0 +1,3 @@
+[settings]
+project = "../../flow-ux-rs/flow-ux/flow-ux.js"
+target = "test.js"
