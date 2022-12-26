@@ -1,8 +1,11 @@
 use crate::prelude::*;
 
+static mut FILE_MODULE_GID: u32 = 0;
 
 #[derive(Debug)]
 pub struct FileModule {
+    pub id : u32,
+    pub ident : String,
     pub folder: PathBuf,
     pub absolute : PathBuf,
     pub imports : Vec<Import>,
@@ -12,7 +15,7 @@ pub struct FileModule {
 
 
 impl FileModule {
-    pub async fn load<P>(folder :P, path: P) -> Result<FileModule> 
+    pub async fn load<P>(ctx: &Context, folder :P, path: P) -> Result<FileModule> 
     where P: AsRef<Path> {
         let folder = folder.as_ref();
         let path = path.as_ref();
@@ -58,7 +61,25 @@ impl FileModule {
         }
         let text = export_re.replace_all(&text, "");
 
+        let ident_re_usc = Regex::new(r"[/-]")?;
+        let ident_re_blank = Regex::new(r"(node_modules_|@|.js)")?;
+        let ident = absolute.strip_prefix(&ctx.project_folder)?.to_string_lossy().to_string();
+        // let ident = ident_path
+        //     .replace("node_modules/","");
+        let ident = ident_re_usc.replace_all(&ident, "_")
+            .to_string();
+        let ident = ident_re_blank.replace_all(&ident,"")
+            .to_string()
+            .to_uppercase();
+
+        // println!("{}",ident);
+
+        unsafe { FILE_MODULE_GID += 1 };
+        let id = unsafe { FILE_MODULE_GID };
+
         let module = FileModule {
+            id,
+            ident,
             folder: parent.to_path_buf(), //folder.to_path_buf(),
             absolute : absolute,// path.to_path_buf(),
             imports,
@@ -68,5 +89,35 @@ impl FileModule {
 
         Ok(module)
 
+    }
+
+    pub fn gather(self : &Arc<FileModule>, collection: &mut Collection) -> Result<()> {
+
+        if collection.idents.contains(&self.ident) {
+            // log_warn!("Cyclic","skipping duplicate reference ...");
+            return Ok(());
+        } else {
+            collection.idents.insert(self.ident.clone());
+        }
+
+        for import in self.imports.iter() {
+            if let Some(reference) = import.reference() {
+                reference.gather(collection)?;
+            } else {
+                import.warn();
+            }
+        }
+
+        for export in self.exports.iter() {
+            if let Some(reference) = export.reference() {
+                reference.gather(collection)?;
+            } else {
+                export.warn();
+            }
+        }
+
+        collection.modules.push(self.clone());
+
+        Ok(())
     }
 }

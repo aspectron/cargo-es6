@@ -18,4 +18,17 @@ impl Export {
             reference: Mutex::new(None),
         }
     }
+
+    pub fn reference(&self) -> Option<Arc<FileModule>> {
+        self.reference.lock().unwrap().as_ref().cloned()
+    }
+
+    pub fn warn(&self) {
+        log_warn!("Warning","+--- import");
+        log_warn!("","| Unable to resolve: `{}`", self.what);
+        log_warn!("","| location: `{}`", self.location);
+        log_warn!("","| referrer: `{}`", self.referrer.display());
+        log_warn!("","+---");
+    }
+
 }

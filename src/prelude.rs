@@ -13,6 +13,7 @@ pub use crate:: {
     modules::export::*,
     modules::file_module::*,
     modules::node_module::*,
+    modules::collection::*,
     modules::*,
     // node_modules::*,
     // es6::*,
@@ -29,4 +30,4 @@ pub use console::style;
 pub use globset::{Glob,GlobMatcher};
 pub use walkdir::WalkDir;
 pub use regex::Regex;
-pub use std::collections::HashMap;
+pub use std::collections::{HashSet,HashMap};

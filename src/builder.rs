@@ -63,10 +63,11 @@ impl Builder {
 
         let module = modules.file_modules_by_absolute.get(&self.ctx.project_file);
         if let Some(module) = module {
-            println!("project file: `{}`", module.absolute.display());
+            self.generate(&module).await?;
         } else {
             return Err(format!("Unabel to resolve project file: `{}`", self.ctx.project_file.display()).into());
         }
+
 
         // let xx = modules.node_modules_by_name.get("flow-ux");
         // println!("{:?}", xx);
@@ -105,5 +106,32 @@ impl Builder {
         Ok(())
     }
 
+    pub async fn generate(self: &Arc<Builder>, module : &Arc<FileModule>) -> Result<()> {
+
+        log_info!("Generating","`{}`",self.ctx.target_file.display());
+        
+        let mut collection = Collection::new();
+        module.gather(&mut collection)?;
+        
+        let mut text = String::new();
+        for module in collection.modules.iter() {
+            // println!("{}",module.ident);
+
+            //   
+
+            text += &format!("const {}_{} : &'static str = r###\"\n", module.ident, module.id);
+            // TODO - IMPORTS
+            text += &module.content;
+            // TODO - EXPORTS
+            text += &format!("\n\"###;\n\n");
+
+        }
+
+        async_std::fs::write(&self.ctx.target_file, &text).await?;
+        let file_size = std::fs::metadata(&self.ctx.target_file)?.len() as f64 / 1024.0;
+        log_info!("Generating","... modules: {} file size: {:1.0} Kb", collection.modules.len(), file_size);
+
+        Ok(())
+    }
 
 }

@@ -35,7 +35,7 @@ impl Modules {
             // println!("`{}`", absolute.display());
             let text = std::fs::read_to_string(&absolute)?;
             let package_json: PackageJson = serde_json::from_str(&text)?;
-            let node_module = Arc::new(NodeModule::load(&absolute, package_json).await?);
+            let node_module = Arc::new(NodeModule::load(&ctx,&absolute, package_json).await?);
             // println!("{} files", node_module.files.len());
             
             file_modules.extend(node_module.files.clone());
@@ -64,7 +64,7 @@ impl Modules {
             file_modules_by_absolute.insert(file_module.absolute.clone(), file_module.clone());
         }
 
-        let project = Arc::new(FileModule::load(&ctx.project_folder, &ctx.project_file).await?);
+        let project = Arc::new(FileModule::load(&ctx,&ctx.project_folder, &ctx.project_file).await?);
         file_modules.push(project.clone());
         file_modules_by_absolute.insert(ctx.project_file.clone(), project.clone());
 
