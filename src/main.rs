@@ -11,9 +11,8 @@ pub mod builder;
 pub mod log;
 pub mod utils;
 pub mod filter;
-pub mod node_modules;
+pub mod modules;
 pub mod prelude;
-pub mod es6;
 
 use prelude::*;
 
