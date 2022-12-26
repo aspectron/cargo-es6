@@ -1,71 +1,112 @@
 use crate::prelude::*;
 
+// pub enum Reference {
+//     FileModule(Arc<Module>),
+//     NodeModule(Arc<NodeModule>),
+// }
+
+#[derive(Debug)]
 pub struct Import {
-    what: String,
-    location: String,
-    // reference: Mutex< 
+    // pub origin: PathBuf,
+    pub referrer: PathBuf,
+    pub what: String,
+    pub location: String,
+    pub reference: Mutex<Option<Arc<FileModule>>>,
 }
 
-pub struct Module {
+impl Import {
+    pub fn new(referrer: &Path, what: &str, location: &str) -> Import {
+        Import {
+            referrer: referrer.to_path_buf(),
+            what: what.to_string(),
+            location: location.to_string(),
+            reference: Mutex::new(None),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Export {
+    // pub origin: PathBuf,
+    pub referrer: PathBuf,
+    pub what: String,
+    pub location: String,
+    pub reference: Mutex<Option<Arc<FileModule>>>,
+}
+
+impl Export {
+    pub fn new(referrer: &Path, what: &str, location: &str) -> Export {
+        Export {
+            referrer: referrer.to_path_buf(),
+            what: what.to_string(),
+            location: location.to_string(),
+            reference: Mutex::new(None),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct FileModule {
     pub folder: PathBuf,
-    pub path : PathBuf,
+    pub absolute : PathBuf,
     pub imports : Vec<Import>,
+    pub exports : Vec<Export>,
     pub content : String,
 }
 
 
-impl Module {
-    pub async fn load<P>(folder :P, path: P) -> Result<Module> 
+impl FileModule {
+    pub async fn load<P>(folder :P, path: P) -> Result<FileModule> 
     where P: AsRef<Path> {
         let folder = folder.as_ref();
         let path = path.as_ref();
-
+        let absolute = folder.join(path);
+        let parent = absolute.parent().unwrap();
         // println!("loading: `{}` -> `{}`",folder.display(),path.display());
 
-        let text = async_std::fs::read_to_string(folder.join(path)).await?;
+        let text = async_std::fs::read_to_string(&absolute).await?;
 
         let import_re = Regex::new(r###"import[^;]*from\s*["']+[^"']+["']+;"###).unwrap();
         let import_reference_re = Regex::new(r###"import\s*(.+)\s*from\s*["'](.+)["']"###).unwrap();
         let import_matches = import_re.find_iter(&text).map(|m| m.as_str().to_string()).collect::<Vec<_>>();
-
-        // println!("{}:",absolute.display());
-        // println!("{:#?}",import_matches);
         let mut imports = Vec::new();
         for import in import_matches.iter() {
             let import = import.replace("\n"," ");
             let captures = import_reference_re.captures(&import).expect(&format!("unable to capture `{}`",import));
             let what = captures[1].to_string();
             let location = captures[2].to_string();
-            // println!("relative: {}",location);
-            // let folder = if filename.starts_with("/") {
-            //     project_folder.clone()
-            // } else {
-            //     // project_folder.join(file).to_owned()
-            //     absolute.parent().unwrap().to_path_buf()
-            // };
-            // let filename = if filename.starts_with("./") {
-            //     filename[2..].to_string()
-            // } else { filename };
-            // let import = match folder.join(&filename).canonicalize().await {
-            //     Ok(path) => {
-            //         println!("absolute: {}",path.display());
-            //         Import { what, from : Reference::File(path.to_str().unwrap().to_string()) }
-            //     }, 
-            //     Err(e) => {
-            //         println!("error: {}",style(e).red());
-            //         Import { what, from : Reference::Module(filename) }
-            //     }
-            // };
-
-            imports.push(Import { what, location });
-            // let filename = .expect(&format!("unable to canonicalize {}",filename));
+            let import = Import::new(
+                &absolute,
+                &what,
+                &location
+            );
+            imports.push(import);
         }
         let text = import_re.replace_all(&text, "");
 
-        let module = Module {
-            folder: folder.to_path_buf(),
-            path : path.to_path_buf(),
+        let export_re = Regex::new(r###"export[^;]*from\s*["']+[^"']+["']+;"###).unwrap();
+        let export_reference_re = Regex::new(r###"export\s*(.+)\s*from\s*["'](.+)["']"###).unwrap();
+        let export_matches = export_re.find_iter(&text).map(|m| m.as_str().to_string()).collect::<Vec<_>>();
+        let mut exports = Vec::new();
+        for export in export_matches.iter() {
+            let export = export.replace("\n"," ");
+            let captures = export_reference_re.captures(&export).expect(&format!("unable to capture `{}`",export));
+            let what = captures[1].to_string();
+            let location = captures[2].to_string();
+            let export = Export::new(
+                &absolute,
+                &what,
+                &location
+            );
+            exports.push(export);
+        }
+        let text = export_re.replace_all(&text, "");
+
+        let module = FileModule {
+            folder: parent.to_path_buf(), //folder.to_path_buf(),
+            absolute : absolute,// path.to_path_buf(),
             imports,
+            exports,
             content: text.to_string(),
         };
 
