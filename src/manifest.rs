@@ -67,6 +67,7 @@ pub struct Settings {
     pub target : String,
     pub ignore : Option<Vec<String>>,
     pub wasm : Option<Wasm>,
+    pub verbose : Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

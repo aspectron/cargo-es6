@@ -174,7 +174,6 @@ impl Builder {
             ident : &'static str,
             content: &'static str,
             imports: &'static [(Import, ModuleId)],
-            // imports: &'static [(&'static str, ModuleId)],
             exports: &'static [(&'static str, ModuleId)],
         }
 
@@ -209,24 +208,6 @@ impl Builder {
                     exports.push(format!("export {} from \"{}\";\n", what, url));
                 }
                 let exports = exports.join("\n");
-
-                // let imports = self.imports.iter().map(|(what, id)| {
-                //     let url = modules
-                //         .get(id)
-                //         .expect(&)
-                //         .url()
-                //         .expect(&format!("module is not loaded `{}`",self.ident));
-                //     format!("import {} from \"{}\";\n", what, url)
-                // }).collect::<Vec<_>>().join("\n");
-
-                // let exports = self.exports.iter().map(|(what, id)| {
-                //     let url = modules
-                //         .get(id)
-                //         .expect(&format!("unable to lookup module `{}`",self.ident))
-                //         .url()
-                //         .expect(&format!("module is not loaded `{}`",self.ident));
-                //     format!("export {} from \"{}\";\n", what, url)
-                // }).collect::<Vec<_>>().join("\n");
 
                 text += &imports;
                 text += &self.content;
@@ -316,6 +297,9 @@ impl Builder {
         }
         "###;
 
+        if !self.ctx.manifest.settings.verbose.unwrap_or(false) {
+            text = text.replace("log_info","// log_info");
+        }
         // text += r###"
 
         // pub async fn load() {
