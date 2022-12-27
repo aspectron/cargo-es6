@@ -1,3 +1,5 @@
 [settings]
 project = "../../flow-ux-rs/flow-ux/flow-ux.js"
-target = "test.rs"
+target = "../../flow-ux-rs/src/modules.rs"
+wasm = { name = "flow-ux", folder="../", outdir = "test/flow-ux", dev=true }
+ignore = ["xterm"]

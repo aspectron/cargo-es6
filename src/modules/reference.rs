@@ -1,20 +1,38 @@
 use crate::prelude::*;
 
 #[derive(Debug)]
-pub struct Import {
-    // pub origin: PathBuf,
+pub enum ReferenceKind {
+    Import,
+    ImportAll,
+    Export,
+}
+
+impl ToString for ReferenceKind {
+    fn to_string(&self) -> String {
+        match self {
+            ReferenceKind::Import => "import".to_string(),
+            ReferenceKind::ImportAll => "import-all".to_string(),
+            ReferenceKind::Export => "export".to_string(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Reference {
+    pub kind : ReferenceKind,
     pub referrer: PathBuf,
     pub what: String,
     pub location: String,
     pub reference: Mutex<Option<Arc<FileModule>>>,
 }
 
-impl Import {
-    pub fn new(referrer: &Path, what: &str, location: &str) -> Import {
-        Import {
+impl Reference {
+    pub fn new(kind: ReferenceKind, referrer: &Path, what: &str, location: &str) -> Reference {
+        Reference {
+            kind,
             referrer: referrer.to_path_buf(),
-            what: what.to_string(),
-            location: location.to_string(),
+            what: what.trim().to_string(),
+            location: location.trim().to_string(),
             reference: Mutex::new(None),
         }
     }

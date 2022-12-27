@@ -66,4 +66,13 @@ pub struct Settings {
     pub project : String,
     pub target : String,
     pub ignore : Option<Vec<String>>,
+    pub wasm : Option<Wasm>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Wasm {
+    pub name : String,
+    pub folder : String,
+    pub outdir : String,
+    pub dev : Option<bool>,
 }

@@ -84,6 +84,7 @@ impl Modules {
     pub async fn resolve(&self, location: &str, referrer : &Path) -> Result<Option<Arc<FileModule>>> {
 
         let relative_re = Regex::new(r"^.?.?/").unwrap();
+        // println!("location: {}", location);
         let absolute = if relative_re.is_match(location) {
             
             let location = if location.starts_with("./") {

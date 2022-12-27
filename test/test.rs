@@ -1,3 +1,836 @@
+const ASPECTRON_FLOW_UX_FLOW_UX_434 : &'static str = r###"
+/*
+* Flow-UX: flow-ux.js
+* version: 1.0.0
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_TERMINAL_431 : &'static str = r###"
+
+
+
+
+import '../resources/extern/colors/extend-string-prototypes.js';
+
+import '../resources/extern/xterm/lib/xterm.js';
+import '../resources/extern/xterm-addon-fit/lib/xterm-addon-fit.js';
+import '../resources/extern/xterm-addon-web-links/lib/xterm-addon-web-links.js';
+
+// import '/node_modules/xterm/lib/xterm.js';
+// import '/node_modules/xterm-addon-fit/lib/xterm-addon-fit.js';
+// import '/node_modules/xterm-addon-web-links/lib/xterm-addon-web-links.js';
+
+/**
+* @class FlowTerminal
+* @extends BaseElement
+*
+* @prop {String} [background=rgba(0,0,0,0.0)] background color
+* @prop {String} [foreground=#000000] foreground color
+* @prop {Number} [font-size=20] font size in number
+* @prop {String} [font-family=Consolas, 'Ubuntu Mono', courier-new, courier, monospace] text font-family 
+* @prop {Boolean} [noscroll=false] set true to make overflow as hidden 
+* @prop {Boolean} [fixed=false] set true to disable "`" and "Esc" keys which toggle terminal 
+* @prop {Boolean} [noinput=false] set true to make terminal readonly
+*
+* @cssvar {color} --flow-terminal-bg-color terminal background color
+* @cssvar {color} --flow-terminal-color terminal foreground color
+* @cssvar {color} --flow-terminal-cursor terminal cursor color
+* @cssvar {color} --flow-terminal-selection terminal selection color
+*
+* @example
+* <flow-terminal id="terminal" background="#000" foreground="#FFF"></flow-terminal>
+* @example
+* document.querySelector("#terminal").prompt();
+*/
+export class FlowTerminal extends BaseElement {
+	/**
+	* @member {String} [background=rgba(0,0,0,0.0)] background color
+	* @memberof XTerminal#
+	*/
+
+	/**
+	* @member {String} [foreground=#000000] foreground color
+	* @memberof XTerminal#
+	*/
+
+	/**
+	* @member {Number} [font-size=20] font size in number
+	* @memberof XTerminal#
+	*/
+
+	/**
+	* @member {String} [font-family=Consolas, 'Ubuntu Mono', courier-new, courier, monospace] text font-family 
+	* @memberof XTerminal#
+	*/
+
+	/**
+	* @member {Boolean} [noscroll=false] set true to make overflow as hidden 
+	* @memberof XTerminal#
+	*/
+
+	/**
+	* @member {Boolean} [fixed=false] set true to disable "`" and "Esc" keys which toggle terminal 
+	* @memberof XTerminal#
+	*/
+
+	/**
+	* @member {Boolean} [noinput=false] set true to make terminal readonly 
+	* @memberof XTerminal#
+	*/
+
+	static get properties() {
+		return {
+			background : { type : String },
+			foreground : { type : String },
+			'font-size' : { type : Number },
+			'font-family' : { type : String },
+			noscroll : { type : Boolean },
+			fixed : { type : Boolean },
+			noinput : { type : Boolean },
+			resident : { type : Number },
+			/*data: { type: Array }*/
+		};
+	}
+	static get styles() {
+		return [ScrollbarStyle, css`
+			:host {
+				/*background-color: rgba(0,0,0,0.0);*/
+				/*color: black;*/
+				min-height:100px;
+				min-width:100px;
+				display:flex;
+				flex-direction:column;
+				box-sizing:border-box;
+			}
+			:host(.hidden){visibility:hidden}
+			#terminal .terminal{height:100%;}
+			
+			#terminal{flex:1;height: 100%;overflow: hidden;}
+			/******* imported from xterm module **********/
+			.xterm {
+			    font-feature-settings: "liga" 0;
+			    position: relative;
+			    user-select: none;
+			    -ms-user-select: none;
+			    -webkit-user-select: none;
+			    font-size:20px;
+			    letter-spacing:0;
+			}
+			.xterm.focus,
+			.xterm:focus {
+			    outline: none;
+			}
+			.xterm .xterm-helpers {
+			    position: absolute;
+			    top: 0;
+			    /**
+			     * The z-index of the helpers must be higher than the canvases in order for
+			     * IMEs to appear on top.
+			     */
+			    z-index: 5;
+			}
+			.xterm .xterm-helper-textarea {
+			    /*
+			     * HACK: to fix IE's blinking cursor
+			     * Move textarea out of the screen to the far left, so that the cursor is not visible.
+			     */
+			    position: absolute;
+			    opacity: 0;
+			    left: -9999em;
+			    top: 0;
+			    width: 0;
+			    height: 0;
+			    z-index: -5;
+			    /** Prevent wrapping so the IME appears against the textarea at the correct position */
+			    white-space: nowrap;
+			    overflow: hidden;
+			    resize: none;
+			    font-size:20px;
+			    letter-spacing:0;
+			}
+			.xterm .composition-view {
+			    /* TODO: Composition position got messed up somewhere */
+			    background: #000;
+			    color: #FFF;
+			    display: none;
+			    position: absolute;
+			    white-space: nowrap;
+			    z-index: 1;
+			}
+			.xterm .composition-view.active {
+			    display: block;
+			}
+			.xterm .xterm-viewport {
+			    /* On OS X this is required in order for the scroll bar to appear fully opaque */
+			    background-color: #000;
+			    overflow-y: scroll;
+			    cursor: default;
+			    position: absolute;
+			    right: 0;
+			    left: 0;
+			    top: 0;
+			    bottom: 0;
+			}
+			.xterm .xterm-screen {
+			    position: relative;
+			}
+			.xterm .xterm-screen canvas {
+			    position: absolute;
+			    left: 0;
+			    top: 0;
+			}
+			.xterm .xterm-scroll-area {
+			    visibility: hidden;
+			}
+			.xterm-char-measure-element {
+			    display: inline-block;
+			    visibility: hidden;
+			    position: absolute;
+			    top: 0;
+			    left: -9999em;
+			    line-height: normal;
+			    letter-spacing:normal;
+			    _width:9px;
+			    overflow:hidden
+			}
+			.xterm {
+			    cursor: text;
+			}
+			.xterm.enable-mouse-events {
+			    /* When mouse events are enabled (eg. tmux), revert to the standard pointer cursor */
+			    cursor: default;
+			}
+			.xterm.xterm-cursor-pointer {
+			    cursor: pointer;
+			}
+			.xterm.column-select.focus {
+			    /* Column selection mode */
+			    cursor: crosshair;
+			}
+			.xterm .xterm-accessibility,
+			.xterm .xterm-message {
+			    position: absolute;
+			    left: 0;
+			    top: 0;
+			    bottom: 0;
+			    right: 0;
+			    z-index: 10;
+			    color: transparent;
+			}
+			.xterm .live-region {
+			    position: absolute;
+			    left: -9999px;
+			    width: 1px;
+			    height: 1px;
+			    overflow: hidden;
+			}
+			.xterm-dim {
+			    opacity: 0.5;
+			}
+			.xterm-underline {
+			    text-decoration: underline;
+			}
+		`];
+	}
+
+	constructor() {
+		// Must call superconstructor first.
+		super();
+
+		this.resident = 0;
+		this.residentBuffers = [];
+		this.residentBuffersLength = 0;
+	}
+
+	/**
+	* Define a template for the new element by implementing LitElement's
+	* `render` function. `render` must return a lit-html TemplateResult.
+	*/
+	render() {
+		return html`<div id="colorClc"></div><div id="terminal"></div><div id="clipboard"></div>`;
+	}
+
+	/**
+	* Initilize terminalHolder element then calls initTerminal(), initClipboard()
+	*/
+	firstUpdated() {
+		this.terminalHolder = this.renderRoot.getElementById('terminal');
+		this.colorClc = this.renderRoot.getElementById("colorClc");
+		this.initTerminal();
+		let clipboardHolder = this.renderRoot.getElementById('clipboard');
+		this.initClipboard(this.terminalHolder, clipboardHolder);
+		this._updateBGColorChange = this.updateBGColorChange.bind(this);
+		document.body.addEventListener("flow-theme-changed", this._updateBGColorChange)
+		this._updateBGColorChange();
+	}
+
+	getVarColor(varName, defaults, style){
+		style = style || getComputedStyle(this);
+		this.colorClc.style.color = style.getPropertyValue(varName) || defaults;
+		return getComputedStyle(this.colorClc).color;
+	}
+
+	updateBGColorChange(){
+		let style = getComputedStyle(this);
+		let theme = this.term.getOption("theme") || this.termTheme;
+		//console.log('%cOld Theme', `color:${theme.foreground};background-color:${theme.background}`, theme)
+		
+		let background = this.getVarColor('--flow-terminal-bg-color', theme.background, style);
+		let foreground = this.getVarColor('--flow-terminal-color', theme.foreground, style);
+		let cursor = this.getVarColor('--flow-terminal-cursor', theme.cursor || foreground, style);
+		let selection = this.getVarColor('--flow-terminal-selection', theme.selection || foreground, style);
+
+		theme.background = background;
+		theme.foreground = foreground;
+		theme.cursor = cursor;
+		theme.selection = selection;
+
+		//console.log('%cNew Theme', `color:${foreground};background-color:${background}`, theme)
+		this.term.setOption('theme', theme)
+		this.term._core._setTheme(theme)
+	}
+
+	removeBgColorListerner(){
+		if(!this._updateBGColorChange)
+			return
+		document.body.removeEventListener("flow-theme-changed", this._updateBGColorChange)
+	}
+
+	/**
+	* Initilize paste event handling process
+	* @param {HTMLElement} eventEl terminalHolder element
+	* @param {HTMLElement} holder textarea parent node, where new textarea will be created for paste event
+	*/
+	initClipboard(eventEl, holder){
+		this.term.attachCustomKeyEventHandler((e)=>{
+			if(e.type != 'keydown')
+				return;
+			this.onClipboardKeyDown(e);
+		});
+	}
+	onClipboardKeyDown(e){
+		if(e.key == "v" && (e.metaKey || e.ctrlKey)){
+			//e.preventDefault();
+			navigator.clipboard.readText().then((text) => {
+				this.onClipboardPaste(text);
+			})
+		}
+		else
+		if(e.key == "c" && (e.metaKey || e.ctrlKey)){
+			//e.preventDefault();
+			let text = this.term.getSelection();
+			if(text) {
+				console.log("copying text to clipboard:",text);
+				navigator.clipboard.writeText(text);
+			}
+		}
+	}
+	onClipboardPaste(value){
+		this.term.focus();
+		this.pasteText(value);
+	}
+	pasteText(text){
+		if(this.running) {
+			this.term.write(text);
+		} else {
+			let t = this.buffer.split('');
+			t.splice(this.cursorX,0,text);
+			this.buffer = t.join('');
+			this.trail(this.cursorX, { rewind : true, offset : text.length });
+			this.cursorX+=text.length;
+		}
+	}
+	updated(changedProperties) {
+		changedProperties.forEach((oldValue, propName) => {
+			//this.log(`${propName} changed. oldValue: ${oldValue}, new: ${this[propName]}`);
+			//if(propName == "data")
+			//	this.updateGraph(this.data);
+		});
+	}
+
+	trail (x, options) {
+		const { rewind, eraseLast, offset } = options;
+		let tail = this.buffer.substring(x)+(eraseLast?' ':'');
+		this.term.write(tail);
+		for(let i = 0; rewind && i < tail.length-(offset||0); i++)
+			this.term.write('\b');
+	}
+
+
+	initTerminal(){
+
+		/*
+		this.log("INIT TERMINAL:", {
+			fontSize: this['font-size'] || 20,
+			background: this.background || 'rgba(0,0,0,0.0)',
+			//background: 'rgba(255,255,255,0.75)',
+			foreground: this.foreground || '#000000',
+			noscroll : this.noscroll
+		});
+		*/
+
+		let term = new Terminal({
+			allowTransparency: true,
+			fontFamily: this['font-family'] || 'Consolas, Ubuntu Mono, courier-new, courier, monospace',
+			fontSize: this['font-size'] || 20,
+			cursorBlink : true,
+			theme: {
+				background: this.background || 'rgba(0,0,0,0.0)',
+				foreground: this.foreground || '#000000',
+				cursor: this.cursor || this.foreground || "#FFF"
+			}
+		});
+    	this.term = term;
+    	this.termTheme = term.getOption("theme") || {}
+
+    	window.terms = window.terms || [];
+    	window.terms.push(term);
+
+    	//this.log("termtermterm:theme", this.termTheme)
+    	this.addons = {
+	    	weblinks : new WebLinksAddon.WebLinksAddon((event,uri) => {
+				this.handleLink(event,uri);
+			}),
+	    	fit : new FitAddon.FitAddon()
+	    };
+
+		//$(this.terminalHolder).on("keydown", e=>{
+		this.terminalHolder.addEventListener("keydown", e=>{
+				//this.log("e.key", e.key)
+			if(e.ctrlKey || e.metaKey) {
+				if(e.key == "+" || e.key == "="){
+					this.setFontSizeDelta(1, e);
+				}else if(e.key == "-" || e.key == "_"){
+					this.setFontSizeDelta(-1, e);
+				}
+			}
+		});
+
+	    Object.entries(this.addons).forEach((e,i) => { 
+	    	let [k,addon] = e; term.loadAddon(addon); 
+	    	let instance = term._addonManager._addons[i];
+	    	this.addons[k] = instance;
+	    });
+		//	https://github.com/xtermjs/xterm.js/tree/master/addons/xterm-addon-fit	
+		//	https://github.com/xtermjs/xterm.js/tree/master/addons/xterm-addon-attach	
+		//	term.loadAddon(new AttachAddon.AttachAddon(websocket));
+
+		//term.open(document.getElementById("terminalx"));
+		term.open(this.terminalHolder)
+		this.buffer = '';
+		this.cursorX = 0;
+		this.history = [ ];
+		this.historyIdx = 0;
+		term.onResize(()=>{
+			var size = {rows: term.rows, cols:term.cols};
+			this.fire("terminal-resize", size);
+			this.log('terminal-resize', size)
+		})
+
+
+		const keys = {
+			Tab : (e, key) => {
+				// TODO - completion handler
+			},
+			Backspace : (e, key) => {
+				if(this.cursorX == 0)
+					return;
+				term.write('\b');
+				this.cursorX--;
+				let t = this.buffer.split('');
+				t.splice(this.cursorX,1);
+				this.buffer = t.join('');
+				this.trail(this.cursorX, { rewind : true, eraseLast : true });
+			},
+			Delete : (e, key) => {
+				let t = this.buffer.split('');
+				t.splice(this.cursorX,1);
+				this.buffer = t.join('');
+				this.trail(this.cursorX, { rewind : true, eraseLast : true });
+			},
+			Inject : (e,key) => {
+				let t = this.buffer.split('');
+				t.splice(this.cursorX,0,key);
+				this.buffer = t.join('');
+				this.trail(this.cursorX, { rewind : true, offset : 1 });
+				this.cursorX++;
+			},
+			Enter : async (e) => {
+				e.stopPropagation();
+				let { buffer, history } = this;
+				let { length } = history;
+
+				term.write('\r\n');
+				this.buffer = '';
+				this.cursorX = 0;
+
+				if(buffer) {
+					if(!length || history[length-1])
+						this.historyIdx = length;
+					else
+						this.historyIdx = length-1;
+					this.history[this.historyIdx] = buffer;
+					this.historyIdx++;
+
+					this.running = true;
+					await this.digest(buffer);
+					this.running = false;
+				}
+
+				this.prompt();
+			},
+			Escape : async (e) => { },
+			PageDown : async (e) => { },
+			PageUp : async (e) => { },
+			Home : async (e) => { 
+				let l = this.cursorX;
+				term.write(`\x1B[${l}D`);
+				this.cursorX = 0;
+			},
+			End : async (e) => { 
+				let l = this.buffer.length - this.cursorX;
+				term.write(`\x1B[${l}C`);
+				this.cursorX = this.buffer.length;
+			},
+			ArrowLeft : (e, key) => {
+				if(this.cursorX == 0)
+					return;
+				this.cursorX--;
+				term.write(key);
+			},
+			ArrowRight : (e, key) => {
+				if(this.cursorX < this.buffer.length) {
+					this.cursorX++;
+					term.write(key);
+				}
+			},
+			ArrowUp : () => {
+				if(this.historyIdx == 0)
+					return;
+				this.history[this.historyIdx] = this.buffer;
+				this.historyIdx--;
+				this.buffer = this.history[this.historyIdx] || '';
+				this.term.write(`\x1B[2K\r${this.prompt_}${this.buffer}`);
+				this.cursorX = this.buffer.length;
+			},
+			ArrowDown : () => {
+				if(this.historyIdx >= this.history.length)
+					return;
+
+				this.history[this.historyIdx] = this.buffer;
+				this.historyIdx++;
+				this.buffer = this.history[this.historyIdx] || '';
+				this.term.write(`\x1B[2K\r${this.prompt_}${this.buffer}`);
+				this.cursorX = this.buffer.length;
+			},
+		}
+
+		term.onKey((e_) => {
+
+			if(this.noinput)
+				return;
+
+			const e = e_.domEvent;
+			const termKey = e_.key;
+			const { key, keyCode } = e;
+			if(!this.fixed && (key == "`" || key == "Escape"))
+				return this.toggleTerminal();
+
+			if(this.stdinSink)
+				return this.stdinSink({termKey,key,keyCode});
+
+			const printable = !e.altKey && !e.ctrlKey && !e.metaKey && !key.match(/^F\d+$/);
+
+			if(keys[key]) {
+				keys[key](e,termKey);
+			} else 
+			if (printable) {
+				keys.Inject(e,termKey);
+			}
+
+			//console.log('cursorX:',this.cursorX,'buffer:',this.buffer,'key:',key,'tk:',termKey);
+			//console.log('x:',term._core.buffer.x,'plen:',this.promptLength);
+			//console.log('keys:',key,keyCode,term._core.buffer);
+			//console.log(this.buffer);
+		});
+		if(window.ResizeObserver){
+			this.resizeObserver = new ResizeObserver(e => {
+				this.updateTerminalSize();
+			});
+			this.resizeObserver.observe(this.terminalHolder);
+		}
+		this.setFontSize(this['font-size'] || this.getFontSize());
+
+		if(this.noscroll) {
+			let xtv = this.shadowRoot.querySelector(".xterm-viewport");
+			xtv.style.overflow = 'hidden';
+		}
+	}
+	get prompt_() {
+		return `${this.promptPrefix?this.promptPrefix()+' ':''}$ `;
+	}
+	/**
+	* prompt the terminal
+	*/
+	prompt(){
+		this.cursorX = 0;
+		this.buffer = '';
+
+		let prompt = this.prompt_;
+		this.term.write("\r\n"+prompt);
+		this.promptLength = ("\r\n"+prompt).length;
+	}
+
+	enableResidentMode(length) {
+		this.resident = length;
+	}
+
+	flushResidentBuffers() {
+		while(this.residentBuffers.length)
+			this.term.write(this.residentBuffers.shift());
+	}
+
+	writeToResidentBuffers(text) {
+		if(!this.resident)
+			return this.term.write(text);
+
+		this.residentBuffers.push(text);
+		this.residentBuffersLength += text.length;
+		while(this.residentBuffersLength > this.resident && this.residentBuffers.length > 1) {
+			let tip = this.residentBuffers.shift();
+			this.residentBuffersLength -= tip.length;
+		}
+	}
+
+	writeln(...args) {
+
+		if(!args.length)
+			args = [''];
+
+		if(this.running) {
+			this.term.write(args.join(' ')+'\r\n');
+		}
+		else {
+			this.term.write(`\x1B[2K\r`+args.join(' ')+'\r\n');
+			let prompt = `${this.prompt_}${this.buffer}`;
+			this.term.write(prompt);
+			let l = this.buffer.length-this.cursorX;
+			while(l--)
+				this.term.write('\b');
+		}
+	}
+	write(...args){
+		this.writeln(...args)
+	}
+	updateTerminalSize() {
+		let term = this.term;
+		//this.log("updateTerminalSize", this, this.term)
+		//if(!$(this).width() || !term)
+		if(!this.offsetWidth || !term)
+			return
+		let charSizeService = term._core._charSizeService
+		if(charSizeService && !charSizeService.hasValidSize){
+			charSizeService.measure()
+			//if(term._core._renderService)
+			//	term._core._renderService._updateDimensions();
+		}
+		let addon = this.addons.fit.instance;
+		let dimensions = addon.proposeDimensions()
+		addon.fit();
+		//this.addons.fit.instance.fit();
+	}
+	/**
+	* toggle terminal css class `hidden`
+	*/
+	toggleTerminal(){
+		this.classList.toggle("hidden");
+	}
+	async digest(cmd) {
+		return new Promise( async (resolve, reject) => {
+			if(!cmd) {
+				resolve();
+				return;
+			}
+
+			if(cmd == 'history') {
+				[...new Set(this.history)].forEach(t => this.write(t));
+				resolve();
+				return;
+			}
+
+			if(cmd == 'history reset') {
+				this.history.forEach(t => this.write(t));
+				resolve();
+				return;
+			}
+			if(!this.sink)
+				return resolve();
+
+			this.sink.digest(cmd).then((resp)=>{
+				if(resp && typeof(resp) == 'string')
+					this.write(resp);
+				resolve();
+			},(err)=>{
+				this.write((err||'unknown digest error').toString().brightRed);
+				resolve();
+			})
+		})
+	}
+	registerSink(sink) {
+		if(!sink.digest || !sink.complete)
+			throw new Error("Missing digest() or complete() in the terminal sink");
+		this.sink = sink;
+	}
+
+	captureStdin(sink) {
+		this.stdinSink = sink;
+	}
+
+	releaseStdin(sink) {
+		delete this.stdinSink;
+	}
+
+	isCaptured() {
+		return !!this.stdinSink;
+	}
+
+	getSize() {
+		return { rows: this.term.rows, cols: this.term.cols };
+	}
+
+	setFontSizeDelta(delta, e){
+		this.setFontSize(this.getFontSize()+delta);
+		if(e && e.preventDefault){
+			e.preventDefault();
+			e.stopPropagation();
+		}
+	}
+	/**
+	* Set font size and update terminal size
+	* @param {number} [size=20] font size should be >= 7
+	*/
+	setFontSize(size){
+		if(!size)
+			size = 20;
+		else
+		if(size < 7)
+			size = 7;
+		this.setSetting("fontSize", size);
+		this.term.setOption("fontSize", size)
+		this.updateTerminalSize();
+	}
+	getFontSize(size){
+		return parseFloat(this.getSetting("fontSize", size || 20));
+	}
+	increaseFontSize(){
+		this.setFontSizeDelta(1);
+	}
+	decreaseFontSize(){
+		this.setFontSizeDelta(-1);
+	}
+	getStorageKeyPrefix(){
+		return (this.id || this.dataKey || "xterm")+"_";
+	}
+	getSetting(name, defaults){
+		let key = this.getStorageKeyPrefix();
+		let ls = window.localStorage || {};
+		return ls[key+name] || defaults;
+	}
+	setSetting(name, value){
+		let key = this.getStorageKeyPrefix();
+		let ls = window.localStorage || {};
+		ls[key+name] = value;
+	}
+	clear() {
+		this.term.write(`\x1B[2J\x1B[H`);
+	}
+	handleLink(event, link) {
+		this.linkHandler?.(event,link);
+	}
+	registerLinkHandler(fn) {
+		this.linkHandler = fn;
+	}
+}
+
+FlowTerminal.define("flow-terminal")
+
+"###;
+
 const ASPECTRON_FLOW_UX_SRC_SVG_414 : &'static str = r###"
 export class Segment {
 	constructor(path, begin, end, circular) {
@@ -175,479 +1008,48 @@ export class Segment {
 }
 "###;
 
-const LIT_REACTIVE_ELEMENT_CSS_TAG_31 : &'static str = r###"
-/**
- * @license
- * Copyright 2019 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-const t=window,e=t.ShadowRoot&&(void 0===t.ShadyCSS||t.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,s=Symbol(),n=new WeakMap;class o{constructor(t,e,n){if(this._$cssResult$=!0,n!==s)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o;const s=this.t;if(e&&void 0===t){const e=void 0!==s&&1===s.length;e&&(t=n.get(s)),void 0===t&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),e&&n.set(s,t))}return t}toString(){return this.cssText}}const r=t=>new o("string"==typeof t?t:t+"",void 0,s),i=(t,...e)=>{const n=1===t.length?t[0]:e.reduce(((e,s,n)=>e+(t=>{if(!0===t._$cssResult$)return t.cssText;if("number"==typeof t)return t;throw Error("Value passed to 'css' function must be a 'css' function result: "+t+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(s)+t[n+1]),t[0]);return new o(n,t,s)},S=(s,n)=>{e?s.adoptedStyleSheets=n.map((t=>t instanceof CSSStyleSheet?t:t.styleSheet)):n.forEach((e=>{const n=document.createElement("style"),o=t.litNonce;void 0!==o&&n.setAttribute("nonce",o),n.textContent=e.cssText,s.appendChild(n)}))},c=e?t=>t:t=>t instanceof CSSStyleSheet?(t=>{let e="";for(const s of t.cssRules)e+=s.cssText;return r(e)})(t):t;export{o as CSSResult,S as adoptStyles,i as css,c as getCompatibleStyle,e as supportsAdoptingStyleSheets,r as unsafeCSS};
-//# sourceMappingURL=css-tag.js.map
+const ASPECTRON_FLOW_UX_SRC_FLOW_ANCHOR_362 : &'static str = r###"
 
-"###;
-
-const LIT_REACTIVE_ELEMENT_REACTIVE_ELEMENT_89 : &'static str = r###"
+const flowAnchors = [];
 
 /**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */var s;const e=window,r=e.trustedTypes,h=r?r.emptyScript:"",o=e.reactiveElementPolyfillSupport,n={toAttribute(t,i){switch(i){case Boolean:t=t?h:null;break;case Object:case Array:t=null==t?t:JSON.stringify(t)}return t},fromAttribute(t,i){let s=t;switch(i){case Boolean:s=null!==t;break;case Number:s=null===t?null:Number(t);break;case Object:case Array:try{s=JSON.parse(t)}catch(t){s=null}}return s}},a=(t,i)=>i!==t&&(i==i||t==t),l={attribute:!0,type:String,converter:n,reflect:!1,hasChanged:a};class d extends HTMLElement{constructor(){super(),this._$Ei=new Map,this.isUpdatePending=!1,this.hasUpdated=!1,this._$El=null,this.u()}static addInitializer(t){var i;this.finalize(),(null!==(i=this.h)&&void 0!==i?i:this.h=[]).push(t)}static get observedAttributes(){this.finalize();const t=[];return this.elementProperties.forEach(((i,s)=>{const e=this._$Ep(s,i);void 0!==e&&(this._$Ev.set(e,s),t.push(e))})),t}static createProperty(t,i=l){if(i.state&&(i.attribute=!1),this.finalize(),this.elementProperties.set(t,i),!i.noAccessor&&!this.prototype.hasOwnProperty(t)){const s="symbol"==typeof t?Symbol():"__"+t,e=this.getPropertyDescriptor(t,s,i);void 0!==e&&Object.defineProperty(this.prototype,t,e)}}static getPropertyDescriptor(t,i,s){return{get(){return this[i]},set(e){const r=this[t];this[i]=e,this.requestUpdate(t,r,s)},configurable:!0,enumerable:!0}}static getPropertyOptions(t){return this.elementProperties.get(t)||l}static finalize(){if(this.hasOwnProperty("finalized"))return!1;this.finalized=!0;const t=Object.getPrototypeOf(this);if(t.finalize(),void 0!==t.h&&(this.h=[...t.h]),this.elementProperties=new Map(t.elementProperties),this._$Ev=new Map,this.hasOwnProperty("properties")){const t=this.properties,i=[...Object.getOwnPropertyNames(t),...Object.getOwnPropertySymbols(t)];for(const s of i)this.createProperty(s,t[s])}return this.elementStyles=this.finalizeStyles(this.styles),!0}static finalizeStyles(i){const s=[];if(Array.isArray(i)){const e=new Set(i.flat(1/0).reverse());for(const i of e)s.unshift(t(i))}else void 0!==i&&s.push(t(i));return s}static _$Ep(t,i){const s=i.attribute;return!1===s?void 0:"string"==typeof s?s:"string"==typeof t?t.toLowerCase():void 0}u(){var t;this._$E_=new Promise((t=>this.enableUpdating=t)),this._$AL=new Map,this._$Eg(),this.requestUpdate(),null===(t=this.constructor.h)||void 0===t||t.forEach((t=>t(this)))}addController(t){var i,s;(null!==(i=this._$ES)&&void 0!==i?i:this._$ES=[]).push(t),void 0!==this.renderRoot&&this.isConnected&&(null===(s=t.hostConnected)||void 0===s||s.call(t))}removeController(t){var i;null===(i=this._$ES)||void 0===i||i.splice(this._$ES.indexOf(t)>>>0,1)}_$Eg(){this.constructor.elementProperties.forEach(((t,i)=>{this.hasOwnProperty(i)&&(this._$Ei.set(i,this[i]),delete this[i])}))}createRenderRoot(){var t;const s=null!==(t=this.shadowRoot)&&void 0!==t?t:this.attachShadow(this.constructor.shadowRootOptions);return i(s,this.constructor.elementStyles),s}connectedCallback(){var t;void 0===this.renderRoot&&(this.renderRoot=this.createRenderRoot()),this.enableUpdating(!0),null===(t=this._$ES)||void 0===t||t.forEach((t=>{var i;return null===(i=t.hostConnected)||void 0===i?void 0:i.call(t)}))}enableUpdating(t){}disconnectedCallback(){var t;null===(t=this._$ES)||void 0===t||t.forEach((t=>{var i;return null===(i=t.hostDisconnected)||void 0===i?void 0:i.call(t)}))}attributeChangedCallback(t,i,s){this._$AK(t,s)}_$EO(t,i,s=l){var e;const r=this.constructor._$Ep(t,s);if(void 0!==r&&!0===s.reflect){const h=(void 0!==(null===(e=s.converter)||void 0===e?void 0:e.toAttribute)?s.converter:n).toAttribute(i,s.type);this._$El=t,null==h?this.removeAttribute(r):this.setAttribute(r,h),this._$El=null}}_$AK(t,i){var s;const e=this.constructor,r=e._$Ev.get(t);if(void 0!==r&&this._$El!==r){const t=e.getPropertyOptions(r),h="function"==typeof t.converter?{fromAttribute:t.converter}:void 0!==(null===(s=t.converter)||void 0===s?void 0:s.fromAttribute)?t.converter:n;this._$El=r,this[r]=h.fromAttribute(i,t.type),this._$El=null}}requestUpdate(t,i,s){let e=!0;void 0!==t&&(((s=s||this.constructor.getPropertyOptions(t)).hasChanged||a)(this[t],i)?(this._$AL.has(t)||this._$AL.set(t,i),!0===s.reflect&&this._$El!==t&&(void 0===this._$EC&&(this._$EC=new Map),this._$EC.set(t,s))):e=!1),!this.isUpdatePending&&e&&(this._$E_=this._$Ej())}async _$Ej(){this.isUpdatePending=!0;try{await this._$E_}catch(t){Promise.reject(t)}const t=this.scheduleUpdate();return null!=t&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){var t;if(!this.isUpdatePending)return;this.hasUpdated,this._$Ei&&(this._$Ei.forEach(((t,i)=>this[i]=t)),this._$Ei=void 0);let i=!1;const s=this._$AL;try{i=this.shouldUpdate(s),i?(this.willUpdate(s),null===(t=this._$ES)||void 0===t||t.forEach((t=>{var i;return null===(i=t.hostUpdate)||void 0===i?void 0:i.call(t)})),this.update(s)):this._$Ek()}catch(t){throw i=!1,this._$Ek(),t}i&&this._$AE(s)}willUpdate(t){}_$AE(t){var i;null===(i=this._$ES)||void 0===i||i.forEach((t=>{var i;return null===(i=t.hostUpdated)||void 0===i?void 0:i.call(t)})),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(t)),this.updated(t)}_$Ek(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$E_}shouldUpdate(t){return!0}update(t){void 0!==this._$EC&&(this._$EC.forEach(((t,i)=>this._$EO(i,this[i],t))),this._$EC=void 0),this._$Ek()}updated(t){}firstUpdated(t){}}d.finalized=!0,d.elementProperties=new Map,d.elementStyles=[],d.shadowRootOptions={mode:"open"},null==o||o({ReactiveElement:d}),(null!==(s=e.reactiveElementVersions)&&void 0!==s?s:e.reactiveElementVersions=[]).push("1.5.0");export{d as ReactiveElement,n as defaultConverter,a as notEqual};
-//# sourceMappingURL=reactive-element.js.map
-
-"###;
-
-const LIT_HTML_LIT_HTML_613 : &'static str = r###"
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-var t;const i=window,s=i.trustedTypes,e=s?s.createPolicy("lit-html",{createHTML:t=>t}):void 0,o=`lit$${(Math.random()+"").slice(9)}$`,n="?"+o,l=`<${n}>`,h=document,r=(t="")=>h.createComment(t),d=t=>null===t||"object"!=typeof t&&"function"!=typeof t,u=Array.isArray,c=t=>u(t)||"function"==typeof(null==t?void 0:t[Symbol.iterator]),v=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,a=/-->/g,f=/>/g,_=RegExp(">|[ \t\n\f\r](?:([^\\s\"'>=/]+)([ \t\n\f\r]*=[ \t\n\f\r]*(?:[^ \t\n\f\r\"'`<>=]|(\"|')|))|$)","g"),m=/'/g,p=/"/g,$=/^(?:script|style|textarea|title)$/i,g=t=>(i,...s)=>({_$litType$:t,strings:i,values:s}),y=g(1),w=g(2),x=Symbol.for("lit-noChange"),b=Symbol.for("lit-nothing"),T=new WeakMap,A=h.createTreeWalker(h,129,null,!1),E=(t,i)=>{const s=t.length-1,n=[];let h,r=2===i?"<svg>":"",d=v;for(let i=0;i<s;i++){const s=t[i];let e,u,c=-1,g=0;for(;g<s.length&&(d.lastIndex=g,u=d.exec(s),null!==u);)g=d.lastIndex,d===v?"!--"===u[1]?d=a:void 0!==u[1]?d=f:void 0!==u[2]?($.test(u[2])&&(h=RegExp("</"+u[2],"g")),d=_):void 0!==u[3]&&(d=_):d===_?">"===u[0]?(d=null!=h?h:v,c=-1):void 0===u[1]?c=-2:(c=d.lastIndex-u[2].length,e=u[1],d=void 0===u[3]?_:'"'===u[3]?p:m):d===p||d===m?d=_:d===a||d===f?d=v:(d=_,h=void 0);const y=d===_&&t[i+1].startsWith("/>")?" ":"";r+=d===v?s+l:c>=0?(n.push(e),s.slice(0,c)+"$lit$"+s.slice(c)+o+y):s+o+(-2===c?(n.push(void 0),i):y)}const u=r+(t[s]||"<?>")+(2===i?"</svg>":"");if(!Array.isArray(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return[void 0!==e?e.createHTML(u):u,n]};class C{constructor({strings:t,_$litType$:i},e){let l;this.parts=[];let h=0,d=0;const u=t.length-1,c=this.parts,[v,a]=E(t,i);if(this.el=C.createElement(v,e),A.currentNode=this.el.content,2===i){const t=this.el.content,i=t.firstChild;i.remove(),t.append(...i.childNodes)}for(;null!==(l=A.nextNode())&&c.length<u;){if(1===l.nodeType){if(l.hasAttributes()){const t=[];for(const i of l.getAttributeNames())if(i.endsWith("$lit$")||i.startsWith(o)){const s=a[d++];if(t.push(i),void 0!==s){const t=l.getAttribute(s.toLowerCase()+"$lit$").split(o),i=/([.?@])?(.*)/.exec(s);c.push({type:1,index:h,name:i[2],strings:t,ctor:"."===i[1]?M:"?"===i[1]?k:"@"===i[1]?H:S})}else c.push({type:6,index:h})}for(const i of t)l.removeAttribute(i)}if($.test(l.tagName)){const t=l.textContent.split(o),i=t.length-1;if(i>0){l.textContent=s?s.emptyScript:"";for(let s=0;s<i;s++)l.append(t[s],r()),A.nextNode(),c.push({type:2,index:++h});l.append(t[i],r())}}}else if(8===l.nodeType)if(l.data===n)c.push({type:2,index:h});else{let t=-1;for(;-1!==(t=l.data.indexOf(o,t+1));)c.push({type:7,index:h}),t+=o.length-1}h++}}static createElement(t,i){const s=h.createElement("template");return s.innerHTML=t,s}}function P(t,i,s=t,e){var o,n,l,h;if(i===x)return i;let r=void 0!==e?null===(o=s._$Co)||void 0===o?void 0:o[e]:s._$Cl;const u=d(i)?void 0:i._$litDirective$;return(null==r?void 0:r.constructor)!==u&&(null===(n=null==r?void 0:r._$AO)||void 0===n||n.call(r,!1),void 0===u?r=void 0:(r=new u(t),r._$AT(t,s,e)),void 0!==e?(null!==(l=(h=s)._$Co)&&void 0!==l?l:h._$Co=[])[e]=r:s._$Cl=r),void 0!==r&&(i=P(t,r._$AS(t,i.values),r,e)),i}class V{constructor(t,i){this.u=[],this._$AN=void 0,this._$AD=t,this._$AM=i}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}v(t){var i;const{el:{content:s},parts:e}=this._$AD,o=(null!==(i=null==t?void 0:t.creationScope)&&void 0!==i?i:h).importNode(s,!0);A.currentNode=o;let n=A.nextNode(),l=0,r=0,d=e[0];for(;void 0!==d;){if(l===d.index){let i;2===d.type?i=new N(n,n.nextSibling,this,t):1===d.type?i=new d.ctor(n,d.name,d.strings,this,t):6===d.type&&(i=new I(n,this,t)),this.u.push(i),d=e[++r]}l!==(null==d?void 0:d.index)&&(n=A.nextNode(),l++)}return o}p(t){let i=0;for(const s of this.u)void 0!==s&&(void 0!==s.strings?(s._$AI(t,s,i),i+=s.strings.length-2):s._$AI(t[i])),i++}}class N{constructor(t,i,s,e){var o;this.type=2,this._$AH=b,this._$AN=void 0,this._$AA=t,this._$AB=i,this._$AM=s,this.options=e,this._$Cm=null===(o=null==e?void 0:e.isConnected)||void 0===o||o}get _$AU(){var t,i;return null!==(i=null===(t=this._$AM)||void 0===t?void 0:t._$AU)&&void 0!==i?i:this._$Cm}get parentNode(){let t=this._$AA.parentNode;const i=this._$AM;return void 0!==i&&11===t.nodeType&&(t=i.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,i=this){t=P(this,t,i),d(t)?t===b||null==t||""===t?(this._$AH!==b&&this._$AR(),this._$AH=b):t!==this._$AH&&t!==x&&this.g(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):c(t)?this.k(t):this.g(t)}O(t,i=this._$AB){return this._$AA.parentNode.insertBefore(t,i)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}g(t){this._$AH!==b&&d(this._$AH)?this._$AA.nextSibling.data=t:this.T(h.createTextNode(t)),this._$AH=t}$(t){var i;const{values:s,_$litType$:e}=t,o="number"==typeof e?this._$AC(t):(void 0===e.el&&(e.el=C.createElement(e.h,this.options)),e);if((null===(i=this._$AH)||void 0===i?void 0:i._$AD)===o)this._$AH.p(s);else{const t=new V(o,this),i=t.v(this.options);t.p(s),this.T(i),this._$AH=t}}_$AC(t){let i=T.get(t.strings);return void 0===i&&T.set(t.strings,i=new C(t)),i}k(t){u(this._$AH)||(this._$AH=[],this._$AR());const i=this._$AH;let s,e=0;for(const o of t)e===i.length?i.push(s=new N(this.O(r()),this.O(r()),this,this.options)):s=i[e],s._$AI(o),e++;e<i.length&&(this._$AR(s&&s._$AB.nextSibling,e),i.length=e)}_$AR(t=this._$AA.nextSibling,i){var s;for(null===(s=this._$AP)||void 0===s||s.call(this,!1,!0,i);t&&t!==this._$AB;){const i=t.nextSibling;t.remove(),t=i}}setConnected(t){var i;void 0===this._$AM&&(this._$Cm=t,null===(i=this._$AP)||void 0===i||i.call(this,t))}}class S{constructor(t,i,s,e,o){this.type=1,this._$AH=b,this._$AN=void 0,this.element=t,this.name=i,this._$AM=e,this.options=o,s.length>2||""!==s[0]||""!==s[1]?(this._$AH=Array(s.length-1).fill(new String),this.strings=s):this._$AH=b}get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}_$AI(t,i=this,s,e){const o=this.strings;let n=!1;if(void 0===o)t=P(this,t,i,0),n=!d(t)||t!==this._$AH&&t!==x,n&&(this._$AH=t);else{const e=t;let l,h;for(t=o[0],l=0;l<o.length-1;l++)h=P(this,e[s+l],i,l),h===x&&(h=this._$AH[l]),n||(n=!d(h)||h!==this._$AH[l]),h===b?t=b:t!==b&&(t+=(null!=h?h:"")+o[l+1]),this._$AH[l]=h}n&&!e&&this.j(t)}j(t){t===b?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,null!=t?t:"")}}class M extends S{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===b?void 0:t}}const R=s?s.emptyScript:"";class k extends S{constructor(){super(...arguments),this.type=4}j(t){t&&t!==b?this.element.setAttribute(this.name,R):this.element.removeAttribute(this.name)}}class H extends S{constructor(t,i,s,e,o){super(t,i,s,e,o),this.type=5}_$AI(t,i=this){var s;if((t=null!==(s=P(this,t,i,0))&&void 0!==s?s:b)===x)return;const e=this._$AH,o=t===b&&e!==b||t.capture!==e.capture||t.once!==e.once||t.passive!==e.passive,n=t!==b&&(e===b||o);o&&this.element.removeEventListener(this.name,this,e),n&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){var i,s;"function"==typeof this._$AH?this._$AH.call(null!==(s=null===(i=this.options)||void 0===i?void 0:i.host)&&void 0!==s?s:this.element,t):this._$AH.handleEvent(t)}}class I{constructor(t,i,s){this.element=t,this.type=6,this._$AN=void 0,this._$AM=i,this.options=s}get _$AU(){return this._$AM._$AU}_$AI(t){P(this,t)}}const L={P:"$lit$",A:o,M:n,C:1,L:E,R:V,D:c,V:P,I:N,H:S,N:k,U:H,B:M,F:I},z=i.litHtmlPolyfillSupport;null==z||z(C,N),(null!==(t=i.litHtmlVersions)&&void 0!==t?t:i.litHtmlVersions=[]).push("2.5.0");const Z=(t,i,s)=>{var e,o;const n=null!==(e=null==s?void 0:s.renderBefore)&&void 0!==e?e:i;let l=n._$litPart$;if(void 0===l){const t=null!==(o=null==s?void 0:s.renderBefore)&&void 0!==o?o:null;n._$litPart$=l=new N(i.insertBefore(r(),t),t,void 0,null!=s?s:{})}return l._$AI(t),l};export{L as _$LH,y as html,x as noChange,b as nothing,Z as render,w as svg};
-//# sourceMappingURL=lit-html.js.map
-
-"###;
-
-const LIT_ELEMENT_LIT_ELEMENT_673 : &'static str = r###"
-
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */var l,o;const r=t;class s extends t{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){var t,e;const i=super.createRenderRoot();return null!==(t=(e=this.renderOptions).renderBefore)&&void 0!==t||(e.renderBefore=i.firstChild),i}update(t){const i=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=e(i,this.renderRoot,this.renderOptions)}connectedCallback(){var t;super.connectedCallback(),null===(t=this._$Do)||void 0===t||t.setConnected(!0)}disconnectedCallback(){var t;super.disconnectedCallback(),null===(t=this._$Do)||void 0===t||t.setConnected(!1)}render(){return i}}s.finalized=!0,s._$litElement$=!0,null===(l=globalThis.litElementHydrateSupport)||void 0===l||l.call(globalThis,{LitElement:s});const n=globalThis.litElementPolyfillSupport;null==n||n({LitElement:s});const h={_$AK:(t,e,i)=>{t._$AK(e,i)},_$AL:t=>t._$AL};(null!==(o=globalThis.litElementVersions)&&void 0!==o?o:globalThis.litElementVersions=[]).push("3.2.2");export{s as LitElement,r as UpdatingElement,h as _$LE};
-//# sourceMappingURL=lit-element.js.map
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_HELPERS_409 : &'static str = r###"
-/*
-* Flow-UX: src/helper.js
-* version: 1.0.0
+* @class FlowAnchor
+* @extends BaseElement
+* @property {String} [for]
+* @property {String} [type]
+* @example
+*   <flow-anchor>Button 1</flow-anchor>
+*
+*
 */
-const toString = Object.prototype.toString;
-const is = (obj, type) =>toString.call(obj)=='[object '+type+']'
-
-export const utils = {};
-utils.toString = toString;
-utils.is = is;
-utils.isArray = obj=>Array.isArray(obj);
-utils.isObject = obj=>is(obj, 'Object');
-utils.isString = obj=>is(obj, 'String');
-utils.isNumber = obj=>is(obj, 'Number');
-utils.isBoolean = obj=>is(obj, 'Boolean');
-utils.isFunction = obj=>is(obj, 'Function');
-utils.isUndefined = obj=>is(obj, 'Undefined');
-utils.valueToDataType = (value)=>{
-	return window[toString.call(value).split("object")[1]?.replace("]", "").trim()||""]
-}
-
-const storage = () => {
-	if(typeof global != 'undefined')
-		return global
-	if(typeof globalThis != 'undefined')
-		return globalThis
-	return  window;
-}
-
-let uid_vec = new Uint32Array(6);
-const UID = (len = 26)=>{
-	window.crypto.getRandomValues(uid_vec);
-	return [...uid_vec].map(v=>bs58e(v)).join('').substring(0,len);
-}
-
-window.UID = UID;
-
-if(!window.OnReCaptchaLoad){
-	window.OnReCaptchaLoad = ()=>{
-		//console.log("OnReCaptchaLoad OnReCaptchaLoad OnReCaptchaLoad")
-		trigger("g-recaptcha-ready")
-		buildReCaptcha();
-	}
-}
-
-const universe = storage();
-const default_flow_global = { }
-const flow = universe.flow = (universe.flow || default_flow_global);
-
-let {debug, baseUrl, theme} = window.flowConfig || flow;
-let {iconPath, icons, resolveIcon, iconMap, iconFile} = theme || {};
-
-if(!baseUrl){
-	baseUrl = (new URL("../", import.meta.url)).href;
-	debug && console.log("FlowUX: baseUrl", baseUrl)
-}
-const isSmallScreen = navigator.userAgent.toLowerCase().includes("mobi");
-
-const IconMap = Object.assign({
-	fal:'light',
-	far:'regular',
-	fab:'brands',
-	fa: 'solid',
-	fas:'solid'
-}, iconMap || {});
-
-iconFile = iconFile||'icons';
-const NativeIcons = baseUrl+'resources/icons/sprites/';
-const FlowIconPath = iconPath || '/resources/fonts/sprites/';//NativeIcons;
-const FlowIcons = icons || {};
-const FlowStates = Object.freeze({ONLINE:'online', AUTH:'auth'});
-
-if(!resolveIcon){
-	resolveIcon = (cname, name, i)=>{
-		if(!name)
-			return `${cname}:invalid icon`;
-		if(/\.(.{3,4}|.{3,4}#.*)$/.test(name))
-			return name
-		
-		let icon = FlowIcons[`${cname}:${name}${i?'-'+i:''}`]
-			||FlowIcons[name]
-			||(name.indexOf(":")>-1?name:iconFile+':'+name);
-
-		if(/\.(.{3,4}|.{3,4}#.*)$/.test(icon))
-			return icon
-
-		let [file, hash] = icon.split(":");
-		if(file == "icons")
-			return `${NativeIcons}icons.svg#${hash}`;
-		return `${FlowIconPath}${IconMap[file]||file}.svg#${hash}`;
-	}
-}
-
-// console.log("FlowIcons", FlowIcons) 
-
-const dpc = (delay, fn)=>{
-	if(typeof delay == 'function')
-		return setTimeout(delay, fn||0);
-	return setTimeout(fn, delay||0);
-}
-
-const clearDPC = (dpc_)=>{
-	clearTimeout(dpc_);
-}
-
-const deferred = () => {
-    let methods = {};
-    const p = new Promise((resolve, reject) => {
-        methods = { resolve, reject };
-    });
-    return Object.assign(p, methods);
-}
-
-export { dpc, clearDPC, deferred };
-
-export const setTheme = theme=>{
-	const body = document.body; 
-	[...body.classList]
-	.filter(cls=>cls.startsWith('flow-theme'))
-	.forEach(cls=>body.classList.remove(cls));
-
-	body.classList.add(`flow-theme-${theme}`);
-	localStorage.flowtheme = theme;
-	//let ce = new CustomEvent("flow-theme-changed", {detail:{theme}});
-	//body.dispatchEvent(ce);
-	trigger("flow-theme-changed", {theme}, {bubbles:true}, body);
-	//trigger("flow-theme-changed", {theme}, {bubbles:true}, window);
-}
-
-//window.setTheme = setTheme;
-export const DefaultTheme = theme?.default||"light";
-export const getTheme = (defaultTheme=DefaultTheme)=>{
-	if(localStorage.flowtheme)
-		return localStorage.flowtheme;
-	const body = document.body;
-	let theme = [...body.classList]
-	.find(cls=>cls.startsWith('flow-theme'))
-	if(!theme)
-		return defaultTheme;
-
-	return theme.replace("flow-theme-", "");
-}
-export {IconMap, FlowIcons, NativeIcons, isSmallScreen, FlowStates};
-export {baseUrl, debug, FlowIconPath, flow, UID, storage, resolveIcon};
-
-
-export const styleAppendTo = (style, defaultSelector="head")=>selector=>{
-	let p = document.querySelector(selector||defaultSelector);
-	if(!p)
-		p = document.head;
-	if(p.matches("style")){
-		p.innerHTML = style.cssText;
-	}else{
-		let sBar = document.createElement('style');
-		sBar.innerHTML = style.cssText;
-		p.appendChild(sBar);
-	}
-}
-
-const bs58e = (function() {
-    var alphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ',
-        base = alphabet.length;
-    return function(enc) {
-		var encoded = '';
-		while(enc) {
-			var remainder = enc % base;
-			enc = Math.floor(enc / base);
-			encoded = alphabet[remainder].toString() + encoded;        
-		}
-		return encoded;
-	}
-})();
-
-const resolveConditions = (src) => {
-	src = Object.entries(src).map(([k,v]) => {
-		return eval(k) ? undefined : v;
-	}).filter(v=>v!==undefined);
-	if(!src.length)
-		return null;
-	return src;
-}
-
-export const DeferComponent = (ctor, name, deps) => {
-
-	if(deps && typeof deps == 'object' && !Array.isArray(deps))
-		deps = resolveConditions(deps);
-
-    if(deps && Array.isArray(deps)) {
-		let count = 0;
-		deps = deps.slice();		
-		while(deps.length) {
-			let src = deps.shift();
-
-			switch(typeof src) {
-				case 'function': {
-					src = src();
-					if(!src)
-						continue;
-					if(Array.isArray(src)) {
-						deps = deps.concat(src);
-						continue;
-					}
-				} break;
-				case 'object': {
-					src = resolveConditions(src);
-					if(!src)
-						continue;
-					else
-					if(src.length == 1)
-						src = src.shift();
-					else {
-						deps = deps.concat(src);
-						continue;
-					}
-				} break;
-			}
-
-			console.log('Flow - loading dep:', src);
-            count++;
-            let el
-            if(/\.css$/.test(src)){
-            	el = document.createElement("link");
-            	el.setAttribute("rel", "stylesheet");
-            	el.setAttribute("type", "text/css")
-            	el.href = src;
-            }else{
-            	el = document.createElement("script");
-            	el.src = src;
-            }
-            document.head.appendChild(el);
-            el.onload = ()=>{
-                count--;
-                if(!count)
-                    ctor.defineElement(name);
-            }        
-        }
-	}
-	else
-		ctor.defineElement(name);
-}
-
-export const sizeClsMap = new Map();
-sizeClsMap.set("TINY", 400);
-sizeClsMap.set("XXS", 550);
-sizeClsMap.set("XS", 768);
-sizeClsMap.set("SM", 992);
-sizeClsMap.set("MD", 1200);
-
-export const isArray = o=>Array.isArray(o);
-export const isObject = o=>Object.prototype.toString.call(o)=='[object Object]';
-
-export const camelCase = str=>{
-  // Lower cases the string
-  return (str+"").toLowerCase()
-    // Replaces any - or _ characters with a space 
-    .replace( /[-_\.]+/g, ' ')
-    // Removes any non alphanumeric characters 
-    .replace( /[^\w\s]/g, '')
-    // Uppercases the first character in each group immediately following a space 
-    // (delimited by spaces) 
-    .replace( / (.)/g, function($1) { return $1.toUpperCase(); })
-    // Removes spaces 
-    .replace( / /g, '' );
-}
-
-export const humanize = str=>{
-	// Lower cases the string
-  	str = (str+"").toLowerCase()
-    // Replaces any - or _ characters with a space 
-    .replace( /[-_\.]+/g, ' ')
-    // Removes any non alphanumeric characters 
-    .replace( /[^\w\s]/g, '')
-    // Uppercases the first character in each group immediately following a space 
-    // (delimited by spaces) 
-    .replace( / (.)/g, function($1) { return $1.toUpperCase(); })
-    return str[0].toUpperCase()+str.substring(1);
-    // Removes spaces 
-    //.replace( / /g, '' );
-}
-
-export const deepClone = (obj, debug)=>{
-	if(debug)
-		console.log("deepClone:", obj, obj instanceof HTMLElement)
-	if((typeof jQuery !='undefined' && obj instanceof jQuery) || (obj?.constructor?.prototype.jquery))
-		return obj.clone();//$("___xxxxxx____");
-	if(obj instanceof HTMLElement)
-		return obj.cloneNode(true);
-	if(isArray(obj))
-		return obj.map(e=>deepClone(e, debug))
-	if(isObject(obj)){
-		let r = {};
-		Object.entries(obj).forEach(([key, value])=>{
-			r[key] = deepClone(value, debug);
-		})
-		return r;
-	}
-	return obj;
-}
-
-export class ExtendedMap extends Map{
-	constructor(...args){
-		super(...args)
-		this.handlers = new Map();
-	}
-	setListener(type, handler){
-		if(!["set", "clear", "delete"].includes(type)){
-			return false
-		}
-		let handlers = this.handlers.get(type)
-		if(!handlers)
-			handlers = []
-		if(!handlers.includes(handler))
-			handlers.push(handler);
-		this.handlers.set(type, handlers);
-	}
-	callHandlers(type, ...args){
-		let handlers = this.handlers.get(type);
-		if(!handlers)
-			return
-		handlers.forEach(fn=>{
-			fn(...args);
-		})
-	}
-	set(key, value){
-		super.set(key, value);
-		this.callHandlers("set", key, value);
-	}
-}
-
-export const trigger = (eventName, detail={}, options={}, el=null, returnEvent=false)=>{
-	let ev = new CustomEvent(eventName, Object.assign({}, options, {detail}));
-	let result = (el || window).dispatchEvent(ev);
-	return returnEvent?ev:result
-}
-
-export const buildReCaptcha = root=>{
-	if(!window.grecaptcha)
-		return
-	grecaptcha.ready(()=>{
-		root = root||document;
-		root.querySelectorAll('.g-recaptcha').forEach((el)=>{
-			let id = el.dataset.grecaptchaId;
-			if(id !== undefined){
-				grecaptcha.reset(id)
-				return
-			}
-
-			id = grecaptcha.render(el, {
-				'sitekey' : el.dataset.sitekey || document.body.dataset.recaptchaKey,
-				callback(data){
-					trigger("g-recaptcha", {code:"success", data}, {bubbles:true}, el)
-				},
-				'expired-callback':()=>{
-					trigger("g-recaptcha", {code:"expired"}, {bubbles:true}, el)
-				},
-				'error-callback':()=>{
-					trigger("g-recaptcha", {code:"error"}, {bubbles:true}, el)
-				}
-			});
-			el.dataset.grecaptchaId = id;
-		});
-	})
-}
-
-export const chunks = (arr, size) =>{
-	return arr.length ? [arr.slice(0, size), ...chunks(arr.slice(size), size)] : []
-}
-export const getRandomInt = (min, max)=>{
-	min = Math.ceil(min);
-	max = Math.floor(max);
-	return Math.floor(Math.random() * (max + 1 - min) + min); //The maximum and minimum are inclusive
-}
-
-export const abbreviateNumber = (num, fixed)=>{
-	if (num === null) { return null; } // terminate early
-	if (num === 0 || !num) { return '0'; } // terminate early
-	fixed = (!fixed || fixed < 0) ? 2 : fixed; // number of decimal places to show
-	var b = (num).toPrecision(2).split("e"), // get power
-		k = b.length === 1 ? 0 : Math.floor(Math.min(b[1].slice(1), 14) / 3), // floor at decimals, ceiling at trillions
-		c = k < 1 ? num.toFixed(0 + fixed) : (num / Math.pow(10, k * 3) ).toFixed(1 + fixed), // divide by power
-		d = c < 0 ? c : Math.abs(c), // enforce -0 is 0
-		e = d + ['', 'K', 'M', 'B', 'T'][k]; // append power
-	return e;
-}
-
-export const shuffle = (array)=>{
-	let currentIndex = array.length, temporaryValue, randomIndex;
-
-	// While there remain elements to shuffle...
-	while (0 !== currentIndex) {
-		// Pick a remaining element...
-		randomIndex = Math.floor(Math.random() * currentIndex);
-		currentIndex -= 1;
-
-		// And swap it with the current element.
-		temporaryValue = array[currentIndex];
-		array[currentIndex] = array[randomIndex];
-		array[randomIndex] = temporaryValue;
-	}
-
-	return array;
-}
-
-const fit = (contains)=>{
-	return (parentWidth, parentHeight, childWidth, childHeight, scale = 1, offsetX = 0.5, offsetY = 0.5) => {
-		const childRatio = childWidth / childHeight
-		const parentRatio = parentWidth / parentHeight
-		let width = parentWidth * scale
-		let height = parentHeight * scale
-
-		if (contains ? (childRatio > parentRatio) : (childRatio < parentRatio)) {
-			height = width / childRatio
-		} else {
-			width = height * childRatio
-		}
-
+export {flowAnchors}
+export class FlowAnchor extends BaseElement {
+	static get properties() {
 		return {
-			width,
-			height,
-			offsetX: (parentWidth - width) * offsetX,
-			offsetY: (parentHeight - height) * offsetY
+			for : { type : String },
+			type : { type : String }
 		}
+	}
+
+	static get styles() {
+		return css`
+			:host {
+				display : block;
+			}
+		`;
+	}
+
+	constructor() {
+		super();
+		flowAnchors.push(this);
+	}
+
+	render() {
+		return html`<slot></slot>`;
 	}
 }
 
-export const contain = fit(true)
-export const cover = fit(false)
-
+FlowAnchor.define('flow-anchor');
 "###;
 
 const ASPECTRON_FLOW_UX_SRC_FLOW_ASYNC_396 : &'static str = r###"
@@ -909,1447 +1311,6 @@ export class AsyncQueueSubscriberMap {
 	}
 	*/
 }
-
-"###;
-
-const LIT_HTML_DIRECTIVE_611 : &'static str = r###"
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-const t={ATTRIBUTE:1,CHILD:2,PROPERTY:3,BOOLEAN_ATTRIBUTE:4,EVENT:5,ELEMENT:6},e=t=>(...e)=>({_$litDirective$:t,values:e});class i{constructor(t){}get _$AU(){return this._$AM._$AU}_$AT(t,e,i){this._$Ct=t,this._$AM=e,this._$Ci=i}_$AS(t,e){return this.update(t,e)}update(t,e){return this.render(...e)}}export{i as Directive,t as PartType,e as directive};
-//# sourceMappingURL=directive.js.map
-
-"###;
-
-const LIT_HTML_DIRECTIVE_HELPERS_546 : &'static str = r###"
-
-/**
- * @license
- * Copyright 2020 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */const{I:l}=o,t=o=>null===o||"object"!=typeof o&&"function"!=typeof o,i={HTML:1,SVG:2},n=(o,l)=>void 0===l?void 0!==(null==o?void 0:o._$litType$):(null==o?void 0:o._$litType$)===l,d=o=>void 0!==(null==o?void 0:o._$litDirective$),v=o=>null==o?void 0:o._$litDirective$,e=o=>void 0===o.strings,c=()=>document.createComment(""),r=(o,t,i)=>{var n;const d=o._$AA.parentNode,v=void 0===t?o._$AB:t._$AA;if(void 0===i){const t=d.insertBefore(c(),v),n=d.insertBefore(c(),v);i=new l(t,n,o,o.options)}else{const l=i._$AB.nextSibling,t=i._$AM,e=t!==o;if(e){let l;null===(n=i._$AQ)||void 0===n||n.call(i,o),i._$AM=o,void 0!==i._$AP&&(l=o._$AU)!==t._$AU&&i._$AP(l)}if(l!==v||e){let o=i._$AA;for(;o!==l;){const l=o.nextSibling;d.insertBefore(o,v),o=l}}}return i},u=(o,l,t=o)=>(o._$AI(l,t),o),f={},s=(o,l=f)=>o._$AH=l,m=o=>o._$AH,p=o=>{var l;null===(l=o._$AP)||void 0===l||l.call(o,!1,!0);let t=o._$AA;const i=o._$AB.nextSibling;for(;t!==i;){const o=t.nextSibling;t.remove(),t=o}},a=o=>{o._$AR()};export{i as TemplateResultType,a as clearPart,m as getCommittedValue,v as getDirectiveClass,r as insertPart,d as isDirectiveResult,t as isPrimitive,e as isSingleExpression,n as isTemplateResult,p as removePart,u as setChildPartValue,s as setCommittedValue};
-//# sourceMappingURL=directive-helpers.js.map
-
-"###;
-
-const LIT_HTML_ASYNC_DIRECTIVE_550 : &'static str = r###"
-
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */const s=(i,t)=>{var e,o;const r=i._$AN;if(void 0===r)return!1;for(const i of r)null===(o=(e=i)._$AO)||void 0===o||o.call(e,t,!1),s(i,t);return!0},o=i=>{let t,e;do{if(void 0===(t=i._$AM))break;e=t._$AN,e.delete(i),i=t}while(0===(null==e?void 0:e.size))},r=i=>{for(let t;t=i._$AM;i=t){let e=t._$AN;if(void 0===e)t._$AN=e=new Set;else if(e.has(i))break;e.add(i),l(t)}};function n(i){void 0!==this._$AN?(o(this),this._$AM=i,r(this)):this._$AM=i}function h(i,t=!1,e=0){const r=this._$AH,n=this._$AN;if(void 0!==n&&0!==n.size)if(t)if(Array.isArray(r))for(let i=e;i<r.length;i++)s(r[i],!1),o(r[i]);else null!=r&&(s(r,!1),o(r));else s(this,i)}const l=i=>{var t,s,o,r;i.type==e.CHILD&&(null!==(t=(o=i)._$AP)&&void 0!==t||(o._$AP=h),null!==(s=(r=i)._$AQ)&&void 0!==s||(r._$AQ=n))};class c extends t{constructor(){super(...arguments),this._$AN=void 0}_$AT(i,t,e){super._$AT(i,t,e),r(this),this.isConnected=i._$AU}_$AO(i,t=!0){var e,r;i!==this.isConnected&&(this.isConnected=i,i?null===(e=this.reconnected)||void 0===e||e.call(this):null===(r=this.disconnected)||void 0===r||r.call(this)),t&&(s(this,i),o(this))}setValue(t){if(i(this._$Ct))this._$Ct._$AI(t,this);else{const i=[...this._$Ct._$AH];i[this._$Ci]=t,this._$Ct._$AI(i,this,0)}}disconnected(){}reconnected(){}}export{c as AsyncDirective};
-//# sourceMappingURL=async-directive.js.map
-
-"###;
-
-const LIT_REACTIVE_ELEMENT_DECORATORS_BASE_38 : &'static str = r###"
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-const e=(e,t,o)=>{Object.defineProperty(t,o,e)},t=(e,t)=>({kind:"method",placement:"prototype",key:t.key,descriptor:e}),o=({finisher:e,descriptor:t})=>(o,n)=>{var r;if(void 0===n){const n=null!==(r=o.originalKey)&&void 0!==r?r:o.key,i=null!=t?{kind:"method",placement:"prototype",key:n,descriptor:t(o.key)}:{...o,key:n};return null!=e&&(i.finisher=function(t){e(t,n)}),i}{const r=o.constructor;void 0!==t&&Object.defineProperty(o,n,t(n)),null==e||e(r,n)}};export{o as decorateProperty,e as legacyPrototypeMethod,t as standardPrototypeMethod};
-//# sourceMappingURL=base.js.map
-
-"###;
-
-const LIT_REACTIVE_ELEMENT_DECORATORS_CUSTOM_ELEMENT_40 : &'static str = r###"
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-const e=e=>n=>"function"==typeof n?((e,n)=>(customElements.define(e,n),n))(e,n):((e,n)=>{const{kind:t,elements:s}=n;return{kind:t,elements:s,finisher(n){customElements.define(e,n)}}})(e,n);export{e as customElement};
-//# sourceMappingURL=custom-element.js.map
-
-"###;
-
-const LIT_REACTIVE_ELEMENT_DECORATORS_PROPERTY_33 : &'static str = r###"
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-const i=(i,e)=>"method"===e.kind&&e.descriptor&&!("value"in e.descriptor)?{...e,finisher(n){n.createProperty(e.key,i)}}:{kind:"field",key:Symbol(),placement:"own",descriptor:{},originalKey:e.key,initializer(){"function"==typeof e.initializer&&(this[e.key]=e.initializer.call(this))},finisher(n){n.createProperty(e.key,i)}};function e(e){return(n,t)=>void 0!==t?((i,e,n)=>{e.constructor.createProperty(n,i)})(e,n,t):i(e,n)}export{e as property};
-//# sourceMappingURL=property.js.map
-
-"###;
-
-const LIT_REACTIVE_ELEMENT_DECORATORS_STATE_37 : &'static str = r###"
-
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */function t(t){return r({...t,state:!0})}export{t as state};
-//# sourceMappingURL=state.js.map
-
-"###;
-
-const LIT_REACTIVE_ELEMENT_DECORATORS_EVENT_OPTIONS_32 : &'static str = r###"
-
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */function e(e){return r({finisher:(r,t)=>{Object.assign(r.prototype[t],e)}})}export{e as eventOptions};
-//# sourceMappingURL=event-options.js.map
-
-"###;
-
-const LIT_REACTIVE_ELEMENT_DECORATORS_QUERY_34 : &'static str = r###"
-
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */function i(i,n){return o({descriptor:o=>{const t={get(){var o,n;return null!==(n=null===(o=this.renderRoot)||void 0===o?void 0:o.querySelector(i))&&void 0!==n?n:null},enumerable:!0,configurable:!0};if(n){const n="symbol"==typeof o?Symbol():"__"+o;t.get=function(){var o,t;return void 0===this[n]&&(this[n]=null!==(t=null===(o=this.renderRoot)||void 0===o?void 0:o.querySelector(i))&&void 0!==t?t:null),this[n]}}return t}})}export{i as query};
-//# sourceMappingURL=query.js.map
-
-"###;
-
-const LIT_REACTIVE_ELEMENT_DECORATORS_QUERY_ALL_36 : &'static str = r###"
-
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */function e(e){return r({descriptor:r=>({get(){var r,o;return null!==(o=null===(r=this.renderRoot)||void 0===r?void 0:r.querySelectorAll(e))&&void 0!==o?o:[]},enumerable:!0,configurable:!0})})}export{e as queryAll};
-//# sourceMappingURL=query-all.js.map
-
-"###;
-
-const LIT_REACTIVE_ELEMENT_DECORATORS_QUERY_ASYNC_35 : &'static str = r###"
-
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-function e(e){return r({descriptor:r=>({async get(){var r;return await this.updateComplete,null===(r=this.renderRoot)||void 0===r?void 0:r.querySelector(e)},enumerable:!0,configurable:!0})})}export{e as queryAsync};
-//# sourceMappingURL=query-async.js.map
-
-"###;
-
-const LIT_REACTIVE_ELEMENT_DECORATORS_QUERY_ASSIGNED_ELEMENTS_39 : &'static str = r###"
-
-/**
- * @license
- * Copyright 2021 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */var n;const e=null!=(null===(n=window.HTMLSlotElement)||void 0===n?void 0:n.prototype.assignedElements)?(o,n)=>o.assignedElements(n):(o,n)=>o.assignedNodes(n).filter((o=>o.nodeType===Node.ELEMENT_NODE));function l(n){const{slot:l,selector:t}=null!=n?n:{};return o({descriptor:o=>({get(){var o;const r="slot"+(l?`[name=${l}]`:":not([name])"),i=null===(o=this.renderRoot)||void 0===o?void 0:o.querySelector(r),s=null!=i?e(i,n):[];return t?s.filter((o=>o.matches(t))):s},enumerable:!0,configurable:!0})})}export{l as queryAssignedElements};
-//# sourceMappingURL=query-assigned-elements.js.map
-
-"###;
-
-const LIT_REACTIVE_ELEMENT_DECORATORS_QUERY_ASSIGNED_NODES_41 : &'static str = r###"
-
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */function o(o,n,r){let l,s=o;return"object"==typeof o?(s=o.slot,l=o):l={flatten:n},r?t({slot:s,flatten:n,selector:r}):e({descriptor:e=>({get(){var e,t;const o="slot"+(s?`[name=${s}]`:":not([name])"),n=null===(e=this.renderRoot)||void 0===e?void 0:e.querySelector(o);return null!==(t=null==n?void 0:n.assignedNodes(l))&&void 0!==t?t:[]},enumerable:!0,configurable:!0})})}export{o as queryAssignedNodes};
-//# sourceMappingURL=query-assigned-nodes.js.map
-
-"###;
-
-const LIT_ELEMENT_INDEX_674 : &'static str = r###"
-
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */console.warn("The main 'lit-element' module entrypoint is deprecated. Please update your imports to use the 'lit' package: 'lit' and 'lit/decorators.ts' or import from 'lit-element/lit-element.ts'. See https://lit.dev/msg/deprecated-import-path for more information.");
-//# sourceMappingURL=index.js.map
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_HTML_389 : &'static str = r###"
-
-
-export const flowHtml = (strings, tags, ...values)=>{
-	strings = strings.slice(1).map(str=>{
-		tags.forEach((value, key)=>{
-			str = str.replace(new RegExp(`\{${key}\}`, 'g'), value);
-		});
-		return str;
-	})
-	//console.log("flowHtml:strings", strings)
-	//console.log("flowHtml:values", values)
-	return html(strings, ...values);
-}
-
-"###;
-
-const LIT_HTML_DIRECTIVES_REPEAT_505 : &'static str = r###"
-
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-const u=(e,s,t)=>{const r=new Map;for(let l=s;l<=t;l++)r.set(e[l],l);return r},c=s(class extends t{constructor(e){if(super(e),e.type!==r.CHILD)throw Error("repeat() can only be used in text expressions")}ht(e,s,t){let r;void 0===t?t=s:void 0!==s&&(r=s);const l=[],o=[];let i=0;for(const s of e)l[i]=r?r(s,i):i,o[i]=t(s,i),i++;return{values:o,keys:l}}render(e,s,t){return this.ht(e,s,t).values}update(s,[t,r,c]){var d;const a=l(s),{values:p,keys:v}=this.ht(t,r,c);if(!Array.isArray(a))return this.ut=v,p;const h=null!==(d=this.ut)&&void 0!==d?d:this.ut=[],m=[];let y,x,j=0,k=a.length-1,w=0,A=p.length-1;for(;j<=k&&w<=A;)if(null===a[j])j++;else if(null===a[k])k--;else if(h[j]===v[w])m[w]=o(a[j],p[w]),j++,w++;else if(h[k]===v[A])m[A]=o(a[k],p[A]),k--,A--;else if(h[j]===v[A])m[A]=o(a[j],p[A]),i(s,m[A+1],a[j]),j++,A--;else if(h[k]===v[w])m[w]=o(a[k],p[w]),i(s,a[j],a[k]),k--,w++;else if(void 0===y&&(y=u(v,w,A),x=u(h,j,k)),y.has(h[j]))if(y.has(h[k])){const e=x.get(v[w]),t=void 0!==e?a[e]:null;if(null===t){const e=i(s,a[j]);o(e,p[w]),m[w]=e}else m[w]=o(t,p[w]),i(s,a[j],t),a[e]=null;w++}else n(a[k]),k--;else n(a[j]),j++;for(;w<=A;){const e=i(s,m[A+1]);o(e,p[w]),m[w++]=e}for(;j<=k;){const e=a[j++];null!==e&&n(e)}return this.ut=v,f(s,m),e}});export{c as repeat};
-//# sourceMappingURL=repeat.js.map
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_PAGINATION_398 : &'static str = r###"
-
-
-
-
-export const paginationStyle = css`
-	.pagination-box{text-align:center;padding:10px 5px;}
-	.pagination{display: inline-block;}
-    .pagination-box[disabled]{display:none}
-	.pagination a{
-		color: var(--k-pagination-color);
-		float: left;
-		padding: 8px 16px;
-		text-decoration: none;
-		transition: background-color .3s;
-		border: 1px solid #555;
-		border-color:var(--k-pagination-border-color, var(--k-btn-border-color, #555));
-		margin:var(--flow-pagination-margin, 2px 4px);
-        cursor:pointer;
-        user-select:none;
-	}
-	@media (max-width:768px){
-		.pagination a{
-			padding:8px 6px;
-			margin: 0px 2px;
-			font-size:0.8rem;
-		}
-	}
-	.pagination a.disabled{
-		opacity:0.5;
-	}
-	.pagination a.hidden{display:none}
-	.pagination a.active{
-		background:var(--k-pagination-active-bg, #2489da);
-		color:var(--k-pagination-active-color, #FFF);
-		border:1px solid #2489da;
-		border-color:var(--k-pagination-active-border-color, #2489da);
-	}
-	.pagination a.active,
-	.pagination a.disabled{
-		cursor:default;
-	}
-	.pagination a:hover:not(.active):not(.disabled){
-        border-color:var(--k-pagination-hover-border-color, var(--k-btn-hover-border-color, #777 ));
-		background-color:var(--k-pagination-hover-bg-color, var(--k-btn-hover-bg-color, rgba(255,255,255, 0.2) ));
-		color:var(--k-pagination-hover-color, var(--k-btn-hover-color, inherit));
-	}
-`;
-
-
-export const buildPagination = (total, skip=0, limit=25)=>{
-    skip = +skip;
-    limit = +limit;
-    total = +total;
-
-    let totalPages = Math.ceil(total/limit);
-    let activePage = Math.min(Math.ceil((skip+1)/limit), totalPages);
-    let maxPages = Math.min(isSmallScreen?3:10, totalPages);
-    let half = Math.floor(maxPages/2);
-    let prev = Math.max(activePage-1, 1);
-    let next = Math.min(activePage+1, totalPages)
-    let p = 1;
-    if(activePage-half > 1)
-        p = activePage-maxPages+Math.min(totalPages-activePage, half)+1;
-
-    let pages = [];
-    for(let i=0; i<maxPages; i++){
-        pages.push({
-            p,
-            skip:(p-1)*limit,
-            active:activePage==p,
-        })
-        p++;
-    }
-    return {
-        totalPages,
-        activePage,
-        isLast:activePage==totalPages,
-        isFirst:activePage==1,
-        prev,
-        next,
-        last:totalPages,
-        lastSkip:(totalPages-1)*limit,
-        prevSkip:(prev-1) * limit,
-        nextSkip:(next-1) * limit,
-        total,
-        skip,
-        limit,
-        pages,
-        maxPages,
-        half
-    }
-}
-
-export const renderPagination = (pagination, clickHandler, options={})=>{
-    if(!pagination)
-        pagination = {pages:[], isFirst:true, isLast:true, totalPages:0, type:''};
-    let {pages, isFirst, isLast, prevSkip, nextSkip, totalPages, lastSkip, type} = pagination;
-
-    let hideNextPrev = pages.length ==0?' hidden':'';
-    let FIRST = options.first||'FIRST';
-    let LAST = options.last||'LAST';
-    let PREV = options.prev||'<';
-    let NEXT = options.next||'>';
-    clickHandler = clickHandler || (e=>{});
-    return html`
-    <div class="pagination-box" ?disabled="${!pages.length}" @click=${clickHandler}>
-        <div class="pagination" data-pagination="${type}">
-            <a class="first ${(isFirst?'disabled':'')+hideNextPrev}" data-skip="0">${FIRST}</a>
-            <a class="prev ${(isFirst?'disabled':'')+hideNextPrev}" data-skip="${prevSkip}">${PREV}</a>
-            ${repeat(pages, p=>p.p, p=>html`
-                <a class="${p.active?'active':''}" data-skip="${p.skip}">${p.p}</a>
-            `)}
-            <a class="next ${(isLast?'disabled':'')+hideNextPrev}"  data-skip="${nextSkip}">${NEXT}</a>
-            <a class="first ${(isLast?'disabled':'')+hideNextPrev}" data-skip="${lastSkip}">${LAST}</a>
-        </div>
-    </div>`;
-}
-
-export const loadingMaskStyle = css`
-    .mask{
-        position:absolute;
-        left:0px;
-        top:0px;
-        right:0px;
-        bottom:0px;
-        width:100%;
-        height:100%;
-        opacity:1;
-        z-index:1000;
-        background-color:rgba(0, 0, 0, 0.7);
-        background-color:var(--flow-loading-mask-bg-color, rgba(0, 0, 0, 0.7));
-        animation: fade-out 1s ease forwards;
-    }
-    .mask .loading-logo{
-        width: 100px;
-        height: 100px;
-        position: relative;
-        left: 50%;
-        top: 50%;
-        margin: -50px 0 0 -50px;
-    }
-
-    :host(.loading) .mask,
-    .loading .mask{
-        animation-name: fade-in;
-    }
-    :host(:not(.loading)) .mask .loading-logo .animate{
-        fill:#009688;
-    }
-    @keyframes fade-in{
-        0% {z-index:-1; opacity:0}
-        1% {z-index:1000; opacity:0}
-        100% {z-index:1000; opacity:1}
-    }
-    @keyframes fade-out{
-        0% {z-index:1000; opacity:1}
-        99% {z-index:1000; opacity:0}
-        100% {z-index:-1; opacity:0}
-    }
-`;
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_BASE_ELEMENT_410 : &'static str = r###"
-/*
-* Flow-UX: src/base-element.js
-* version: 1.0.0
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/**
-* @class BaseElement
-* @extends LitElement
-*/
-export class BaseElement extends LitElement{
-
-	static get baseUrl(){
-		return baseUrl;
-	}
-
-	static hashCode(str){//java String#hashCode
-	    var hash = 0;
-	    for (var i = 0; i < str.length; i++) {
-	       hash = str.charCodeAt(i) + ((hash << 5) - hash);
-	    }
-	    return hash;
-	} 
-
-	static intToRGB(i){
-	    var c = (i & 0x00FFFFFF)
-	        .toString(16)
-	        .toUpperCase();
-
-	    return "00000".substring(0, 6 - c.length) + c;
-	}
-
-	/**
-	* convert any string to color hex code
-	* @param {String} str any string i.e 'hello'
-	* @return {String} color hex code i.e `#DDFFAA`
-	*/
-	static strToColor(str){
-		return '#'+this.intToRGB(this.hashCode(str));
-	}
-
-	/**
-	* @desc define customElements. you can call on drived/child class as <code class="prettyprint js">CoolElement.define('my-cool-element')</code>
-	* @param {String} name name of tag i.e. 'my-cool-element'
-	* @since 0.0.1
-	*/
-	static define(name, deps){
-		if(deps) {
-			DeferComponent(this,name,deps);
-		}
-		else
-			this.defineElement(name);
-	}
-
-	static defineElement(name){
-		customElements.define(name, this);
-	}
-
-	static get svgStyle(){
-		return css`
-			svg.icon{
-				width:28px;
-				height:28px;
-				margin:0px 5px;
-				fill:var(--flow-primary-color);
-			}
-		`
-	}
-
-	static createElement(name, attr={}, props={}){
-		let el = document.createElement(name);
-		Object.keys(attr).forEach(k=>{
-			el.setAttribute(k, attr[k])
-		})
-		Object.keys(props).forEach(k=>{
-			el[k] = props[k];
-		})
-
-		return el;
-	}
-
-	static setLocalSetting(name, value, prefix='flow-'){
-		if(!window.localStorage)
-			return
-
-		window.localStorage[prefix+name] = value;
-	}
-
-	static getLocalSetting(name, defaults, prefix='flow-'){
-		if(!window.localStorage)
-			return defaults;
-
-		let value = window.localStorage[prefix+name];
-		if(typeof(value) == 'undefined')
-			return defaults
-
-		return value;
-	}
-
-	/**
-	* fire CustomEvent
-	* @param {String} eventName name of event
-	* @param {Object=} detail event's [detail]{@link https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/detail} property
-	* @param {Object=} options [CustomEventInit dictionary]{@link https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/CustomEvent}
-	* @param {HTMLElement=} event target (default: window)
-	* @return {boolean} The return value is false if event is cancelable and at least one of the event handlers which handled this event called Event.preventDefault(). Otherwise it returns true.
-	* @since 0.0.1
-	*/
-	static fire(eventName, detail={}, options={}, el=null, returnEvent=false){
-		let ev = new CustomEvent(eventName, Object.assign({}, options, {detail}));
-		let result = (el || window).dispatchEvent(ev);
-		return returnEvent?ev:result
-	}
-
-	static get sizeClsMap(){
-		return sizeClsMap
-	}
-	static setElementSizeClass(cmp, width){
-
-		width = width || cmp.getBoundingClientRect().width;
-		let found = [...this.sizeClsMap.entries()].find(([key, size])=>{
-			//console.log("foundfoundfound:key,size", key, size)
-			return width<=size
-		}) || ["LG"];
-
-		//console.log("foundfoundfound", width, found)
-		let cls = [...this.sizeClsMap.keys(), "LG"];
-		let [clsToAdd] = found;
-		cls.splice(cls.indexOf(clsToAdd), 1);
-		cmp.classList.remove(...cls);
-		
-		//temporarily remove XSS size for accounts panel
-		// if(clsToAdd == "XXS")
-		// 	clsToAdd = "TINY";
-		//console.log("foundfoundfound:adding cls", cls, clsToAdd, cmp)
-		cmp.classList.add(clsToAdd);
-		cmp.sizeCls = clsToAdd;
-
-	}
-
-	constructor(){
-		super();
-		const name = this.constructor.name;
-		this.__cname = name.toLowerCase().replace("flow", "");
-		this._initLog();
-	}
-
-	initPropertiesDefaultValues(props=null){
-		this.constructor.elementProperties.forEach((v, key)=>{
-			//console.log("key, v", key, v)
-			let type = typeof v.value;
-			if(!['undefined', 'function'].includes(type))
-				this[key] = v.value;
-		})
-		if(props){
-			Object.keys(props).forEach(name=>{
-				if(typeof props[name].value != 'undefined')
-					this[name] = props[name].value
-			})
-		}
-	}
-
-	_initLog(forceLog = false, name){
-		let {localStorage:lS} = window;
-		let {debug} = lS||{};
-		name = name || this.constructor.name;
-		if(forceLog||debug=="all"||debug=="*"||
-			(debug+"").indexOf(this.__cname)>-1 ||
-			(debug+"").indexOf(name) >-1){
-			this.log = Function.prototype.bind.call(
-				console.log,
-				console,
-				`%c[${name}]`,
-				`font-weight:bold;color:${this.constructor.strToColor(name)}`
-			);
-		}else{
-			this.log = ()=>{
-				//
-			}
-		}
-	}
-
-	cloneValue(value){
-		if( value instanceof Array )
-			return value.map(v=>this.cloneValue(v))
-		else if( value instanceof Object ){
-			let r = {}
-			Object.entries(value).forEach( ([k,v])=>{
-				r[k] = this.cloneValue(v);
-			})
-			return r;
-		}
-
-		return value;	
-	}
-
-	/**
-	* update the property by its path
-	* @param {String} path propery path i.e `tabs.2.disable`
-	* @param {*} value new value
-	*
-	*/
-	set(path, value){
-		const parts = path.split(".");
-		let v = this;
-		let last = parts.length-1;
-		let updated = false;
-		let lastValue = this.cloneValue(v[parts[0]]);
-		
-		parts.find((p, i)=>{
-			if( !(v instanceof Object) )
-				return
-			if(i==last){
-				v[p] = value;
-				//this.log("v, p, i, v", {v, p, i, value})
-				updated = true;
-				return true;
-			}
-			v = v[p];
-		})
-		if(updated){
-			this.requestUpdate(parts[0], lastValue)
-			//this.log("requestUpdate, prop, lastValue", parts[0], lastValue)
-		}
-		return updated;
-	}
- 
-	/**
-	* fire CustomEvent
-	* @param {String} eventName name of event
-	* @param {Object=} detail event's [detail]{@link https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/detail} property
-	* @param {Object=} options [CustomEventInit dictionary]{@link https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/CustomEvent}
-	* @param {HTMLElement=} event target (default: this element)
-	* @return {boolean} The return value is false if event is cancelable and at least one of the event handlers which handled this event called Event.preventDefault(). Otherwise it returns true.
-	* @since 0.0.1
-	*/
-	fire(eventName, detail={}, options={}, el=null, returnEvent=false){
-		let ev = new CustomEvent(eventName, Object.assign({}, options, {detail}));
-		let result = (el || this).dispatchEvent(ev);
-		return returnEvent?ev:result
-
-	}
-
-	/**
-	* debounce provided function for given time
-	* @param {String} name key name to debounce function
-	* @param {Function} fn a function to debounce
-	* @param {Number} time time in milliseconds for delay
-	* @return {Object} a reference to debounced function
-	* @since 0.0.1
-	*/
-	debounce(name, fn, time){
-		this._debounce = this._debounce || new Map();
-		if(this._debounce.has(name))
-			this._debounce.get(name).cancel();
-
-		this._debounce.set(name, {
-			id:setTimeout(fn, time),
-			cancel(){
-				if(!this.id){
-					clearTimeout(this.id)
-					this.id = null;
-				}
-
-			}
-		})
-
-		return this._debounce.get(name);
-	}
-
-	buildUrl(url){
-		return this.constructor.baseUrl + url;
-	}
-	iconPath(name, i){
-		return resolveIcon(this.__cname, name, i);
-	}
-
-	/**
-	* Logs given values
-	* @param {...*} args
-	*/
-	log(...args){
-	}
-
-
-	renderOnStateChange(state, ON=true){
-		if(!this._renderOnStateChange)
-			this._renderOnStateChange = {};
-		this._renderOnStateChange[state] = ON;
-	}
-
-	connectedCallback() {
-		super.connectedCallback();
-
-		let stateChange = this._renderOnStateChange || {};
-		let ONLINE = stateChange[FlowStates.ONLINE];
-		let AUTH = stateChange[FlowStates.AUTH];
-		let GET_NETWORK_AND_USER_STATE = false;
-		if(this.onlineCallback || ONLINE) {
-			this.onlineCallback_ = (...args)=>{
-				this.__online = true;
-				this.onlineCallback?.(...args);
-				if(ONLINE)
-					this.requestUpdate("FLOW-NETWORK-ONLINE", false)
-			}
-			window.addEventListener('network-iface-online', this.onlineCallback_);
-			GET_NETWORK_AND_USER_STATE = true;
-		}
-
-		if(this.offlineCallback || ONLINE) {
-			this.offlineCallback_ = (...args)=>{
-				this.__online = false;
-				this.offlineCallback?.(...args);
-				if(ONLINE)
-					this.requestUpdate("FLOW-NETWORK-ONLINE", true)
-			}
-			window.addEventListener('network-iface-offline', this.offlineCallback_);
-			GET_NETWORK_AND_USER_STATE = true;
-		}
-
-		if(this.signinCallback || AUTH) {
-			this.signinCallback_ = (...args)=>{
-				this.__signedin = true;
-				this.signinCallback?.(...args);
-				if(AUTH)
-					this.requestUpdate("FLOW-USER-AUTH", false)
-			}
-			window.addEventListener('flow-user-signin', this.signinCallback_);
-			GET_NETWORK_AND_USER_STATE = true;
-		}
-
-		if(this.signoutCallback || AUTH) {
-			this.signoutCallback_ = (...args)=>{
-				this.__signedin = false;
-				this.signoutCallback?.(...args);
-				if(AUTH)
-					this.requestUpdate("FLOW-USER-AUTH", true)
-			}
-			window.addEventListener('flow-user-signout', this.signoutCallback_);
-			GET_NETWORK_AND_USER_STATE = true;
-		}
-
-		if(GET_NETWORK_AND_USER_STATE){
-			let ce = this.fire("flow-network-and-user-state-get", {}, {}, window, true);
-			//console.log("signedin, online", ce.detail, this)
-			let {signedin, online} = ce.detail || {};
-
-			if(typeof online != 'undefined'){
-				if(online){
-					this.onlineCallback_?.()
-				}else{
-					this.offlineCallback_?.()
-				}
-			}
-			if(typeof signedin != 'undefined'){
-				if(signedin){
-					this.signinCallback_?.()
-				}else{
-					this.signoutCallback_?.()
-				}
-			}
-		}
-
-		if(this.onReCaptchaReady){
-			this._onReCaptchaReady = this.onReCaptchaReady.bind(this);
-			window.addEventListener("g-recaptcha-ready", this._onReCaptchaReady)
-		}
-
-		if(this.registeredListeners) {
-			this.registeredListeners.forEach(({ name, handler }) => {
-				window.addEventListener(name, handler);
-			})
-		}
-
-		if(this.socketSubscriptions) {
-			this.socketSubscriptions.forEach((subscription) => {
-				subscription.resubscribe();
-			})
-		}
-
-	}
-
-	onlineCallback() {
-		super.onlineCallback?.();
-		if(this.pendingSocketSubscriptions) {
-			this.pendingSocketSubscriptions.forEach((subscription) => {
-				const { subject } = subscription;
-				this.subscribe(subject, subscription);
-				//subscription.resubscribe();
-			})
-		}
-
-	}
-
-	disconnectedCallback() {
-		super.disconnectedCallback();
-		
-		if(this.onlineCallback_) {
-			window.removeEventListener('network-iface-online', this.onlineCallback_);
-			delete this.onlineCallback_;
-		}
-		if(this.offlineCallback_) {
-			window.removeEventListener('network-iface-offline', this.offlineCallback_);
-			delete this.offlineCallback_;
-		}
-		if(this.signinCallback_) {
-			window.removeEventListener('flow-user-signin', this.signinCallback_);
-			delete this.signinCallback_;
-		}
-		if(this.signoutCallback) {
-			window.removeEventListener('flow-user-signout', this.signoutCallback);
-			delete this.signoutCallback;
-		}
-		if(this._onReCaptchaReady){
-			window.removeEventListener("g-recaptcha-ready", this._onReCaptchaReady)
-		}
-
-		if(this.registeredListeners) {
-			this.registeredListeners.forEach(({ name, handler }) => {
-				window.removeEventListener(name, handler);
-			})
-		}
-
-		if(this.socketSubscriptions) {
-			this.socketSubscriptions.forEach((subscription)=>{
-				subscription.unsubscribe();
-			})
-		}
-	}
-
-	registerListener(name_, handler_) {
-		const {name, handler} = this.addToListenersStack(name_, handler_);
-		window.addEventListener(name, handler);
-		//console.log("window.addEventListener",name,handler);
-	}
-	addToListenersStack(name, handler_, stack){
-		if(!this.registeredListeners)
-			this.registeredListeners = [];
-		const handler = handler_ || (() => { this.requestUpdate(); });//.bind(this);
-		(stack||this.registeredListeners).push({name,handler});
-		return {name,handler};
-		
-	}
-
-	removeListeners() {
-		if(this.registeredListeners) {
-			this.registeredListeners.forEach(({ name, handler }) => {
-				window.removeEventListener(name, handler);
-			})
-		}
-		this.registeredListeners = [];
-	}
-
-	bindDDTriggers(skipEventBind=false){
-		
-		let triggers = this.renderRoot.querySelectorAll("[data-trigger-for]");
-		//console.log("bindDDTriggers", this, triggers)
-		triggers.forEach(node=>{
-			let id = node.getAttribute("data-trigger-for");
-			//console.log("idididid", id)
-			if(!id)
-				return
-			let selector = id;
-			if(id[0]!="#")
-				selector = "#"+selector;
-			let key = node.dataset.ddKey
-			if(!key){
-				key = id.replace("#", "");
-				if(!/DD$/.test(key))
-					key = key+"DD";
-			}
-			let dd = this[key]||this.renderRoot.querySelector(selector);
-			//console.log("idididid", {id, key, selector, dd})
-			if(!dd)
-				node.flowDropdown = null;
-			this[key] = dd;
-			node.flowDropdown = dd;
-			if(skipEventBind)
-				return
-			if(!node["event-bind-"+id]){
-				node["event-bind-"+id] = true;
-				node.addEventListener("click", ()=>{
-					if(!this[key])
-						return
-					this[key].toggle();
-				})
-			}
-		})
-	}
-
-	isOnline(){
-		return this.__online;
-	}
-	isSignedin(){
-		return this.__signedin;
-	}
-	serialize(){
-		return {
-			nodeName: this.nodeName
-		}
-	}
-	deserialize(){
-		//
-	}
-	subscribe(subject, subscriber){
-		if(!flow.app.defaultRPC) {
-			subscriber = new AsyncQueueSubscriber(null,subject);
-			if(!this.pendingSocketSubscriptions)
-				this.pendingSocketSubscriptions = [];
-			this.pendingSocketSubscriptions.push(subscriber);
-			return subscriber;
-		} else {
-			subscriber = flow.app.defaultRPC.subscribe(subject, subscriber);
-			if(!this.socketSubscriptions)
-				this.socketSubscriptions = new Map();
-			this.socketSubscriptions.set(subscriber.uid, subscriber);
-			return subscriber;
-		}
-	}
-	request(subject, data, callback){
-		return flow.app.defaultRPC.request(subject, data, callback);
-	}
-}
-
-export const ScrollbarStyle = css`
-*::-webkit-scrollbar-track,
-:host::-webkit-scrollbar-track{
-    box-shadow:var(--flow-scrollbar-track-box-shadow, initial);
-    background:var(--flow-scrollbar-track-bg, initial);
-}
-
-*::-webkit-scrollbar,
-:host::-webkit-scrollbar{
-	width:var(--flow-scrollbar-width, initial);
-	height:var(--flow-scrollbar-width, initial);
-	background:var(--flow-scrollbar-bg, initial);
-}
-*::-webkit-scrollbar-thumb,
-:host::-webkit-scrollbar-thumb{
-    box-shadow:var(--flow-scrollbar-thumb-box-shadow, initial);
-    background:var(--flow-scrollbar-thumb-bg, initial);
-}
-`
-
-ScrollbarStyle.appendTo = styleAppendTo(ScrollbarStyle);
-
-let getLocalSetting = BaseElement.getLocalSetting;
-let setLocalSetting = BaseElement.setLocalSetting;
-export {getLocalSetting, setLocalSetting}
-
-export const SpinnerStyle = css`
-	@keyframes spinner-animation{0%{transform:rotate(0deg)}100%{transform:rotate(359deg)}}
-	.spinner{
-		webkit-animation: spinner-animation 2s linear infinite;
-	    animation: spinner-animation 2s linear infinite;
-	    transform-origin:center;
-	}
-	fa-icon.spinner:not([hidden]){display:inline-block;position:relative}
-`
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_ANCHOR_362 : &'static str = r###"
-
-const flowAnchors = [];
-
-/**
-* @class FlowAnchor
-* @extends BaseElement
-* @property {String} [for]
-* @property {String} [type]
-* @example
-*   <flow-anchor>Button 1</flow-anchor>
-*
-*
-*/
-export {flowAnchors}
-export class FlowAnchor extends BaseElement {
-	static get properties() {
-		return {
-			for : { type : String },
-			type : { type : String }
-		}
-	}
-
-	static get styles() {
-		return css`
-			:host {
-				display : block;
-			}
-		`;
-	}
-
-	constructor() {
-		super();
-		flowAnchors.push(this);
-	}
-
-	render() {
-		return html`<slot></slot>`;
-	}
-}
-
-FlowAnchor.define('flow-anchor');
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_I18N_379 : &'static str = r###"
-
-
-export const i18nDirMap = new Map();
-export const i18nElementsMap = new Map();
-
-class i18n extends BaseElement{
-
-	static hash(text) {
-        var A = 5381,
-            B = 9835,
-            i    = text.length;
-        while(i) {
-            var ch = text.charCodeAt(--i);
-            A = (A * 33) ^ ch;
-            B = (B * 55) ^ ch ^ A;
-        }
-        A = A >= 0 ? A : (A & 0x7FFFFFFF) + 0x80000000;
-        B = B >= 0 ? B : (B & 0x7FFFFFFF) + 0x80000000;
-        return A.toString(16)+B.toString(16);
-    }
-
-    static entriesChanged(){
-    	let entriesAll = this.getAllEntries();
-    	let entries = this.getEntries();
-    	let detail = {entries, entriesAll}
-    	let ce = new CustomEvent("flow-i18n-entries-changed", {detail})
-    	window.dispatchEvent(ce);
-    }
-
-	static stripWhitespace(text) {
-		return text.replace(/\s\s+/g,' ').trim();
-	}
-
-    static createEntry(text, values=false){
-		let hash = this.hash(text);
-		//console.log("i18n.entries", this.entries, text)
-		if(!this.entries[hash]){
-			this.entries[hash] = Object.assign({en:text}, values || {});
-			this.entriesChanged();
-		}else if(values){
-			Object.assign(this.entries[hash], values);
-			this.entriesChanged();
-		}
-		return hash;
-	}
-
-	static t(text, defaults, locale){
-		text = this.stripWhitespace(text);
-		let hash = this.createEntry(text);
-		if(this.testing)
-			return `[${locale||this.locale}:${text}]`;
-		let entry = this.entries[hash];
-		let value = entry[locale||this.locale];
-		//console.log("value", value, this.locale, text)
-		//if(value !== undefined)
-		//	return value;
-		return value || defaults || text;
-	}
-
-	static setConfig(_config){
-		config = _config;
-	}
-	static getConfig(){
-		return config;
-	}
-	static setActiveLanguages(locales){
-		let newLocale = false;
-		config.languages.forEach(l=>{
-			l.active = locales.includes(l.locale);
-			if(l.locale == this.locale && !l.active)
-				newLocale = 'en';
-		});
-
-		if(newLocale)
-			this.setLocale(newLocale);
-	}
-	static getActiveLanguages(){
-		return config.languages.filter(l=>l.active)
-	}
-	static getActiveLocales(){
-		return this.getActiveLanguages().map(l=>l.locale);
-	}
-	static setEntries(list){
-		(list ||[]).forEach(entry=>{
-			this.entries[this.hash(entry.en)] = entry;
-		});
-
-		onLocaleChange();
-	}
-	static setTesting(testing){
-		this.testing = testing;
-		onLocaleChange();
-	}
-	static getEntries(){
-		let activeLocales = this.getActiveLocales();
-    	let entry;
-    	return this.getAllEntries().map(e=>{
-    		entry = {en:e.en};
-    		activeLocales.forEach(l=>{
-    			entry[l] = e[l] || "";
-    		})
-    		return entry;
-    	})
-	}
-	static getAllEntries(){
-		return Object.values(this.entries);
-	}
-	static get properties() {
-		return {
-			text:{type:String}
-			//xx:{type:String}
-		}
-	}
-
-	static setLocale(locale='en'){
-		this.locale = locale;
-		this.setLocalSetting('i18n-locale', locale);
-		onLocaleChange();
-	}
-
-	static cleanText(text){
-		return text
-		.replace(/<\!\-\-\?lit([^>]*)\$-\->/g, "")
-		.replace(/<\!\-\-\-\->/g, "")
-	}
-
-	constructor(){
-		super();
-		this.text = "";
-		//this.setAttribute("c1", `${this.text}`)
-		//console.log("constructor:", this.innerHTML, this.text)
-	}
-
-	createRenderRoot() {
-		//this.innerHTML_ = this.innerHTML;
-		return this;
-	}
-
-	connectedCallback(){
-		super.connectedCallback();
-		this._cb = this._cb || this.onLocaleChange.bind(this);
-		window.addEventListener("flow-i18n-locale", this._cb)
-		//this.setAttribute("c2", `${this.text}`)
-		this.update();
-	}
-
-	disconnectedCallback(){
-		super.disconnectedCallback();
-		this._cb && window.removeEventListener("flow-i18n-locale", this._cb)
-		//TODO MAYBE:: _parts.delete(this.renderRoot)
-	}
-
-	onLocaleChange(){
-		this.update();
-	}
-
-	/*
-	updated(changed){
-		super.updated();
-		console.log("changed", changed)
-		this.setAttribute("c3", `${this.text}:${JSON.stringify(changed)}`)
-	}
-	*/
-
-	render() {
-		if(this.innerHTML_ == undefined){
-			this.innerHTML_ = i18n.cleanText(this.innerHTML)
-			this.innerHTML = "";
-		}
-		//if(this.getAttribute("xx") == 1)
-		//this.log("innerHTML", i18n.locale, "inner:"+this.innerHTML_, " text:"+this.text)
-		let strings = [i18n.t(this.text || this.innerHTML_)];
-		strings.raw = [];
-		return html(strings);
-	}  
-}
-
-
-let config = {
-	// languages:[
-	// 	{title:'English', locale:'en'},
-	// 	{title:'Russian', locale:'ru'},
-	// 	{title:'Hindi', locale:'hi'},
-	// 	{title:'Punjabi', locale:'pu'}
-	// ]
-	languages : [
-		{"title":"العربية‎", "locale": "ar", rtl: true },
-		{"title":"Български", "locale": "bg" },
-		{"title":"বাংলা", "locale": "bn" },
-		{"title":"English", "locale": "en" },
-		{"title":"Español", "locale": "es" },
-		{"title":"Greek", "locale": "el" },
-		{"title":"Esti", "locale": "et" },
-		{"title":"Français", "locale": "fr" },
-		{"title":"Deutsch", "locale": "de" },
-		{"title":"Danish", "locale": "da" },
-		{"title":"Czech", "locale": "cs" },
-		{"title":"Farsi", "locale": "fa" },
-		{"title":"Finnish", "locale": "fi" },
-		{"title":"Filipino", "locale": "fil" },
-		{"title":"עברית", "locale": "he", rtl: true },
-		{"title":"Hindi", "locale": "hi" },
-		{"title":"Croatian", "locale": "hr" },
-		{"title":"Hungarian", "locale": "hu" },
-		{"title":"Italiano", "locale": "it" },
-		{"title":"Icelandic", "locale": "is" },
-		{"title":"日本語", "locale": "ja" },
-		{"title":"Korean", "locale": "ko" },
-		{"title":"Korean", "locale": "kr" },
-		{"title":"Lithuanian", "locale": "lt" },
-		{"title":"Norwegian", "locale": "nb" },
-		{"title":"Dutch", "locale": "nl" },
-		{"title":"Norwegian", "locale": "no" },
-		{"title":"Polski", "locale": "pl" },
-		{"title":"PortuguÃªs", "locale": "pt" },
-		{"title":"Romanian", "locale": "ro" },
-		{"title":"Русский", "locale": "ru" },
-		{"title":"Slovak", "locale": "sk" },
-		{"title":"Serbian", "locale": "sr" },
-		{"title":"Slovenian", "locale": "sl" },
-		{"title":"Swedish", "locale": "sv" },
-		{"title":"Tamil", "locale": "ta" },
-		{"title":"Thai", "locale": "th" },
-		{"title":"Turkish", "locale": "tr" },
-		{"title":"Ukrainian", "locale": "uk" },
-		{"title":"Urdu", "locale": "ur" },
-		{"title":"Vietnamese", "locale": "vi" },
-		{"title":"Mongolian", "locale": "mn" },
-		{"title":"中文", "locale": "zh_HANS" },
-		{"title":"繁體中文", "locale": "zh_HANT" }
-	],
-	aliases : {
-		"en-GB": "en",
-		"en-US": "en",
-		"zh-CN": "zh_HANS",
-		"zh-TW": "zh_HANT"
-	}
-
-}
-
-i18n.entries = {};
-i18n.locale = BaseElement.getLocalSetting('i18n-locale', 'en');
-i18n.entries[i18n.hash('Hello')] = {
-	en: "Hello",
-	ru : 'Ð-Ð´Ñ€Ð°Ð²ÑÑ‚Ð²ÑƒÐ¹Ñ‚Ðµ',
-	pu: 'ਸਤ ਸ੍ਰੀ ਅਕਾਲ',
-	hi: 'नमस्ते!'
-}
-
-window.addEventListener("flow-i18n-entries", e=>{
-	i18n.setEntries(e.detail.entries);
-})
-
-let Mixin = (Base, tag)=>{
-	class Child extends Base{
-		connectedCallback() {
-			if(!this.innerHTML_)
-				this.innerHTML_ = i18n.cleanText(this.innerHTML);
-			this._cb = this._cb || this.onLocaleChange.bind(this);
-			window.addEventListener("flow-i18n-locale", this._cb)
-			this.onLocaleChange();
-		}
-
-		disconnectedCallback(){
-			this._cb && window.removeEventListener("flow-i18n-locale", this._cb)
-		}
-
-		onLocaleChange(){
-			this.innerHTML = this.htmlToElement(i18n.t(this.innerHTML_))
-		}
-		htmlToElement(html) {
-		    let template = document.createElement('template');
-		    template.innerHTML = `<span>${html.trim()}</span>`;
-		    return template.content.firstChild.innerHTML;
-		}
-	}
-
-	customElements.define('i18n-'+tag, Child, {extends: tag});
-
-}
-
-Mixin(HTMLDivElement, 'div');
-Mixin(HTMLSpanElement, 'span')
-Mixin(HTMLParagraphElement, 'p')
-Mixin(HTMLLabelElement, 'label')
-Mixin(HTMLTableCellElement, 'td')
-Mixin(HTMLTableCellElement, 'th')
-Mixin(HTMLAnchorElement, 'a')
-
-export const buildLitHTML = (...strParts)=>{
-	let strings = [...strParts];
-	strings.raw = [];
-	return html(strings);
-}
-
-export const i18nFormat = (str, ...values)=>{
-	str = i18n.t(str);
-	values.forEach(n=>{
-		str = str.replace('[n]', n)
-	})
-	return str;
-}
-
-export const i18nHTMLFormat = (str, ...values)=>{
-	str = i18n.t(str);
-	values.forEach(n=>{
-		str = str.replace('[n]', n)
-	})
-	return buildLitHTML(str);
-}
-
-class I18nDirective extends AsyncDirective{
-	constructor(...args){
-		super(...args);
-		i18nDirMap.set(this, {});
-	}
-	render(text) {
-		this.__text = text;
-		return i18n.t(text);
-	}
-
-	disconnected() {
-		i18nDirMap.delete(this);
-	}
-
-	reconnected() {
-		i18nDirMap.set(this, {});
-	}
-}
-
-const T = directive(I18nDirective);
-
-let onLocaleChange = ()=>{
-	let ce = new CustomEvent("flow-i18n-locale", {detail:{locale:i18n.locale}})
-	window.dispatchEvent(ce);
-
-	i18nDirMap.forEach((v, dir)=>{
-		//console.log("dir", dir)
-		dir.setValue(dir.__text?i18n.t(dir.__text):'')
-	})
-
-	i18nElementsMap.forEach((v, ele)=>{
-		//console.log("dir", dir)
-		ele.setI18nValue(ele.__i18nText?i18n.t(ele.__i18nText):'')
-	})
-}
-
-i18n.setLocale(i18n.locale);
-
-
-export class FlowI18nDialog{
-	static open(alignTarget){
-		if(this.dialog)
-			return
-		this._click = this._click || this.onClick.bind(this);
-		
-		let p = this._open(alignTarget);
-		setTimeout(()=>{
-			window.addEventListener("click", this._click)
-		}, 100);
-		return p;
-	}
-	static close(data){
-		if(this.dialog){
-			this.dialog.resolve(data);
-			this.dialog = null;
-		}
-		this.removeEventListener();
-	}
-	static onClick(e){
-		if(!this.dialog){
-			this.removeEventListener();
-			return
-		}
-		let t = e.target;
-		let menu = t && t.closest && t.closest("flow-dialog.flow-menu");
-		if(menu != this.dialog){
-			this.removeEventListener();
-			this.close();
-		}
-	}
-	static removeEventListener(){
-		window.removeEventListener("click", this._click)
-	}
-	static _open(alignTarget){
-		let menuClick = e=>{
-			let li = e.target.closest("li");
-			let locale = li.getAttribute("data-locale");
-			i18n.setLocale(locale);
-			dialog.resolve({locale});
-			this.dialog = false;
-			this.removeEventListener();
-		}
-
-		let body = html
-			`<ul class="menu" @click="${menuClick}">${
-				config.languages.filter(l=>l.active).map(l=>html
-					`<li data-locale="${l.locale}" 
-						class="${l.locale==i18n.locale?'active':''}">${l.title}</li>`
-				)
-			}</ul>`
-
-		let promise = FlowDialog.show({
-			body,
-			btns:[],
-			cls:"flow-menu hide-close-btn",
-			modal:false
-		})
-
-		let {dialog} = promise;
-		this.dialog = dialog;
-		if(alignTarget){
-			let dialogBox = dialog.getBoundingClientRect();
-			FlowDialog.alignTo(alignTarget, dialog, {
-				targetPos:'right-bottom',
-				dialogPos:'left-top',
-				hOffset: -dialogBox.width,
-				vOffset: 2
-			})
-		}
-
-		return promise
-	}
-}
-
-
-//window.xxxxx_setLocale = i18n.setLocale.bind(i18n)
-
-
-export class I18nTest extends LitElement{
-	static get styles(){
-		return css`:host{display:inline-block;border:1px solid #DDD;padding:10px;}`
-	}
-	static get properties(){
-		return {
-			loop:{type:Boolean}
-		}
-	}
-	constructor(){
-		super();
-		this.start();
-	}
-	start(){
-		let i=0, ls = ['ru', 'pu', 'hi', 'en'];
-		this.intervalId = setInterval(()=>{
-			let l = ls[i++];
-			if(!l){
-				if(this.loop){
-					i=0;
-					l = ls[i++];
-				}else{
-					this.remove();
-					clearInterval(this.intervalId);
-				}
-			}
-			i18n.setLocale(l)
-		}, 1000)
-	}
-	render(){
-		return html`Hello: ${T('Hello')} <div title="${T('abc')}">How are You</div>`
-	}
-}
-
-customElements.define('i18n-test', I18nTest);
-customElements.define('flow-i18n', i18n);
-
-
-export {i18n, T}
-
-
 
 "###;
 
@@ -3110,284 +2071,112 @@ export class FlowRadio extends BaseElement {
 FlowRadio.define('flow-radio');
 "###;
 
-const ASPECTRON_FLOW_UX_SRC_FLOW_BTN_380 : &'static str = r###"
-
-
+const ASPECTRON_FLOW_UX_SRC_FLOW_RADIO_BTN_394 : &'static str = r###"
 
 
 /**
-* @class FlowBtn
-* @extends BaseElement
-* @example
-*   <flow-btn>Button 1</flow-btn>
-* @property {Boolean} [disabled] 
-* @cssvar {font-family} [--flow-btn-font-family=var(--flow-font-family, initial)]
-* @cssvar {font-weight} [--flow-btn-font-weight=var(--flow-font-weight, bold)]
-* @cssvar {font-size} [--flow-btn-font-size=initial]
-* @cssvar {line-height} [--flow-btn-line-height=inherit]
-* @cssvar {color} [--flow-border-color=var(--flow-primary-color, rgba(0,151,115,1))]
-* @cssvar {color} [--flow-btn-hover-border-color=var(--flow-primary-color, rgba(0,151,115,1))]
-* @cssvar {color} [--flow-btn-primary-invert-color=var(--flow-primary-invert-color, #FFF)]
-* @cssvar {color} [--flow-btn-success-color=var(--flow-btn-success-color, #FFF)]
-* @cssvar {color} [--flow-btn-hover-info-color=var(--flow-btn-info-color, #FFF))]
-* @cssvar {color} [--flow-btn-hover-success-color=var(--flow-btn-success-color, #FFF))]
-* @cssvar {color} [--flow-btn-hover-warning-color=var(--flow-btn-warning-color, #FFF))]
-* @cssvar {color} [--flow-btn-hover-danger-color=var(--flow-btn-danger-color, #FFF))]
-* @cssvar {color} [--flow-btn-warning-color=var(--flow-btn-warning-color, #FFF))]
-* @cssvar {color} [--flow-btn-danger-color=var(--flow-btn-danger-color, #FFF))]
-* @cssvar {color} [--flow-btn-info-color=var(--flow-btn-info-color, #FFF))]
-* @cssvar {background-color} [--flow-btn-primary-bg-color=var(--flow-primary-color, rgba(0,151,115,1))]
-* @cssvar {background-color} [--flow-btn-success-bg-color=var(--flow-primary-color, rgba(0,151,115,1))]
-* @cssvar {background-color|border-color} [--flow-btn-hover-success-bg-color=var(--flow-primary-color, rgba(0,151,115,1)))]
-* @cssvar {background-color|border-color} [--flow-btn-warning-bg-color=var(--flow-primary-color, rgba(0,151,115,1)))]
-* @cssvar {background-color|border-color} [--flow-btn-hover-warning-bg-color=var(--flow-primary-color, rgba(0,151,115,1)))]
-* @cssvar {background-color|border-color} [--flow-btn-danger-bg-color=var(--flow-primary-color, rgba(0,151,115,1)))]
-* @cssvar {background-color|border-color} [--flow-btn-hover-danger-bg-color=var(--flow-primary-color, rgba(0,151,115,1)))]
-* @cssvar {background-color|border-color} [--flow-btn-info-bg-color=var(--flow-primary-color, rgba(0,151,115,1)))]
-* @cssvar {background-color|border-color} [--flow-btn-hover-info-bg-color=var(--flow-primary-color, rgba(0,151,115,1)))]
-* @cssvar {border-color} [--flow-btn-hover-success-bg-color=var(--flow-primary-color, rgba(0,151,115,1)))]
-* @cssvar {border-color} [--flow-btn-success-bg-color=var(--flow-primary-color, rgba(0,151,115,1)))]
-* @cssvar {border-radius} [--flow-btn-radius=8px]
-* @cssvar {margin} [--flow-btn-margin=""]
-* @cssvar {margin} [--flow-btn-wrapper-margin=5px];
-* @cssvar {min-width} [--flow-btn-wrapper-min-width=50px];
-* @cssvar {padding} [--flow-btn-padding=5px]
-*/
-export class FlowBtn extends BaseElement {
-	static get properties() {
-		return {
-			disabled:{type:Boolean, reflect: true},
-			'on-click':{type:Function},
-			icon:{type:String, reflect:true},
-			i18n:{type:Boolean, reflect: true}
-		}
-	}
-
-	static get styles(){
-		return css`
-			:host{
-				display:var(--flow-btn-display, inline-flex);
-				margin: var(--flow-btn-margin);
-				padding:var(--flow-btn-padding, 5px);
-				border: var(--flow-btn-border, 2px solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1))));
-				border-radius:var(--flow-btn-radius, 8px);
-				border-width:var(--flow-btn-border-width, 2px);
-				font-family:var(--flow-btn-font-family, var(--flow-font-family, initial));
-				font-weight:var(--flow-btn-font-weight, var(--flow-font-weight, bold));
-				font-size:var(--flow-btn-font-size, initial);
-				line-height:var(--flow-btn-line-height, inherit);
-				text-transform:var(--flow-btn-text-transform, inherit);
-				user-select: none;
-				--fa-icon-size-temp:var(--fa-icon-size);
-			}
-			:host([icon]){
-				padding:var(--flow-iconbtn-padding, var(--flow-btn-padding, 5px));
-			}
-			fa-icon{
-
-				--fa-icon-size:var(--flow-btn-icon-size, var(--fa-icon-size-temp, 20px))
-			}
-			:host([disabled]){
-				opacity:0.5;
-				cursor:default;
-				pointer-events:none;
-			}
-			:host(.start-justifed){
-				justify-self:flex-start;
-			}
-			:host(.end-justifed){
-				justify-self:flex-end;
-			}
-			:host(:not([disabled])){
-				cursor:pointer;
-				background-color:var(--flow-btn-bg-color, inherit);
-				border-color:var(--flow-btn-border-color, inherit);
-				color:var(--flow-btn-color, inherit);
-			}
-			:host(:not([disabled]):hover){
-				background-color:var(--flow-btn-hover-bg-color, inherit);
-				border-color:var(--flow-btn-hover-border-color, inherit);
-				color:var(--flow-btn-hover-color, inherit);
-				--fa-icon-color:var(--flow-btn-hover-color, inherit);
-			}
-			:host([primary]),
-			:host(.primary){
-				background-color:var(--flow-btn-primary-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border-color:var(--flow-btn-primary-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				color:var(--flow-btn-primary-invert-color, var(--flow-primary-invert-color, #FFF));
-				--fa-icon-color:var(--flow-btn-primary-invert-color, var(--flow-primary-invert-color, #FFF));
-			}
-			:host([primary]:not([disabled]):hover),
-			:host(.primary:not([disabled]):hover){
-				background-color:var(--flow-btn-hover-primary-bg-color, var(--flow-btn-hover-border-color, var(--flow-primary-color, rgba(0,151,115,1))));
-				color: var(--flow-btn-hover-primary-color);
-			}
-
-			:host(.secondary){
-				background-color:var(--flow-btn-secondary-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border-color:var(--flow-btn-secondary-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				color:var(--flow-btn-secondary-color, #FFF);
-			}
-
-			:host(.secondary:not([disabled]):hover){
-				background-color:var(--flow-btn-hover-secondary-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border-color:var(--flow-btn-hover-secondary-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				color:var(--flow-btn-hover-secondary-color, var(--flow-btn-secondary-color, #FFF));
-			}
-
-			:host(.success){
-				background-color:var(--flow-btn-success-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border-color:var(--flow-btn-success-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				color:var(--flow-btn-success-color, #FFF);
-			}
-
-			:host(.success:not([disabled]):hover){
-				background-color:var(--flow-btn-hover-success-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border-color:var(--flow-btn-hover-success-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				color:var(--flow-btn-hover-success-color, var(--flow-btn-success-color, #FFF));
-			}
-
-			:host(.warning){
-				background-color:var(--flow-btn-warning-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border-color:var(--flow-btn-warning-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				color:var(--flow-btn-warning-color, #FFF);
-			}
-
-			:host(.warning:not([disabled]):hover){
-				background-color:var(--flow-btn-hover-warning-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border-color:var(--flow-btn-hover-warning-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				color:var(--flow-btn-hover-warning-color, var(--flow-btn-warning-color, #FFF));
-			}
-
-			:host(.danger){
-				background-color:var(--flow-btn-danger-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border-color:var(--flow-btn-danger-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				color:var(--flow-btn-danger-color, #FFF);
-			}
-
-			:host(.danger:not([disabled]):hover){
-				background-color:var(--flow-btn-hover-danger-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border-color:var(--flow-btn-hover-danger-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				color:var(--flow-btn-hover-danger-color, var(--flow-btn-danger-color, #FFF));
-			}
-
-			:host(.info){
-				background-color:var(--flow-btn-info-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border-color:var(--flow-btn-info-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				color:var(--flow-btn-info-color, #FFF);
-			}
-
-			:host(.info:not([disabled]):hover){
-				background-color:var(--flow-btn-hover-info-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border-color:var(--flow-btn-hover-info-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				color:var(--flow-btn-hover-info-color, var(--flow-btn-info-color, #FFF));
-			}
-
-			.wrapper{
-				display:flex;
-				align-items:center;
-				margin:var(--flow-btn-wrapper-margin,5px);
-				min-width:var(--flow-btn-wrapper-min-width,50px);
-				text-align:center;
-				justify-content:center;
-				box-sizing:border-box;
-			}
-			:host([full-height-wrapper]) .wrapper,
-			:host([icon]) .wrapper{
-				height:100%;
-				margin:0px;
-			}
-			:host([i18n]) slot,
-			:host(:not([i18n])) #text-element{
-				display:none
-			}
-		`;
-	}
+ * @export
+ * @class FlowRadioBtn
+ * @extends {FlowToggleBtn}
+ * @prop {Boolean} active is btn active?
+ * @prop {Boolean} inputValue is value for multiple radio btn
+ * 
+ * @example
+ * <flow-radio-btn inputvalue="xyz"></flow-radio-btn>
+ * 
+ */
+export class FlowRadioBtn extends FlowToggleBtn {
 	constructor(){
-		super()
-		this.addEventListener("click", ()=>{
-			this.click();
-		})
-		this.i18nSupport = (this.getAttribute("i18n") != null);
-		if(this.i18nSupport){
-			i18nElementsMap.set(this, {});
-		}
-	}
-	render() {
-		let {icon=''} = this;
-		return html`<div 
-			class="wrapper">${icon?html`<fa-icon icon=${icon}></fa-icon>`:''} <slot id="text-slot"></slot><span id="text-element"></span></div>`;
-	}
-
-	firstUpdated(...args){
-		super.firstUpdated(...args);
-		this.setAttribute('role', 'button');
-		if(this.i18nSupport){
-			this.slotElement = this.renderRoot.querySelector("#text-slot")
-			this.textElement = this.renderRoot.querySelector("#text-element")
-			this.slotElement.addEventListener('slotchange', (e)=>{
-				this.slotElementChidren = this.slotElement.assignedNodes();
-				let text = [];
-				this.slotElementChidren.forEach(el=>{
-					text.push(el.textContent)
-				})
-				//console.log("this.slotElementChidren", this.slotElementChidren, text)
-				this.__i18nText = i18n.cleanText(text.join(""));
-				this.setI18nValue(this.__i18nText?i18n.t(this.__i18nText):'')
-			})
-			
-		}
-	}
-
-	setI18nValue(text){
-		if(this.textElement){
-			this.textElement.innerHTML = text;
-		}
-	}
-
-	click() {
-		if(this.disabled)
-			return
-		this.fire("flow-btn-click", {el:this})
-		let clickFn = this['on-click'];
-		if(clickFn){
-			if(typeof clickFn == "string"){
-				try{
-					eval(clickFn);
-				}catch(e){
-
-				}
-			}else if(typeof clickFn == "function"){
-				clickFn();
-			}
-		}
-
-		/*let form = this.form || this.getAttribute("form");
-
-		if(typeof(form) == 'string'){
-			form = document.querySelector(form);
-		}
-
-		if(form && form.submit())*/
-	}
-
-	connectedCallback(){
-		super.connectedCallback();
-		if(this.i18nSupport){
-			i18nElementsMap.set(this, {});
-		}
-	}
-
-	disconnectedCallback(){
-		super.disconnectedCallback();
-		if(this.i18nSupport){
-			i18nElementsMap.delete(this, {});
-		}
+		super();
+        this.radio = true;
 	}
 }
 
-FlowBtn.define('flow-btn');
+FlowRadioBtn.define('flow-radio-btn');
+"###;
 
+const ASPECTRON_FLOW_UX_SRC_FLOW_RADIO_BTNS_356 : &'static str = r###"
+
+
+/**
+ * @export
+ * @class FlowRadioBtns
+ * @extends {BaseElement}
+ * 
+ * @example
+ * 
+ * <flow-radio-btns selected="btn2">
+ *	<flow-radio-btn inputvalue="btn1">Btn 1</flow-radio-btn>
+ *	<flow-radio-btn inputvalue="btn2">Btn 2</flow-radio-btn>
+ *	<flow-radio-btn inputvalue="btn3">Btn 3</flow-radio-btn>
+ * </flow-radio-btns>
+ *
+ * 
+ */
+export class FlowRadioBtns extends FlowMenu {
+	constructor(){
+		super();
+		this.valueAttr = "inputvalue";
+        this.selector = "flow-radio-btn";
+	}
+    connectedCallback(){
+        this.classList.add("flow-btn-group");
+        super.connectedCallback();
+    }
+	updateList(){
+		this.list.forEach(item=>{
+			let value = item.getAttribute(this.valueAttr)
+			item.setActive(this.isSelected(value));
+		});
+	}
+}
+
+FlowRadioBtns.define('flow-radio-btns');
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_RADIOS_373 : &'static str = r###"
+
+
+/**
+ * @export
+ * @class FlowRadios
+ * @extends {BaseElement}
+ * 
+ * @example
+ * 
+ * <flow-radios selected="btn2">
+ *	<flow-radio inputvalue="btn1">Btn 1</flow-radio>
+ *	<flow-radio inputvalue="btn2">Btn 2</flow-radio>
+ *	<flow-radio inputvalue="btn3">Btn 3</flow-radio>
+ * </flow-radios>
+ *
+ * 
+ */
+export class FlowRadios extends FlowMenu {
+	constructor(){
+		super();
+		this.valueAttr = "inputvalue";
+		this.selector = "flow-radio";
+		this.name = this.name||"radio-"+Date.now();
+	}
+	updateList(){
+		this.list.forEach(item=>{
+			let value = item.getAttribute(this.valueAttr)
+			item.setChecked(this.isSelected(value));
+		});
+	}
+	onSlotChange(){
+		this.list.forEach(item=>{
+			if (!item.getAttribute("name")){
+				item.setAttribute("name", this.name)
+			}
+			item.onclick = ()=>{};//<--- iphone issue
+		});
+		this.updateList();
+	}
+}
+
+FlowRadios.define('flow-radios');
 "###;
 
 const ASPECTRON_FLOW_UX_SRC_FLOW_TOGGLE_BTN_372 : &'static str = r###"
@@ -3487,400 +2276,6 @@ export class FlowToggleBtn extends FlowBtn {
 }
 
 FlowToggleBtn.define('flow-toggle-btn');
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_RADIO_BTN_394 : &'static str = r###"
-
-
-/**
- * @export
- * @class FlowRadioBtn
- * @extends {FlowToggleBtn}
- * @prop {Boolean} active is btn active?
- * @prop {Boolean} inputValue is value for multiple radio btn
- * 
- * @example
- * <flow-radio-btn inputvalue="xyz"></flow-radio-btn>
- * 
- */
-export class FlowRadioBtn extends FlowToggleBtn {
-	constructor(){
-		super();
-        this.radio = true;
-	}
-}
-
-FlowRadioBtn.define('flow-radio-btn');
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_MENU_374 : &'static str = r###"
-
-
-/**
- * @export
- * @class FlowMenu
- * @extends {BaseElement}
-
-
- * 
- * @example
- * <flow-menu selected="one">
- * 	<flow-menu-item value="one">One</flow-menu-item>
- * 	<flow-menu-item value="two">Two</flow-menu-item>
- * </flow-menu>
- */
-
- export class SelectOption{
-	constructor(text, value){
-		this.text = text;
-		this.value = value;
-	}
-}
-
-export class FlowMenu extends BaseElement {
-	static get properties() {
-		return {
-			selected:{type:String, reflect:true},
-			selector:{type:String},
-			valueAttr:{type:String},
-			multiple:{type:Boolean}
-		}
-	}
-
-	static get styles() {
-		return css`
-		:host{
-			display:block;padding:5px 0px;
-			--flow-menu-item-margin-internal: var(--flow-menu-item-margin, 1px);
-			--flow-menu-item-margin-internal2x:calc(var(--flow-menu-item-margin-internal) * 2);
-		}
-
-		::slotted(flow-menu-item){
-			display:flex;align-items:center;
-		}
-		
-		::slotted(flow-menu-item),
-		::slotted(.menu-item),
-		.menu-item{
-			box-sizing:border-box;
-			cursor:pointer;user-select:none;
-			padding:var(--flow-menu-item-padding, 10px);
-			margin:var(--flow-menu-item-margin-internal);
-			background-color:var(--flow-menu-item-bg, var(--flow-background-color));
-			color:var(--flow-menu-item-color, var(--flow-color));
-			pointer-events:auto;
-		}
-		::slotted(flow-menu-item:hover:not(.disabled):not(.selected)),
-		::slotted(.menu-item:hover:not(.disabled):not(.selected)),
-		.menu-item:hover:not(.disabled):not(.selected){
-			background-color:var(--flow-menu-item-hover-bg, #DDD);
-			color:var(--flow-menu-item-hover-color, #000);
-		}
-		::slotted(flow-menu-item.selected),
-		::slotted(.menu-item.selected),
-		.menu-item.selected{
-			background-color:var(--flow-menu-item-selected-bg, var(--flow-primary-color));
-			color:var(--flow-menu-item-selected-color, var(--flow-primary-invert-color));
-		}
-		:host(.grid),
-		:host(.grid) .menu-list-container{
-			display:flex;
-			flex-wrap:wrap;
-			width:var(--flow-menu-grid-width, 500px);
-		}
-		:host(.grid.full),
-		:host(.grid.full) .menu-list-container{
-			width:var(--flow-menu-gridfull-width, 1000px);
-		}
-		:host(.grid:not(.full)) ::slotted(flow-menu-item),
-		:host(.grid:not(.full)) ::slotted(.menu-item),
-		:host(.grid:not(.full)) .menu-item{
-			min-width:calc(20% - var(--flow-menu-item-margin-internal2x));
-			max-width:calc(20% - var(--flow-menu-item-margin-internal2x));
-		}
-		:host(.grid.full) ::slotted(flow-menu-item),
-		:host(.grid.full) ::slotted(.menu-item),
-		:host(.grid.full) .menu-item{
-			min-width:var(--flow-menu-gridfull-item-min-width, 100px);
-			max-width:var(--flow-menu-gridfull-item-max-width, initial);
-			flex:var(--flow-menu-gridfull-item-flex, 1);
-		}
-		::slotted(div.divider),
-		::slotted(div.section){
-			padding:var(--flow-menu-divider-padding, 10px);
-			box-shadow:var(--flow-menu-divider-box-shadow, var(--flow-box-shadow));
-			margin:var(--flow-menu-divider-margin, 0 0 5px 0);
-			background-color:var(--flow-menu-divider-bg-color, var(--flow-background-inverse-soft));
-			color:var(--flow-menu-divider-color, var(--flow-background-color));
-		}
-		::slotted(flow-menu-item.disabled),
-		::slotted(.menu-item.disabled),
-		.menu-item.disabled{
-			cursor:var(--flow-menu-disabled-item-cursor, default);
-			opacity:var(--flow-menu-disabled-item-opacity, 0.7);
-		}
-		`;
-	}
-	constructor(){
-		super();
-		this.selected = "";
-		this.selector = "flow-menu-item, .menu-item";
-		this.valueAttr = "value";
-		this._selected = []
-	}
-	render(){
-		return html`
-		<slot></slot>
-		`;
-	}
-	static SelectOption=SelectOption
-	static createOption(text, value, cls=""){
-		return {text, value, cls};
-	}
-	static createOptionItem(text, value, cls=""){
-		let isDivider = cls.includes("divider")||cls.includes("section")
-		let item = document.createElement(isDivider?"div":"flow-menu-item");
-		if(cls){
-			item.setAttribute("class", cls);
-		}
-		item.setAttribute("value", value);
-		item.innerHTML = text;
-		return item;
-	}
-	static createOptionItems(items=[]){
-		return items.map(item=>{
-			return this.createOptionItem(item.text, item.value, item.cls||"")
-		})
-	}
-	changeOptions(items=[]){
-		let children = this.querySelectorAll("*");
-		children.forEach(c=>{
-			c.remove();
-		});
-
-		FlowMenu.createOptionItems(items).forEach(el=>{
-			this.appendChild(el)
-		})
-		this.onSlotChange();
-	}
-	firstUpdated(){
-		this.renderRoot
-			.addEventListener("click", this._onClick.bind(this));
-
-		let slot = this.renderRoot.querySelector('slot');
-		this.listSlot = slot;
-		if(slot){
-			slot.addEventListener('slotchange', (e)=>{
-				//let items = slot.assignedElements();
-				//this.items = items
-				//TODO update selection 
-				this.onSlotChange()
-			});
-		}
-	}
-	onSlotChange(){
-		this.updateList();
-	}
-	updated(changes){
-		//this.log("changes", changes)
-		if(changes.has("selected")){
-			this.parseSelected();
-			this.requestUpdate("_selected")
-		}
-
-		this.updateList(changes)
-		super.updated(changes)
-	}
-
-	parseSelected(){
-		let {selected} = this;
-		this.log("parseSelected:selected:"+JSON.stringify(selected), selected)
-		if(this.multiple){
-			if(!Array.isArray(selected)){
-				try{
-					selected = JSON.parse(selected);
-				}catch(e){
-					selected = undefined;
-				}
-				if(selected !== undefined)
-					selected = [selected];
-				else
-					selected = [];
-			}
-		}else{
-			if(Array.isArray(selected))
-				selected = selected[0];
-			if(selected !== undefined)
-				selected = [selected];
-			else
-				selected = []
-		}
-		selected = selected.filter(s=>s!==undefined).map(s=>s+"");
-		//this.log("updated:selected", selected)
-		this.select(selected);
-	}
-
-	get list(){
-		if(!this.listSlot)
-			return [];
-		return this.listSlot
-			.assignedElements()
-			.filter(item=>item.matches(this.selector))
-	}
-
-	updateList(){
-		this.list.forEach(item=>{
-			let value = item.getAttribute(this.valueAttr)
-			item.onclick = ()=>{};//<--- iphone issue
-			item.classList.toggle("selected", this.isSelected(value));
-		});
-	}
-
-	isSelected(value){
-		return this._selected.includes(value);
-	}
-
-	_onClick(e){
-		let target = e.target.closest(this.selector);
-		if(!target || target.classList.contains("disabled"))
-			return
-		let value = target.getAttribute(this.valueAttr);
-		if(this.multiple)
-			this.toggle(value);
-		else
-			this.selectOne(value)
-	}
-	selectFirst(){
-		let item = this.list[0];
-		if (item){
-			let value = item.getAttribute(this.valueAttr);
-			this.selectOne(value);
-			return value;
-		}
-		return "";
-	}
-	selectOne(value){
-		this._selected = [value];
-		this.selectionChanged();
-	}
-	select(values){
-		this._selected = values;
-		this.selectionChanged();
-	}
-	toggle(value){
-		let index = this._selected.indexOf(value);
-		if(index<0)
-			this._selected.push(value);
-		else
-			this._selected.splice(index, 1);
-		this.selectionChanged();
-	}
-	selectionChanged(){
-		this.updateList()
-		let selected = this._selected.slice(0);
-		let selected_str;
-		if(!this.multiple){
-			selected = selected[0];
-			selected_str = selected;
-		}else{
-			selected_str = JSON.stringify(selected)
-		}
-		this.selected = selected_str;
-		this.fire("select", {selected}, {bubbles:true})
-	}
-	get value(){
-		if(!this.multiple)
-			return this._selected[0]
-		return this._selected
-	}
-}
-
-FlowMenu.define('flow-menu');
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_RADIO_BTNS_356 : &'static str = r###"
-
-
-/**
- * @export
- * @class FlowRadioBtns
- * @extends {BaseElement}
- * 
- * @example
- * 
- * <flow-radio-btns selected="btn2">
- *	<flow-radio-btn inputvalue="btn1">Btn 1</flow-radio-btn>
- *	<flow-radio-btn inputvalue="btn2">Btn 2</flow-radio-btn>
- *	<flow-radio-btn inputvalue="btn3">Btn 3</flow-radio-btn>
- * </flow-radio-btns>
- *
- * 
- */
-export class FlowRadioBtns extends FlowMenu {
-	constructor(){
-		super();
-		this.valueAttr = "inputvalue";
-        this.selector = "flow-radio-btn";
-	}
-    connectedCallback(){
-        this.classList.add("flow-btn-group");
-        super.connectedCallback();
-    }
-	updateList(){
-		this.list.forEach(item=>{
-			let value = item.getAttribute(this.valueAttr)
-			item.setActive(this.isSelected(value));
-		});
-	}
-}
-
-FlowRadioBtns.define('flow-radio-btns');
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_RADIOS_373 : &'static str = r###"
-
-
-/**
- * @export
- * @class FlowRadios
- * @extends {BaseElement}
- * 
- * @example
- * 
- * <flow-radios selected="btn2">
- *	<flow-radio inputvalue="btn1">Btn 1</flow-radio>
- *	<flow-radio inputvalue="btn2">Btn 2</flow-radio>
- *	<flow-radio inputvalue="btn3">Btn 3</flow-radio>
- * </flow-radios>
- *
- * 
- */
-export class FlowRadios extends FlowMenu {
-	constructor(){
-		super();
-		this.valueAttr = "inputvalue";
-		this.selector = "flow-radio";
-		this.name = this.name||"radio-"+Date.now();
-	}
-	updateList(){
-		this.list.forEach(item=>{
-			let value = item.getAttribute(this.valueAttr)
-			item.setChecked(this.isSelected(value));
-		});
-	}
-	onSlotChange(){
-		this.list.forEach(item=>{
-			if (!item.getAttribute("name")){
-				item.setAttribute("name", this.name)
-			}
-			item.onclick = ()=>{};//<--- iphone issue
-		});
-		this.updateList();
-	}
-}
-
-FlowRadios.define('flow-radios');
 "###;
 
 const ASPECTRON_FLOW_UX_SRC_FLOW_BTN_GROUP_412 : &'static str = r###"
@@ -4994,17 +3389,6 @@ export class FlowTestElement extends BaseElement {
 }
 
 FlowTestElement.define('flow-test-element');
-
-"###;
-
-const LIT_HTML_DIRECTIVES_IF_DEFINED_501 : &'static str = r###"
-
-/**
- * @license
- * Copyright 2018 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */const l=l=>null!=l?l:t;export{l as ifDefined};
-//# sourceMappingURL=if-defined.js.map
 
 "###;
 
@@ -6310,6 +4694,11436 @@ export class FlowQRCode extends BaseElement {
 }
 
 FlowQRCode.define('flow-qrcode', [baseUrl+'resources/extern/qrcode/qrcode.js']);
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_QRCODE_SCANNER_420 : &'static str = r###"
+
+
+
+
+//console.log("jsQR", jsQR)
+
+export class FlowQRCodeScanner extends BaseElement {
+	static get properties() {
+		return {
+			cameras:{type:Array},
+			selectedCamera:{type:Object},
+			qrCode:{type:String},
+			errorMessage:{type:String},
+			hideCode:{type:Boolean, reflect:true},
+			boxColor:{type:String},
+			renderAfter:{type:Number}
+		}
+	}
+
+	static get styles() {
+		return css`
+			:host {
+				display : block;
+				min-width: 100px;
+				min-height: 100px;
+				/*max-width: 400px;*/
+				/*overflow:auto;*/
+				margin:auto;
+				position:relative;
+				/*max-height:80vh;*/
+			}
+			.error{
+				font-size:var(--flow-qrcode-scanner-error-font-size, 0.8rem);
+				color:var(--flow-qrcode-scanner-error-color, #F00);
+				padding:var(--flow-qrcode-scanner-error-padding, 10px);
+			}
+			.wait-msg, .select-msg{
+				font-size:var(--flow-qrcode-scanner-msg-font-size, 1rem);
+				text-align:center;padding:10px;
+			}
+			.video{border:0px solid #000000;display:none;}
+			.view{
+				border:1px solid #000000;display:block;margin:5px auto;
+				width:var(--flow-qrcode-scanner-canvas-width, 280px);
+				height:var(--flow-qrcode-scanner-canvas-height, 280px);
+				object-fit:contain;
+			}
+			.render-canvas{
+				position:absolute;border:0px solid #000;display:none
+			}
+			.code-box{
+				display:flex;
+				flex-direction:var(--flow-qrcode-scanner-code-box-flex-direction, column);
+				align-items:var(--flow-qrcode-scanner-code-box-align-items, center);
+			}
+			.code{
+				border:0px;-webkit-appearance:none;outline:none;
+				margin:var(--flow-qrcode-scanner-code-margin, 10px);
+				overflow:hidden;text-overflow:ellipsis;
+				font-size:var(--flow-qrcode-scanner-code-font-size, 1rem);
+				background-color:transparent;color:var(--flow-primary-color);
+				font-family:var(--flow-qrcode-scanner-code-font-family, "Exo 2");
+				word-wrap:break-word;
+				max-width:100%;
+				width:var(--flow-qrcode-scanner-code-width, 300px);
+				height:var(--flow-qrcode-scanner-code-height, auto);
+				/*max-height:var(--flow-qrcode-scanner-code-max-height, 100px);*/
+				resize:none;
+				display:block;
+			}
+			:host([hidecode]) .code-box{display:none}
+			.logs{width:90%;height:100px;}
+			:host(:not([logs])) .logs{display:none}
+			.camera-selection{
+				display:flex;
+			}
+			:host([debug]) .render-canvas,
+			:host([debug]) .video{
+				display:block;position:relative;margin:auto;
+			}
+			/*
+			.camera-selection flow-select{
+				max-width:var(--flow-qrcode-scanner-s-max-width, 400px);
+				--flow-dropdown-display:var(--flow-qrcode-scanner-s-display, block);
+				--flow-select-width:var(--flow-qrcode-scanner-sw, var(--flow-select-width, 100%));
+				--flow-select-margin:var(--flow-qrcode-scanner-sm, var(--flow-select-margin, 10px auto));
+			}
+			*/
+		`;
+	}
+
+	constructor() {
+		super();
+		this.stopped = true;
+		this.renderAfter = 10;
+	}
+
+	render() {
+		let {cameras=[], selectedCamera='', qrCode='', errorMessage=''} = this;
+		return html`
+			<textarea class="logs"></textarea>
+			<div class="error">${errorMessage}</div>
+			${this.renderScanning()}
+			${this.renderCameraSelection()}
+			${this.renderCode()}
+		`;
+	}
+
+	renderCameraSelection(){
+		const {cameras, selectedCamera, cameraDiscovery, stopped} = this;
+		if(cameraDiscovery === false || stopped)
+			return '';
+		if(!cameras)
+			return html`<div class="wait-msg" is="i18n-div">Please wait. Getting cameras.</div>`;
+		//if(selectedCamera)
+		//	return html`<div>Selected cameras: ${selectedCamera.label}</div>`
+
+		let selected = selectedCamera?.id||'';
+		return html`
+		<div class="camera-selection">
+			<!--div class="select-msg">Select cameras</div-->
+			<flow-select label="${T('Select cameras')}"
+				@select="${this.onCameraSelect}" selected="${selected}">
+				${cameras.map(c=>{
+					return html`<flow-menu-item
+						value="${c.id}">${c.label}</flow-menu-item>`
+				})}
+			</flow-select>
+		</div>
+		`
+	}
+	renderScanning(){
+		//let {selectedCamera} = this;
+		//if(!selectedCamera)
+		//	return ''
+
+		return html`
+			<video class="video" width="320" height="240" autoplay></video>
+			<canvas class="render-canvas"></canvas>
+			<img class="view">
+		`
+	}
+
+	renderCode(){
+		let {qrCode} = this;
+		if(!qrCode)
+			return '';
+		return html`
+			<div class="code-box">
+				<!--div class="label">QR code:</div-->
+				<div class="code">QR code: ${qrCode}</div>
+				<flow-btn @click="${this.clearCode}">Clear</flow-btn>
+			</div>
+		`;
+	}
+	clearCode(){
+		this.setQRCode("");
+	}
+	setQRCode(qrCode){
+		this.qrCode = qrCode;
+		this.fire("changed", {code: qrCode})
+	}
+
+	firstUpdated(){
+		super.firstUpdated();
+		this.viewImg = this.renderRoot.querySelector(".view");
+		this.init();
+	}
+	updated(){
+		super.updated();
+		this.initScanning();
+	}
+	_log(title, data){
+		let input = this.renderRoot.querySelector(".logs");
+		input.value += `\n--------------\n${title}\n`+JSON.stringify(data)
+	}
+	stop(){
+		this.stopped = true;
+		let {video} = this;
+		this.closeActiveStreams(video?.srcObject)
+	}
+	start(){
+		this.stopped = false;
+		this.scanning = false;
+		this.init();
+	}
+	getVideoElement(){
+		if(this._video)
+			return this._video;
+		this._video = document.createElement("video");
+		return this._video;
+	}
+	getCanvasElement(){
+		if(this._canvas)
+			return this._canvas;
+		this._canvas = document.createElement("canvas");
+		return this._canvas;
+	}
+	initScanning(){
+		this.__render = 0;
+		if(this.qrCode || this.stopped)
+			return
+		let canvas = this.getCanvasElement();//this.renderRoot.querySelector(".render-canvas");
+		let video = this.getVideoElement()//this.renderRoot.querySelector(".video")
+		let {selectedCamera} = this;
+		this._log("initScanning", {canvas:!!canvas, video:!!video, selectedCamera, scanning:this.scanning})
+		if(!canvas || !video || !selectedCamera)
+			return
+
+		if(this.scanning == selectedCamera.id)
+			return
+		this.closeActiveStreams(video.srcObject)
+		this.scanning = selectedCamera.id;
+		this.video = video;
+
+		const canvasCtx = canvas.getContext('2d', {alpha: false});
+		//const desiredWidth = 1280;
+		//const desiredHeight = 720;
+
+		const constraints = {
+			audio: false,
+			video:{deviceId: { exact: selectedCamera.id }}
+			/*,
+			video: {
+				// the browser will try to honor this resolution,
+				// but it may end up being lower.
+				width: desiredWidth,
+				height: desiredHeight
+			}*/
+		};
+
+		// open the webcam stream
+		navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+			video.srcObject = stream;
+			const track = stream.getVideoTracks()[0];
+			const trackInfo = track.getSettings();
+			//let {width, height} = trackInfo;
+			// required to tell iOS safari we don't want fullscreen
+			video.setAttribute("playsinline", true);
+			video.play();
+
+			let box = this.getBoundingClientRect();
+
+			//console.log(actualSettings.width, actualSettings.height)
+			canvas.width = trackInfo.width;//200;//actualSettings.width;
+			canvas.height = trackInfo.height;//200;//actualSettings.height;
+
+			canvasCtx.lineWidth = 4;
+			canvasCtx.strokeStyle = this.boxColor || "#FF3B58";
+
+			let { 
+				offsetX, offsetY, width, height
+			} = contain(canvas.width, canvas.height, trackInfo.width, trackInfo.height);
+
+			offsetX = Math.floor(offsetX)
+			offsetY = Math.floor(offsetY)
+			width = Math.floor(width)
+			height = Math.floor(height)
+
+			requestAnimationFrame(()=>{
+				this.videoTick({
+					video, box:{offsetX, offsetY, width, height}, canvas, canvasCtx,
+					cameraId : selectedCamera.id
+				})
+			});
+
+		}).catch((e) => {
+			throw e
+		});
+	}
+
+	setError(error){
+		this.errorMessage = error;
+	}
+
+	async init(){
+		if(this.stopped)
+			return
+		try{
+			let cameras = await this.getCameras();
+			this.cameras = cameras;
+			let backCameras =  cameras.filter(c=>!c.label.toLowerCase().includes("front"))
+			if(backCameras.length){
+				this.selectedCamera = backCameras[0];
+			}else if(cameras.length){
+				this.selectedCamera = cameras[0];
+			}
+			this.log("cameras", cameras)
+		}catch(e){
+			console.log("getCameras:error", e)
+			this.setError(html`Camera discovery process failed.
+				<br />Make sure you have given Camera permission.`)
+			this.cameraDiscovery = false;
+		}
+	}
+	closeActiveStreams(stream){
+		if(!stream)
+			return
+
+		// 	alert('stopping');
+		// return;
+		const tracks = stream.getVideoTracks();
+		for (var i = 0; i < tracks.length; i++) {
+			const track = tracks[i];
+			track.enabled = false;
+			track.stop();
+			stream.removeTrack(track);
+		}
+	}
+
+	getCameras() {
+		return new Promise((resolve, reject) => {
+			if (navigator.mediaDevices
+				&& navigator.mediaDevices.enumerateDevices
+				&& navigator.mediaDevices.getUserMedia) {
+				this.log("navigator.mediaDevices used");
+				navigator.mediaDevices.getUserMedia({ audio: false, video: true })
+				.then(stream => {
+					// hacky approach to close any active stream if they are
+					// active.
+					stream.oninactive
+						= _ => this.log("All streams closed");
+
+					navigator.mediaDevices.enumerateDevices()
+						.then(devices => {
+							const results = [];
+							//alert("devices:"+JSON.stringify(devices))
+							for (var i = 0; i < devices.length; i++) {
+								const device = devices[i];
+								if (device.kind == "videoinput") {
+									if(!/front/i.test(device.label) || devices.length == 1) {
+										results.push({
+											id: device.deviceId,
+											label: device.label
+										});
+									}
+								}
+							}
+							this.log(`${results.length} results found`);
+							this.closeActiveStreams(stream);
+							resolve(results);
+						})
+						.catch(err => {
+							reject(`${err.name} : ${err.message}`);
+						});
+				})
+				.catch(err => {
+					reject(`${err.name} : ${err.message}`);
+				})
+			} else if (MediaStreamTrack && MediaStreamTrack.getSources) {
+				this.log("MediaStreamTrack.getSources used");
+				const callback = sourceInfos => {
+					const results = [];
+					for (var i = 0; i !== sourceInfos.length; ++i) {
+						const sourceInfo = sourceInfos[i];
+						if (sourceInfo.kind === 'video') {
+							results.push({
+								id: sourceInfo.id,
+								label: sourceInfo.label
+							});
+						}
+					}
+					this.log(`${results.length} results found`);
+					resolve(results);
+				}
+				MediaStreamTrack.getSources(callback);
+			} else {
+				this.log("unable to query supported devices.");
+				reject("unable to query supported devices.");
+			}
+		});
+	}
+
+	stopScanning(){
+		let {video} = this;
+		this._log("stopScanning", 'video_srcObject:'+(!!video?.srcObject))
+		if(video?.srcObject){
+			this.closeActiveStreams(video.srcObject)
+			video.srcObject = null;
+		}
+		this.scanning = false;
+	}
+
+	videoTick({video, box, canvasCtx, canvas, cameraId}) {
+		if(cameraId != this.selectedCamera?.id)
+			return
+
+		let next = ()=>{
+			if(this.qrCode){
+				this.stopScanning()
+				return
+			}
+			if(this.stopped)
+				return;
+				
+			requestAnimationFrame(()=>{
+				this.videoTick({video, box, canvas, canvasCtx, cameraId})
+			});
+		}
+
+		this.__render++;
+		if(this.__render != 1){
+			if(this.__render<this.renderAfter)
+				return next();
+
+			this.__render = 0;
+		}
+
+
+		if (video.readyState !== video.HAVE_ENOUGH_DATA)
+			return next();
+
+		canvasCtx.fillRect(0, 0, box.width, box.height);
+		canvasCtx.drawImage(video, box.offsetX, box.offsetY, box.width, box.height);
+		let imageData = canvasCtx.getImageData(0, 0, box.width, box.height);
+
+		let code = jsQR(imageData.data, imageData.width, imageData.height, {
+			inversionAttempts: "dontInvert",
+		});
+
+		if (code) {
+			let loc = code.location;
+			this.drawLine(canvasCtx, loc.topLeftCorner, loc.topRightCorner);
+			this.drawLine(canvasCtx, loc.topRightCorner, loc.bottomRightCorner);
+			this.drawLine(canvasCtx, loc.bottomRightCorner, loc.bottomLeftCorner);
+			this.drawLine(canvasCtx, loc.bottomLeftCorner, loc.topLeftCorner);
+			this.setQRCode(code.data);
+		}
+
+		this.viewImg.src = canvas.toDataURL("image/jpeg");
+
+		next();
+		
+	}
+
+	drawLine(ctx, begin, end){
+		ctx.beginPath();
+		ctx.moveTo(begin.x, begin.y);
+		ctx.lineTo(end.x, end.y);
+		ctx.stroke();
+	}
+
+	onCameraSelect(e){
+		let {selected} = e.detail;
+		console.log("selected", selected)
+		this.selectedCamera = this.cameras.find(c=>c.id == selected);
+	}
+
+}
+
+FlowQRCodeScanner.define('flow-qrcode-scanner');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_BTN_380 : &'static str = r###"
+
+
+
+
+/**
+* @class FlowBtn
+* @extends BaseElement
+* @example
+*   <flow-btn>Button 1</flow-btn>
+* @property {Boolean} [disabled] 
+* @cssvar {font-family} [--flow-btn-font-family=var(--flow-font-family, initial)]
+* @cssvar {font-weight} [--flow-btn-font-weight=var(--flow-font-weight, bold)]
+* @cssvar {font-size} [--flow-btn-font-size=initial]
+* @cssvar {line-height} [--flow-btn-line-height=inherit]
+* @cssvar {color} [--flow-border-color=var(--flow-primary-color, rgba(0,151,115,1))]
+* @cssvar {color} [--flow-btn-hover-border-color=var(--flow-primary-color, rgba(0,151,115,1))]
+* @cssvar {color} [--flow-btn-primary-invert-color=var(--flow-primary-invert-color, #FFF)]
+* @cssvar {color} [--flow-btn-success-color=var(--flow-btn-success-color, #FFF)]
+* @cssvar {color} [--flow-btn-hover-info-color=var(--flow-btn-info-color, #FFF))]
+* @cssvar {color} [--flow-btn-hover-success-color=var(--flow-btn-success-color, #FFF))]
+* @cssvar {color} [--flow-btn-hover-warning-color=var(--flow-btn-warning-color, #FFF))]
+* @cssvar {color} [--flow-btn-hover-danger-color=var(--flow-btn-danger-color, #FFF))]
+* @cssvar {color} [--flow-btn-warning-color=var(--flow-btn-warning-color, #FFF))]
+* @cssvar {color} [--flow-btn-danger-color=var(--flow-btn-danger-color, #FFF))]
+* @cssvar {color} [--flow-btn-info-color=var(--flow-btn-info-color, #FFF))]
+* @cssvar {background-color} [--flow-btn-primary-bg-color=var(--flow-primary-color, rgba(0,151,115,1))]
+* @cssvar {background-color} [--flow-btn-success-bg-color=var(--flow-primary-color, rgba(0,151,115,1))]
+* @cssvar {background-color|border-color} [--flow-btn-hover-success-bg-color=var(--flow-primary-color, rgba(0,151,115,1)))]
+* @cssvar {background-color|border-color} [--flow-btn-warning-bg-color=var(--flow-primary-color, rgba(0,151,115,1)))]
+* @cssvar {background-color|border-color} [--flow-btn-hover-warning-bg-color=var(--flow-primary-color, rgba(0,151,115,1)))]
+* @cssvar {background-color|border-color} [--flow-btn-danger-bg-color=var(--flow-primary-color, rgba(0,151,115,1)))]
+* @cssvar {background-color|border-color} [--flow-btn-hover-danger-bg-color=var(--flow-primary-color, rgba(0,151,115,1)))]
+* @cssvar {background-color|border-color} [--flow-btn-info-bg-color=var(--flow-primary-color, rgba(0,151,115,1)))]
+* @cssvar {background-color|border-color} [--flow-btn-hover-info-bg-color=var(--flow-primary-color, rgba(0,151,115,1)))]
+* @cssvar {border-color} [--flow-btn-hover-success-bg-color=var(--flow-primary-color, rgba(0,151,115,1)))]
+* @cssvar {border-color} [--flow-btn-success-bg-color=var(--flow-primary-color, rgba(0,151,115,1)))]
+* @cssvar {border-radius} [--flow-btn-radius=8px]
+* @cssvar {margin} [--flow-btn-margin=""]
+* @cssvar {margin} [--flow-btn-wrapper-margin=5px];
+* @cssvar {min-width} [--flow-btn-wrapper-min-width=50px];
+* @cssvar {padding} [--flow-btn-padding=5px]
+*/
+export class FlowBtn extends BaseElement {
+	static get properties() {
+		return {
+			disabled:{type:Boolean, reflect: true},
+			'on-click':{type:Function},
+			icon:{type:String, reflect:true},
+			i18n:{type:Boolean, reflect: true}
+		}
+	}
+
+	static get styles(){
+		return css`
+			:host{
+				display:var(--flow-btn-display, inline-flex);
+				margin: var(--flow-btn-margin);
+				padding:var(--flow-btn-padding, 5px);
+				border: var(--flow-btn-border, 2px solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1))));
+				border-radius:var(--flow-btn-radius, 8px);
+				border-width:var(--flow-btn-border-width, 2px);
+				font-family:var(--flow-btn-font-family, var(--flow-font-family, initial));
+				font-weight:var(--flow-btn-font-weight, var(--flow-font-weight, bold));
+				font-size:var(--flow-btn-font-size, initial);
+				line-height:var(--flow-btn-line-height, inherit);
+				text-transform:var(--flow-btn-text-transform, inherit);
+				user-select: none;
+				--fa-icon-size-temp:var(--fa-icon-size);
+			}
+			:host([icon]){
+				padding:var(--flow-iconbtn-padding, var(--flow-btn-padding, 5px));
+			}
+			fa-icon{
+
+				--fa-icon-size:var(--flow-btn-icon-size, var(--fa-icon-size-temp, 20px))
+			}
+			:host([disabled]){
+				opacity:0.5;
+				cursor:default;
+				pointer-events:none;
+			}
+			:host(.start-justifed){
+				justify-self:flex-start;
+			}
+			:host(.end-justifed){
+				justify-self:flex-end;
+			}
+			:host(:not([disabled])){
+				cursor:pointer;
+				background-color:var(--flow-btn-bg-color, inherit);
+				border-color:var(--flow-btn-border-color, inherit);
+				color:var(--flow-btn-color, inherit);
+			}
+			:host(:not([disabled]):hover){
+				background-color:var(--flow-btn-hover-bg-color, inherit);
+				border-color:var(--flow-btn-hover-border-color, inherit);
+				color:var(--flow-btn-hover-color, inherit);
+				--fa-icon-color:var(--flow-btn-hover-color, inherit);
+			}
+			:host([primary]),
+			:host(.primary){
+				background-color:var(--flow-btn-primary-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border-color:var(--flow-btn-primary-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				color:var(--flow-btn-primary-invert-color, var(--flow-primary-invert-color, #FFF));
+				--fa-icon-color:var(--flow-btn-primary-invert-color, var(--flow-primary-invert-color, #FFF));
+			}
+			:host([primary]:not([disabled]):hover),
+			:host(.primary:not([disabled]):hover){
+				background-color:var(--flow-btn-hover-primary-bg-color, var(--flow-btn-hover-border-color, var(--flow-primary-color, rgba(0,151,115,1))));
+				color: var(--flow-btn-hover-primary-color);
+			}
+
+			:host(.secondary){
+				background-color:var(--flow-btn-secondary-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border-color:var(--flow-btn-secondary-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				color:var(--flow-btn-secondary-color, #FFF);
+			}
+
+			:host(.secondary:not([disabled]):hover){
+				background-color:var(--flow-btn-hover-secondary-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border-color:var(--flow-btn-hover-secondary-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				color:var(--flow-btn-hover-secondary-color, var(--flow-btn-secondary-color, #FFF));
+			}
+
+			:host(.success){
+				background-color:var(--flow-btn-success-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border-color:var(--flow-btn-success-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				color:var(--flow-btn-success-color, #FFF);
+			}
+
+			:host(.success:not([disabled]):hover){
+				background-color:var(--flow-btn-hover-success-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border-color:var(--flow-btn-hover-success-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				color:var(--flow-btn-hover-success-color, var(--flow-btn-success-color, #FFF));
+			}
+
+			:host(.warning){
+				background-color:var(--flow-btn-warning-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border-color:var(--flow-btn-warning-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				color:var(--flow-btn-warning-color, #FFF);
+			}
+
+			:host(.warning:not([disabled]):hover){
+				background-color:var(--flow-btn-hover-warning-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border-color:var(--flow-btn-hover-warning-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				color:var(--flow-btn-hover-warning-color, var(--flow-btn-warning-color, #FFF));
+			}
+
+			:host(.danger){
+				background-color:var(--flow-btn-danger-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border-color:var(--flow-btn-danger-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				color:var(--flow-btn-danger-color, #FFF);
+			}
+
+			:host(.danger:not([disabled]):hover){
+				background-color:var(--flow-btn-hover-danger-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border-color:var(--flow-btn-hover-danger-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				color:var(--flow-btn-hover-danger-color, var(--flow-btn-danger-color, #FFF));
+			}
+
+			:host(.info){
+				background-color:var(--flow-btn-info-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border-color:var(--flow-btn-info-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				color:var(--flow-btn-info-color, #FFF);
+			}
+
+			:host(.info:not([disabled]):hover){
+				background-color:var(--flow-btn-hover-info-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border-color:var(--flow-btn-hover-info-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				color:var(--flow-btn-hover-info-color, var(--flow-btn-info-color, #FFF));
+			}
+
+			.wrapper{
+				display:flex;
+				align-items:center;
+				margin:var(--flow-btn-wrapper-margin,5px);
+				min-width:var(--flow-btn-wrapper-min-width,50px);
+				text-align:center;
+				justify-content:center;
+				box-sizing:border-box;
+			}
+			:host([full-height-wrapper]) .wrapper,
+			:host([icon]) .wrapper{
+				height:100%;
+				margin:0px;
+			}
+			:host([i18n]) slot,
+			:host(:not([i18n])) #text-element{
+				display:none
+			}
+		`;
+	}
+	constructor(){
+		super()
+		this.addEventListener("click", ()=>{
+			this.click();
+		})
+		this.i18nSupport = (this.getAttribute("i18n") != null);
+		if(this.i18nSupport){
+			i18nElementsMap.set(this, {});
+		}
+	}
+	render() {
+		let {icon=''} = this;
+		return html`<div 
+			class="wrapper">${icon?html`<fa-icon icon=${icon}></fa-icon>`:''} <slot id="text-slot"></slot><span id="text-element"></span></div>`;
+	}
+
+	firstUpdated(...args){
+		super.firstUpdated(...args);
+		this.setAttribute('role', 'button');
+		if(this.i18nSupport){
+			this.slotElement = this.renderRoot.querySelector("#text-slot")
+			this.textElement = this.renderRoot.querySelector("#text-element")
+			this.slotElement.addEventListener('slotchange', (e)=>{
+				this.slotElementChidren = this.slotElement.assignedNodes();
+				let text = [];
+				this.slotElementChidren.forEach(el=>{
+					text.push(el.textContent)
+				})
+				//console.log("this.slotElementChidren", this.slotElementChidren, text)
+				this.__i18nText = i18n.cleanText(text.join(""));
+				this.setI18nValue(this.__i18nText?i18n.t(this.__i18nText):'')
+			})
+			
+		}
+	}
+
+	setI18nValue(text){
+		if(this.textElement){
+			this.textElement.innerHTML = text;
+		}
+	}
+
+	click() {
+		if(this.disabled)
+			return
+		this.fire("flow-btn-click", {el:this})
+		let clickFn = this['on-click'];
+		if(clickFn){
+			if(typeof clickFn == "string"){
+				try{
+					eval(clickFn);
+				}catch(e){
+
+				}
+			}else if(typeof clickFn == "function"){
+				clickFn();
+			}
+		}
+
+		/*let form = this.form || this.getAttribute("form");
+
+		if(typeof(form) == 'string'){
+			form = document.querySelector(form);
+		}
+
+		if(form && form.submit())*/
+	}
+
+	connectedCallback(){
+		super.connectedCallback();
+		if(this.i18nSupport){
+			i18nElementsMap.set(this, {});
+		}
+	}
+
+	disconnectedCallback(){
+		super.disconnectedCallback();
+		if(this.i18nSupport){
+			i18nElementsMap.delete(this, {});
+		}
+	}
+}
+
+FlowBtn.define('flow-btn');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_GROUP_BTNS_403 : &'static str = r###"
+
+
+
+/**
+* @class FlowGroupBtns
+* @extends BaseElement
+* @property {Boolean} [disabled]
+* @property {Boolean} [toggleable] 
+* @property {String} [selected=""] 
+* @property {String} [valueAttr="data-value"] 
+* @cssvar {font-family} [--flow-font-family="Julius Sans One"]
+* @cssvar {font-weight} [--flow-font-weight=bold]
+* @cssvar {border-radius} [--flow-btn-radius=8px]
+* @cssvar {margin} [--flow-group-btns-margin]
+* @cssvar {border-color} [--flow-group-btns-border-color=var(--flow-primary-color, rgba(0,151,115,1))]
+* @cssvar {border-width} [--flow-group-btns-border-width=1px]
+* @cssvar {font-size} [--flow-group-btns-font-size=initial]
+* @cssvar {line-height} [--flow-group-btns-line-height=inherit]
+* @cssvar {align-items} [--flow-group-btns-align-items=stretch]
+* @cssvar {min-width} [--flow-group-btns-wrapper-min-width=50px]
+* @cssvar {justify-content} [--flow-group-btns-wrapper-justify=initial]
+* @example
+*   <flow-group-btns selected="1">
+*		<flow-btn data-value="1">Button 1</flow-btn>
+*		<flow-btn data-value="2">Button 2</flow-btn>
+*	</flow-group-btns>
+*/
+
+/*
+... @ cssvar {--flow-btn-bg-color} [--flow-group-btns-active-bg-color=var(--flow-primary-color)]
+... @ cssvar {--flow-btn-color} [--flow-group-btns-active-color=var(--flow-primary-invert-color)]
+... @ cssvar {--flow-btn-hover-color} [--flow-group-btns-active-color=var(--flow-primary-invert-color)]
+*/
+
+export class FlowGroupBtns extends BaseElement {
+	static get properties() {
+		return {
+			disabled:{type:Boolean, reflect: true},
+			selected:{type:String},
+			valueAttr:{type:String},
+			toggleable:{type:Boolean}
+		}
+	}
+
+	static get styles(){
+		return css`
+			:host{
+				display:inline-block;
+				margin: var(--flow-group-btns-margin);
+				padding:0px;
+				border:1px solid var(--flow-group-btns-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border-radius:var(--flow-group-btns-radius, 8px);
+				border-width:var(--flow-group-btns-border-width, 1px);
+				font-family:var(--flow-group-btns-font-family, var(--flow-font-family, initial));
+				font-weight:var(--flow-group-btns-font-weight, var(--flow-font-weight, bold));
+				font-size:var(--flow-group-btns-font-size, initial);
+				line-height:var(--flow-group-btns-line-height, inherit);
+				user-select: none;
+				overflow:hidden;
+				background-color: var(--flow-group-btns-bg, var(--flow-input-bg, inherit));
+			}
+			:host([disabled]){
+				opacity:0.5;
+				cursor:default;
+				pointer-events:none;
+			}
+
+			:host ::slotted(flow-btn){
+				--flow-btn-margin:0px;
+				--flow-btn-border-width:0px;
+				--flow-btn-radius:0px;
+				--flow-btn-wrapper-margin:5px;
+				--flow-btn-hover-color:var(--flow-group-btns-active-color-hover, var(--flow-primary-invert-color));
+				border-right:var(--flow-group-btns-border-width, 1px) solid var(--flow-group-btns-border-color, var(--flow-primary-color, rgba(0,151,115,1)))
+			}
+
+			:host ::slotted(flow-btn.active){
+				--flow-btn-bg-color:var(--flow-group-btns-active-bg-color, var(--flow-primary-color));
+				--flow-btn-color:var(--flow-group-btns-active-color, var(--flow-primary-invert-color));
+				--flow-btn-hover-color:var(--flow-group-btns-active-color-hover, var(--flow-primary-invert-color));
+			}
+
+			:host ::slotted(flow-btn:last-child){
+				border-right:0px;
+			}
+
+			.wrapper{
+				display:flex;flex-direction:row;
+				align-items:var(--flow-group-btns-align-items, stretch);
+				min-width: var(--flow-group-btns-wrapper-min-width, 50px);
+				text-align:center;
+				justify-content:var(--flow-group-btns-wrapper-justify, initial);
+			}
+		`;
+	}
+	constructor(){
+		super()
+		this.valueAttr = "data-value";
+		this.setAttribute('role', 'buttons');
+	}
+	render() {
+		return html`
+		<div class="wrapper" @click=${this.click}>
+			<slot></slot>
+		</div>
+		`;
+	}
+	firstUpdated(){
+		this.listSlot = this.renderRoot.querySelector('slot');
+		this.updateList();
+	}
+	updated(...args){
+		super.updated(...args);
+		this.updateList();
+	}
+
+	click(e) {
+		if(this.disabled)
+			return
+		let target = e.target;
+		let selected = target.getAttribute(this.valueAttr);
+		if(this.toggleable && this.selected == selected){
+			selected = "";
+		}
+
+		this.log("selected", selected)
+
+		this.selected = selected;
+		this.fire("group-btn-select", {el:this, selected})
+		this.updateList();
+	}
+	updateList(){
+		if(!this.listSlot)
+			return
+		this.listSlot.assignedElements()
+			.map(btn=>{
+				let selected = this.selected == btn.getAttribute(this.valueAttr);
+				btn.classList.toggle("active", selected);
+			})
+	}
+}
+
+FlowGroupBtns.define('flow-group-btns');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_SHELL_LINK_405 : &'static str = r###"
+
+
+
+
+
+/**
+* @class FlowShellLink
+* @extends BaseElement
+*
+* @property {Boolean} [disabled] 
+* @property {Boolean} [icon]
+* @property {String} [href]
+*
+* @cssvar {font-family} [--flow-font-family="Julius Sans One"]
+* @cssvar {font-weight} [--flow-font-weight=bold]
+* @cssvar {color} [--flow-link-color=#017b68]
+* @cssvar {color} [--flow-link-hover-color=#017b68]
+* @cssvar {fill} [--flow-primary-color=017b68]
+*
+* @example
+*   <flow-shell-link url="url">text</flow-shell-link>
+*
+*/
+export class FlowShellLink extends BaseElement {
+	static get properties() {
+		return {
+			disabled:{type:Boolean, reflect: true},
+			icon:{type:Boolean, reflect: true},
+			href : { type : String }
+		}
+	}
+
+	static get styles(){
+		return css`
+			:host{
+				display:inline-block;
+				font-family:var(--flow-font-family, "Julius Sans One");
+				font-weight:var(--flow-font-weight, bold);
+			}
+			:host([disabled]){
+				opacity:0.5;
+				cursor:default;
+				pointer-events:none;
+			}
+			:host(:not([disabled])){
+				cursor:pointer;
+			}
+
+			.link-wrapper {
+				color: var(--flow-link-color, #017b68);
+				display: flex;
+			}
+
+			.link-wrapper:hover {
+				color: var(--flow-link-hover-color, #017b68);
+			}
+
+			.icon-box {
+				display: block;
+				width: 16px;
+				height: 16px;
+				margin-bottom: -4px;
+				opacity: 0.65;
+			}
+
+			.icon-box svg {
+				fill: var(--flow-primary-color, #017b68);
+				width: 100%;
+				height: 100%;
+			}
+
+			.content {
+				display: block;
+			}
+		`;
+	}
+
+	constructor(){
+		super()
+	}
+
+	render() {
+		let iconSrc = this.iconPath(`external-link-square-alt`);
+		return html`
+		<div class="link-wrapper" @click=${this.click}>
+			<div class="content"><slot></slot></div>
+			${ this.icon ? html`<div class="icon-box"><svg><use href="${iconSrc}"></use></svg></div>` : '' }
+		</div>
+		`;
+	}
+
+	click() {
+		this.fire("flow-shell-link-click", {el:this})
+		console.log("opening href:",this.href);
+		require('nw.gui').Shell.openExternal( this.href );
+
+	}
+}
+
+FlowShellLink.define('flow-shell-link');
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_WINDOW_LINK_349 : &'static str = r###"
+
+
+
+//if(typeof nw != 'undefined'){
+	/*chrome.webRequest.onBeforeRequest.addListener(function(details) {
+    	console.log("onBeforeRequest", details)
+		return {cancel: false};
+    },
+    {urls: ["<all_urls>"]},
+    ["blocking"]);*/
+	//onHeadersReceived
+	/*
+	chrome.webRequest.onResponseStarted.addListener(function(details){
+		let {responseHeaders, url, type} = details;
+		
+		if(type == "script"){
+			console.log("onHeadersReceived", responseHeaders, details)
+			let found = responseHeaders.find(a=>{
+				return a.name && a.name.toLowerCase() == 'content-type';
+			})
+			if(!found)
+				responseHeaders.push({name: "Content-Type", value: "text/javascript"})
+		}
+		return responseHeaders;
+	},
+	{urls: ["<all_urls>"]},
+	['responseHeaders', 'extraHeaders']);
+	*/
+//}
+
+/**
+* @class FlowWindowLink
+* @extends BaseElement
+*
+* @property {String} [url]
+* @property {String} [id]
+* @property {String} [title]
+* @property {Boolean} [disabled]
+* @property {String} [icon] window icon
+* @property {Number} [width]
+* @property {Number} [height]
+* @property {Boolean} [resizable]
+* @property {Boolean} [frame]
+* @property {Boolean} [transparent]
+* @property {Number} [min_width]
+* @property {Number} [min_height]
+* @property {Number} [max_width]
+* @property {Number} [max_height]
+* @property {Boolean} [as_desktop]
+* @property {Boolean} [always_on_top] 
+* @property {Boolean} [visible_on_all_workspaces] (OS X Only)
+* @property {Boolean} [new_instance] Open the window in a separate process
+*
+*
+* @cssvar {font-family} [--font-family=var(--flow-font-family, "Open Sans")]
+* @cssvar {font-weight} [--font-weight=var(--flow-font-weight, normal)]
+* @cssvar {color} [--flow-link-color=var(--flow-link-color, #017b68)]
+* @cssvar {color} [--flow-link-hover-color=var(--flow-link-hover-color, #017b68)]
+* @cssvar {fill} [--flow-primary-color=rgba(0,151,115,1)]
+*
+* @example
+*   <flow-window-link href="url">text</flow-window-link>
+*
+* http://docs.nwjs.io/en/latest/References/Manifest%20Format/#window-subfields
+*
+*/
+export class FlowWindowLink extends BaseElement {
+	static get properties() {
+		return {
+			disabled:{type:Boolean, reflect: true},
+			icon:{type:String},
+			url : { type : String },
+			id : { type : String },
+			title : { type : String },
+			width : { type : Number },
+			height : { type : Number },
+			resizable : { type : Boolean },
+			frame : { type : Boolean },
+			transparent : { type : Boolean },
+			fullscreen : { type : Boolean },
+			min_width : { type : Number },
+			min_height : { type : Number },
+			max_width : { type : Number },
+			max_height : { type : Number },
+			as_desktop : { type : Boolean },
+			always_on_top : { type : Boolean },
+			visible_on_all_workspaces : { type : Boolean },
+			new_instance : { type : Boolean },
+		}
+	}
+
+	static get styles(){
+		return css`
+			:host{
+				display:inline-block;
+				font-family:var(--flow-font-family, "Open Sans");
+				font-weight:var(--flow-font-weight, normal);
+			}
+			:host([disabled]){
+				opacity:0.5;
+				cursor:default;
+				pointer-events:none;
+			}
+			:host(:not([disabled])){
+				cursor:pointer;
+			}
+
+			.link-wrapper {
+				color: var(--flow-link-color, #017b68);
+				display: flex;
+			}
+
+			.link-wrapper:hover {
+				color: var(--flow-link-hover-color, #017b68);
+			}
+/*
+			.icon-box {
+				display: block;
+				width: 16px;
+				height: 16px;
+				margin-bottom: -4px;
+				opacity: 0.65;
+			}
+
+			.icon-box svg {
+				fill: var(--flow-primary-color, #017b68);
+				width: 100%;
+				height: 100%;
+			}
+*/
+			.content {
+				display: block;
+			}
+		`;
+	}
+
+	constructor(){
+		super();
+
+		this.width = 1024;
+		this.height = 768;
+		this.resizable = true;
+		this.frame = true;
+		this.transparent = false;
+		this.fullscreen = false;
+		this.icon = undefined;
+		this.min_width = undefined;
+		this.min_height = undefined;
+		this.max_width = undefined;
+		this.max_height = undefined;
+		this.as_desktop = false;
+		this.always_on_top = false;
+		this.visible_on_all_workspaces = false;
+		this.new_instance = undefined;
+		this.show = true;
+		this.url = '';
+
+		if(!window.flow)
+			window.flow = { };
+		if(!window.flow['flow-window-link'])
+			window.flow['flow-window-link'] = { windows : [ ] };
+	}
+
+	render() {
+		//let iconSrc = this.iconPath(this.linkicon || `external-link-square-alt`);
+		return html`
+		<div class="link-wrapper" @click=${this.click}>
+			<div class="content"><slot></slot></div>
+		</div>
+			`;
+			//${ this.icon ? html`<div class="icon-box"><svg><use href="${iconSrc}"></use></svg></div>` : '' }
+	}
+
+	click() {
+		this.fire("flow-window-link-click", {el:this})
+		console.log("opening url:",this.url);
+		//require('nw.gui').Shell.openExternal( this.href );
+
+		const { 
+			id, 
+			title, 
+			width, 
+			height, 
+			resizable, 
+			frame, 
+			transparent, 
+			show, 
+			fullscreen, 
+			icon, 
+			min_width, 
+			min_height, 
+			max_width, 
+			max_height, 
+			as_desktop, 
+			always_on_top, 
+			visible_on_all_workspaces, 
+			new_instance 
+		} = this;
+
+		let args = {
+			id, 
+			title, 
+			width, 
+			height, 
+			resizable, 
+			frame, 
+			transparent, 
+			show, 
+			fullscreen, 
+			icon, 
+			min_width, 
+			min_height, 
+			max_width, 
+			max_height, 
+//			as_desktop, 
+			always_on_top, 
+//			visible_on_all_workspaces, 
+			new_instance,
+			//new_instance: true,
+			// id: this.id,
+			// title: this.title,
+			// width: 1027,
+			// height: 768,
+			// resizable: true,
+			// frame: true,
+			// transparent: false,
+			// show: true,
+			// http://docs.nwjs.io/en/latest/References/Manifest%20Format/#window-subfields
+		};
+
+
+
+        if(this.url && typeof nw != 'undefined') {
+            nw.Window.open(this.url, args, (win, b) => {
+            	win.window.appOrigin = location.origin;
+				window.flow['flow-window-link'].windows.push(win);
+
+				//this.window = win;
+				
+
+                // console.log("win", win)
+                // win.app = this;
+                // global.abcapp = "123";
+                // resolve();
+            });
+        }
+
+	}
+}
+
+FlowWindowLink.define('flow-window-link');
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FA_ICON_418 : &'static str = r###"
+
+
+/**
+ *
+ * @export
+ * @class FaIcon
+ * @extends {BaseElement}
+ * @property {String} [style] inner svg tag style text
+ * @example
+ * <fa-icon icon="fal:chart-network"></fa-icon>
+ * <fa-icon icon="icons:chart-network"></fa-icon>
+ */
+export class FaIcon extends BaseElement {
+	static get properties() {
+		return {
+			color:String,
+			src: String,
+			style: String,
+			css: String,
+			size:Number,
+			w:Number,
+			h:Number,
+			icon:String
+		};
+	}
+	static get styles() {
+		return css`
+		:host {
+			display: inline-block;
+			padding: var(--fa-icon-padding, 0px);
+			margin: var(--fa-icon-margin, 0px);
+			width: var(--fa-icon-size, 19px);
+			height: var(--fa-icon-size, 19px);
+		}
+		svg,img{
+			width: var(--fa-icon-size, 19px);
+			height: var(--fa-icon-size, 19px);
+			fill: var(--fa-icon-color);
+		}
+		img{object-fit:contain;}
+		`;
+	}
+	constructor() {
+		super();
+		this.src = '';
+		this.style = '';
+		this.css = '';
+		//this.size = 19;
+		this.color = '';
+	}
+	firstUpdated() {
+		//this.src = this.getSources(this.class_);
+	}
+	render() {
+		this.src = this.iconPath(this.icon);
+		//let size1 = this.style.getPropertyValue("--fa-icon-size");
+		//console.log("size1size1", size1)
+		let {size, color, w, h} = this;
+		w = (w||size)?`width:${w||size}px;`:'';
+		h = (h||size)?`height:${h||size}px;`:'';
+		color = color?`fill:${color};`:'';
+		let ext = this.src.split(/\?#/)[0].split(".").pop().toLowerCase();
+		if(['png', 'jpeg', 'jpg'].includes(ext)){
+			return html`<img style="${w}${h}${color}${this.css||''}" src="${this.src}" />`;
+		}
+		return html`
+		<svg style="${w}${h}${color}${this.style}"><use href="${this.src}"></use></svg>
+		`;
+	}
+}
+FaIcon.define('fa-icon');
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_DATA_BADGE_386 : &'static str = r###"
+
+
+
+
+/**
+* @class FlowDataBadge
+* @extends BaseElement
+* @example
+*   <flow-data-badge title="text">value</flow-data-badge>
+* @property {Boolean} [disabled] 
+* @property {String} [title] 
+* @property {String} [prefix] 
+* @property {String} [suffix] 
+* @property {String} [align] 
+* @cssvar {font-family} [--flow-data-badge-font-family="Julius Sans One"]
+* @cssvar {font-weight} [--flow-data-badge-font-weight=bold]
+* @cssvar {border} [--flow-primary-color=#333]
+* @cssvar {width} [--flow-data-badge-width]
+* @cssvar {min-width} [--flow-data-badge-min-width]
+* @cssvar {max-width} [--flow-data-badge-max-width]
+* @cssvar {margin} [--flow-data-badge-margin]
+* @cssvar {border} [--flow-data-badge-container-border=2px solid var(--flow-primary-color,#333)]
+* @cssvar {background-color} [--flow-data-badge-bg=inherit]
+* @cssvar {padding} [--flow-data-badge-container-padding=2px 6px]
+* @cssvar {margin} [--flow-data-badge-container-margin=6px]
+* @cssvar {box-shadow} [--flow-data-badge-container-box-shadow=2px 2px 1px rgba(1, 123, 104, 0.1)]
+* @cssvar {border-radius} [--flow-data-badge-container-border-radius=10px]
+* @cssvar {opacity} [--flow-data-badge-title-opacity=1]
+* @cssvar {font-size} [--flow-data-badge-title-font-size=10px] 
+* @cssvar {color} [--flow-data-badge-caption]
+* @cssvar {font-size} [--flow-data-badge-value-font-size=14px]
+* @cssvar {font-family} [--flow-data-badge-value-font-family="Exo 2"]
+* @cssvar {font-weight} [--flow-data-badge-value-font-weight=normal]
+* @cssvar {color} [--flow-data-field-value=#333]
+*/
+export class FlowDataBadge extends BaseElement {
+	static get properties() {
+		return {
+			disabled:{type:Boolean, reflect:true},
+			title:{type:String},
+			prefix : { type : String },
+			suffix:{type:String},
+			align:{type:String}
+		}
+	}
+
+	static get styles(){
+		return css`
+			:host{
+				display:inline-block;
+				font-weight:bold;
+				font-size:13px;
+				text-transform:uppercase;
+				cursor:pointer;
+				font-family:var(--flow-data-badge-font-family, "Julius Sans One");
+				font-weight:var(--flow-data-badge-font-weight, bold);
+				width:var(--flow-data-badge-width);
+				min-width:var(--flow-data-badge-min-width);
+				max-width:var(--flow-data-badge-max-width);
+				margin:var(--flow-data-badge-margin);
+			}
+			:host([disabled]){opacity:0.5;cursor:default;pointer-events:none;}
+			.colon{display:none}
+			:host(.has-colon) .colon{display:inline;}
+			.container{
+				white-space: nowrap;
+				border: var(--flow-data-badge-container-border, 2px) solid var(--flow-primary-color,#333);
+				background-color:var(--flow-data-badge-bg, inherit);
+				xdisplay:flex;xflex-firection:column;xalign-items:center;
+				padding:var(--flow-data-badge-container-padding,2px 6px);
+				margin: var(--flow-data-badge-container-margin, 6px);
+				box-shadow:var(--flow-data-badge-container-box-shadow, 2px 2px 1px rgba(1, 123, 104, 0.1));
+				border-radius:var(--flow-data-badge-container-border-radius, 10px);
+
+			}
+			.container>div{padding:2px;}
+			.title{
+				text-align:left; 
+				opacity:var(--flow-data-badge-title-opacity,1);
+				xmargin-top:7px; 
+				font-size: var(--flow-data-badge-title-font-size, 10px); 
+				color:var(--flow-data-badge-caption);
+				xtext-shadow: 0px 0px 0px var(--flow-data-badge-caption-shadow, #fff); }
+			.value{
+				text-align:right;opacity:1;
+				font-size:var(--flow-data-badge-value-font-size,14px);
+				font-family:var(--flow-data-badge-value-font-family,"Exo 2");
+				font-weight:var(--flow-data-badge-value-font-weight,normal);
+				
+			}
+			.prefix{opacity:0.9;margin-right:3px;margin-top:3px; font-size: 10px; }
+			.suffix{opacity:0.9;margin-left:3px;margin-top:3px; font-size: 10px; }
+			.col { display: flex; flex-direction: column; align-items: left; }
+			.row { display: flex; flex-direction: row; color: var(--flow-data-field-value,#333); }
+		`;
+	}
+
+	render() {
+		return html
+		`<div class="container col">
+			<div class="title">${this.title}<span class="colon">:</span></div>
+			<div class="row">
+				${ (!this.align || this.align == 'right') ? html`<div style="flex:1;"></div>` : '' }
+				<div class="prefix">${this.prefix}</div>
+				<div class="value"><slot></slot></div>
+				<div class="suffix">${this.suffix}</div>
+				${ (this.align == 'left') ? html`<div style="flex:1;"></div>` : '' }
+			</div>
+		</div>`;	
+	}
+}
+
+//FlowDataBadge.define('flow-data-badge');
+FlowDataBadge.define('flow-data-badge');
+
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_DATA_BADGE_GRAPH_366 : &'static str = r###"
+
+
+
+
+/**
+* @class FlowDataBadgeGraph
+* @extends Flowd3Element
+* @prop {Boolean} disabled
+* @prop {String} title
+* @prop {String} prefix
+* @prop {String} suffix
+* @prop {String} align
+* @prop {Number} value
+* @prop {String} sampler
+* @prop {String} type
+* @prop {Number} range
+* @cssvar {font-family} [--flow-data-badge-font-family="Julius Sans One"]
+* @cssvar {font-weight} [--flow-data-badge-font-weight=bold]
+* @cssvar {color} [--flow-data-badge-caption]
+* @cssvar {color} [--flow-data-field-value=#333]
+* @example
+*   <flow-data-badge-graph title="text">value</flow-data-badge-graph>
+*
+*/
+export class FlowDataBadgeGraph extends Flowd3Element {
+	static get properties() {
+		return {
+			disabled:{type:Boolean, reflect:true},
+			title:{type:String},
+			prefix : { type : String },
+			suffix:{type:String},
+			align:{type:String},
+			value:{type:Number},
+			sampler:{type:String},  // sampler: 'kaspad.kd0.info.
+			type:{type:String},
+			range:{type:Number},
+		}
+	}
+
+	static get styles(){
+		return [Flowd3Element.styles, css`
+			:host{
+				display:inline-flex;
+				font-weight:bold;
+				font-size:13px;
+				text-transform:uppercase;
+				cursor:pointer;
+				font-family:var(--flow-data-badge-font-family, "Julius Sans One");
+				font-weight:var(--flow-data-badge-font-weight, bold);
+				border-radius: 10px;
+				overflow: hidden;
+
+				/*width:300px;height:300px;*/
+			}
+			:host([disabled]){opacity:0.5;cursor:default;pointer-events:none;}
+			.colon{display:none}
+			:host(.has-colon) .colon{display:inline;}
+
+			:host([.large]) { 
+			}
+
+			.container{
+				white-space: nowrap;
+				xdisplay:flex;xflex-firection:column;xalign-items:center;
+				padding:2px 6px;
+				/*min-height: inherit;*/
+			}
+			.container>div{padding:2px;}
+			.title{flex:1; text-align:left; opacity:1;xmargin-top:7px; font-size: 10px; color: var(--flow-data-badge-caption); xtext-shadow: 0px 0px 0px var(--flow-data-badge-caption-shadow, #fff); }
+			.value{text-align:right; opacity:1;font-size:14px;font-family:"Exo 2";font-weight:normal;}
+			.prefix{opacity:0.9;margin-right:3px;margin-top:3px; font-size: 10px; }
+			.suffix{opacity:0.9;margin-left:3px;margin-top:3px; font-size: 10px; }
+			.col { display: flex; flex-direction: column; align-items: left;  }
+			.row { display: flex; flex-direction: row; flex:0; color: var(--flow-data-field-value,#333); }
+
+
+			.wrapper {
+				/*width:100%;height:100%;*/
+				position:relative;
+				flex:1;
+				margin:6px;overflow:hidden;
+				border: 2px solid var(--flow-primary-color,#333);
+				box-shadow: 2px 2px 1px rgba(1, 123, 104, 0.1);
+				border-radius: 10px;
+				/*
+				min-width: var(--flow-data-badge-graph-width,240px);
+				min-height: var(--flow-data-badge-graph-height,80px);				
+				*/				
+			}
+			.wrapper > div {
+				width:100%;height:100%;
+				position:relative;left:0px;top:0px;bottom:0px;right:0px;
+				/*display: flex;
+				flex-direction: column;*/
+				/*min-height: inherit;*/
+			}
+
+			.d3-holder{
+				min-height:10px;
+				min-width:10px;
+				opacity:1;
+				border-radius:10px;
+				/*border: 1px solid red;*/
+				/*margin: 0px -5px 0px -1px;
+				z-index: 100;*/
+			}
+
+			.wrapper>div.d3-holder{position:absolute;}
+
+		`];
+	}
+
+	constructor() {
+		super();
+		this.range = 60 * 5;
+		this.refresh = 1e3;
+		//this.svgViewBox = [-1, 0, 100, 50]
+		//this.svgPreserveAspectRatio = 'xMidYMid meet';
+		this.svgPreserveAspectRatio = 'xMaxYMax meet';
+	}
+
+	connectedCallback() {
+		super.connectedCallback();
+		if(this.sampler)
+			this.interval = setInterval(this.draw.bind(this), this.refresh);
+	}
+
+	disconnectedCallback() {
+		super.disconnectedCallback();
+
+		if(this.interval)
+			clearInterval(this.interval);
+		if(this._draw){
+			let sampler = FlowSampler.get(this.sampler || 'test-sampler');
+			sampler.off('data', this._draw);
+			this._draw = null;
+		}
+	}
+
+	onElementResize(){
+		super.onElementResize();
+		dpc(()=>{
+			this.draw();
+		})
+	}
+
+	render() {
+
+		dpc(()=>{
+			this.draw();
+		})
+
+		return html
+		`
+		<div class='wrapper'>
+			<div class="d3-holder">${super.render()}</div>
+			<div>
+				<div class="container col">
+					<div class="title">${this.title}<span class="colon">:</span></div>
+					<div class="row">
+						${ (!this.align || this.align == 'right') ? html`<div style="flex:1;"></div>` : '' }
+						<div class="prefix">${this.prefix}</div>
+						<div class="value"><slot></slot></div>
+						<div class="suffix">${this.suffix}</div>
+						${ (this.align == 'left') ? html`<div style="flex:1;"></div>` : '' }
+					</div>
+				</div>
+			</div>
+		</div>
+		`;	
+	}
+
+	getMargin(){
+		return {
+			bottom:0,
+			top:0,
+			left:0,
+			right:0
+		}
+	}
+
+
+	draw(){
+        if(!this.sampler)
+			return;
+
+        let sampler = FlowSampler.get(this.sampler || 'test-sampler');
+		if(!this._draw){
+			this._draw = this.draw.bind(this);
+			sampler.on('data', this._draw);
+		}
+
+        const { data } = sampler;
+		this.redraw(data);
+	}
+
+	redraw(data){
+
+		let margin = this.getMargin();
+		let {height, width} = this.el_d3.getBoundingClientRect();
+
+		//console.log("data", data)
+
+		let [min,max] = d3.extent(data, d => d.date);
+		//console.log("processing min-max[1]",min,max);
+		min = max - 1000*this.range;//@anton why we are extending this min?
+
+
+		const x = d3.scaleUtc()
+		.domain([min,max])
+		//.domain(d3.extent(data, d => d.date))//.nice()
+		.range([margin.left, width - margin.right])
+
+		const y = d3.scaleLinear()
+		//.domain([min,max])//.nice()
+		.domain(d3.extent(data, d => d.value))//.nice()
+		//.domain([0, d3.max(data, d => d.value)]).nice()
+		.range([height - margin.bottom, margin.top]);
+		/*
+		const xAxis = g => g
+		.attr("transform", `translate(0,${height - margin.bottom})`)
+		//.call(d3.axisBottom(x).ticks(width / 80).tickSizeOuter(0));
+
+		const yAxis = g => g
+		.attr("transform", `translate(${margin.left},0)`)
+		.call(d3.axisLeft(y))
+		.call(g => g.select(".domain").remove())
+		// .call(g => g.select(".tick:last-of-type text").clone()
+		// 	.attr("x", 3)
+		// 	.attr("text-anchor", "start")
+		// 	.attr("font-weight", "bold")
+		// 	.text(this.title));
+		*/
+
+		const area = d3.area()
+			.curve(d3.curveLinear)
+			.x(d => x(d.date))
+			.y0(y(0))
+			.y1(d => y(d.value));
+
+		const { el } = this;
+
+		if(!this.path)
+			this.path = el.append('path')
+				.attr("transform", `translate(${margin.left},0)`)
+				.attr('stroke-opacity', 'var(--flow-data-badge-graph-stroke-opacity, 1.0)')
+				.attr("stroke-linejoin", "round")
+				.attr("stroke-linecap", "round")
+				.attr("stroke-width", 'var(--flow-data-badge-graph-stroke-width, 0)')
+				.attr('fill','var(--flow-data-badge-graph-fill, steelblue)')
+                .attr('stroke','var(--flow-data-badge-graph-stroke, #000)')
+                
+				
+		this.path.datum(data)
+			.attr('d',area);
+	}
+}
+
+FlowDataBadgeGraph.define('flow-data-badge-graph');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_DIALOG_360 : &'static str = r###"
+//import '../resources/extern/dialog/dialog-polyfill.js';
+
+
+/**
+* @class FlowDialog
+* @extends BaseElement
+* @example
+*   <flow-dialog heading="Title">value</flow-dialog>
+* @property {Boolean} [disabled] 
+* @property {String} [heading] 
+* @property {Array} [btns] 
+* @property {Object} [body] 
+*/
+export class FlowDialog extends BaseElement {
+	static get properties() {
+		return {
+			disabled:{type:Boolean, reflect:true},
+			heading:{type:String},
+			btns:{type:Array},
+			body:{type:Object},
+			hideCloseBtn:{type:Boolean},
+			compact:{type:Boolean}
+		}
+	}
+
+	static buildArgs(...arg){
+		let args = arg.shift();
+		let handler = arg[arg.length-1];
+		if(typeof(args) == 'string'){
+			args = {
+				title:args,
+				body:arg.shift(),
+				cls:arg.shift(),
+				btns:arg.shift(),
+				modal:arg.shift(),
+			};
+		}
+		args.handler = args.handler || args.callback;
+		args.modal = args.modal !== false;
+
+		if(!args.handler && typeof(handler) == 'function')
+			args.handler = handler
+
+		//console.log("args", args)
+
+		return args;
+	}
+
+	static getHandler(btnName,  args){
+		let {btns, handler} = args;
+		if(!btnName || !btns || !btns.length)
+			return handler;
+
+		let btn = btns.find(btn=>((btn.value||btn.text)+"").toLowerCase() == btnName);
+		return btn? (btn.handler || btn.callback || handler):handler;
+	}
+
+	static _show(args){
+
+		let {btns, body, title, modal, cls, hideCloseBtn, compact, alignTo} = args;
+		let {autoClose} = args;
+		let dg = document.createElement("flow-dialog");
+		let promise = new Promise((resolve, reject)=>{
+			let resolved = false;
+			let onWindoClick = (e)=>{
+				if(resolved){
+					removeWinEventListener();
+					return
+				}
+				let t = e.target;
+				let menu = t && t.closest && t.closest("flow-dialog");
+				if(menu != dg){
+					removeWinEventListener();
+					dg.destroy();
+				}
+			}
+			let onWindoResize = e=>{
+				//console.log("onWindoResize22: dg.dialog", dg._isPolyfill)
+				if(dg._isPolyfill){
+					//console.log("onWindoResize: dg.dialog", dg.dialog)
+					dialogPolyfill.reposition(dg.dialog)
+				}
+			}
+			let removeWinEventListener = ()=>{
+				window.removeEventListener("click", onWindoClick)
+				window.removeEventListener("resize", onWindoResize)
+			}
+			let _resolve = (result)=>{
+				if(resolved)
+					return
+				resolved = true;
+				dg.remove();
+				dg.removeEventListener("btn-click", onBtnClicked);
+				removeWinEventListener();
+				resolve(result);
+			}
+			let onBtnClicked = e=>{
+				let result = e.detail;
+				let {btn} = result;
+				let handler = this.getHandler(btn, args);
+				if(handler)
+					return handler(_resolve, result, dg, btn, e);
+
+				dg.resolve(result);
+			}
+			dg.resolve = _resolve;
+
+			dg.addEventListener("btn-click", onBtnClicked)
+			if(cls)
+				dg.classList.add(...cls.split(" "));
+			if(btns)
+				dg.btns = btns;
+			if(body)
+				dg.body = body;
+			if(title)
+				dg.heading = title;
+			if(hideCloseBtn)
+				dg.hideCloseBtn = true;
+			if(compact)
+				dg.compact = true;
+			if(alignTo)
+				this.alignTo(alignTo, dg, args);
+
+
+			document.body.append(dg)
+			setTimeout(()=>{
+				modal?dg.showModal():dg.show();
+				if(autoClose){
+					window.addEventListener("click", onWindoClick)
+				}
+				//console.log("onWindoResize:1")
+				window.addEventListener("resize", onWindoResize)
+
+			}, 100)
+			
+		})
+
+		promise.dialog = dg;
+		return promise
+	}
+
+	static alignTo(alignTarget, dialog, args){
+		let {vOffset=0, hOffset=0, targetPos='left-bottom', dialogPos='left-top'} = args;
+		let box = alignTarget.getBoundingClientRect();
+		let dialogBox = dialog.getBoundingClientRect();
+		let style = dialog.style;
+		let [H,V] = targetPos.split("-");
+		let [dH, dV] = dialogPos.split("-");
+		let dVOpposite = dV=='top'?'bottom':'top';
+		let dHOpposite = dH=='left'?'right':'left';
+		style[dVOpposite] = 'unset';
+		style[dHOpposite] = 'unset';
+		let setPos = ()=>{
+			style[dH] = (box[H]+hOffset)+"px";
+			style[dV] = (box[V]+vOffset)+"px";
+			
+			/*
+			if(targetPos == 'right-top'){
+				
+			}else{
+				style.top = (box.bottom+vOffset)+"px";
+				style.left = (box.right-dialogBox.width+hOffset)+"px";
+			}
+			*/
+		}
+
+		setPos();
+		dialog.addEventListener("updated", e=>{
+			let {dialog} = e.detail
+			dialogBox = dialog.getBoundingClientRect();
+			style = dialog.style;
+			setPos();
+		})
+	}
+
+	static alert(...args){
+		args = this.buildArgs(...args)
+		if(!args.btns){
+			args.btns = ['Ok:primary']
+		}
+		return this._show(args)
+	}
+	static show(...args){
+		return this._show(this.buildArgs(...args))
+	}
+
+	static confirm(...args){
+		args = this.buildArgs(...args);
+		if(!args.btns){
+			args.btns = ['Cancel', 'Yes:danger']
+		}
+
+		return this._show(args);
+	}
+
+	createRenderRoot(){
+		return this;
+	}
+
+	render() {
+		return html
+		`<dialog @close=${this.onDialogClose} ?compact=${this.compact}>
+			<div class="heading" ?hide=${!this.heading}>${this.heading}</div>
+			<span class="close-btn" title="Close" ?hide=${this.hideCloseBtn}
+				@click="${this.onCloseClick}">&times;</span>
+			<div class="body">
+				${this.renderBody()}
+			</div>
+			<div class="buttons" @click=${this.onBtnClick} ?hide=${!this.btns||!this.btns.length}>
+				${this.renderBtns()}
+			</div>
+		</dialog>`;	
+	}
+
+	renderBody(){
+		return this.body||"";
+	}
+
+	renderBtns(){
+		let value, text, cls;
+		return (this.btns || ['Ok'])
+		.map(b=>{
+			if(typeof(b)=='string'){
+				let [t, c, v] = b.split(":");
+				text = t;
+				value = v || text;
+				cls = c||'';
+			}else{
+				text = b.text;
+				value = b.value || text;
+				cls = b.cls||"";
+			}
+			return html
+			`<flow-btn 
+				class="${cls}" 
+				value="${(value+"").toLowerCase()}">${text}</flow-btn>`
+		})
+	}
+
+	firstUpdated(){
+		this.dialog = this.renderRoot.querySelector('dialog');
+		this._isPolyfill = !this.dialog.showModal
+		dialogPolyfill.registerDialog(this.dialog)
+		if(this._show)
+			this[this._show]();
+	}
+
+	updated(){
+		super.updated();
+		this.dispatchEvent(new CustomEvent('updated', {detail:{dialog:this.dialog}, bubbles:true}))
+	}
+
+	show(){
+		if(this.dialog)
+			return this.dialog.show()
+
+		this._show = 'show';
+	}
+	showModal(){
+		if(this.dialog)
+			return this.dialog.showModal();
+		this._show = 'showModal';
+	}
+
+	close(){
+		this._show = false;
+		if(this.dialog)
+			this.dialog.close();
+	}
+
+	destroy(){
+		this.close();
+		this.remove();
+	}
+
+	onCloseClick(){
+		if(this.resolve)
+			return this.resolve({btn:"close"})
+		this.destroy();
+	}
+
+	onDialogClose(e){
+		if(!this.autoClose && this._show){
+			this[this._show]();
+			return
+		}
+		let detail = {e};
+		this.dispatchEvent(new CustomEvent('closed', {detail}))
+	}
+	onBtnClick(e){
+		let btnEl = e.target.closest("flow-btn");
+		let btn = btnEl?.getAttribute("value");
+		if(!btn)
+			return
+		let inputs = [...this.renderRoot.querySelectorAll(".input, flow-input, flow-checkbox, input, textarea, select,flow-menu")];
+		let values = {}, name;
+		inputs.forEach(input=>{
+			name = input.name||input.getAttribute("name")||input.getAttribute("data-name");
+			values[name] = input.value;
+		})
+		let detail = {
+			btn,
+			values
+		}
+
+		//console.log("onBtnClick", detail)
+		this.dispatchEvent(new CustomEvent('btn-click', {detail}))
+	}
+}
+
+window.FlowDialog = FlowDialog;
+
+FlowDialog.define('flow-dialog', [
+	()=>window.dialogPolyfill?null:baseUrl+'resources/extern/dialog/dialog-polyfill.css',
+	()=>window.dialogPolyfill?null:baseUrl+'/resources/extern/dialog/dialog-polyfill.js'
+]);
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_PAGES_416 : &'static str = r###"
+
+
+let flowPagesStyle = css`
+	flow-pages>h1,
+	flow-pages>.title{
+	    padding:10px;
+	    font-size:2rem;
+	}
+	flow-pages .buttons{margin:10px;display:flex;justify-content:flex-end;z-index:10}
+	flow-pages .buttons .flex{flex:1;}
+	flow-pages .buttons flow-btn{margin:0px 5px;padding:5px 5px;user-select:none;}
+	flow-pages .buttons flow-btn svg{
+	    width:20px;
+	    height:20px;
+	    margin-right:10px;
+	    fill:var(--flow-primary-color, rgba(0,151,115,1.0));
+	    pointer-events:none;
+	}
+	flow-pages .buttons flow-btn span+svg{
+	    margin-left:10px;
+	    margin-right:0px;
+	}
+`
+
+let style = document.head.querySelector('style.flow-pages-style') || document.createElement("style");
+style.innerHTML = flowPagesStyle.toString();
+style.classList.add("flow-pages-style");
+if(!style.parentNode)
+	document.head.insertBefore(style, document.head.querySelector('link[href*="flow-ux.css"], :last-child').nextSibling);
+export {flowPagesStyle};
+
+/**
+ * @export
+ * @class FlowPages
+ * @extends {BaseElement}
+ * 
+ * @property {Array} pages
+ * @property {Number} index 
+ * 
+ * @cssvar {fill|background-color} [--flow-primary-color=rgba(0,151,115,1)]
+ * @cssvar {background-color} [--flow-background-color=#FFF]
+ * @cssvar {box-shadow} [--flow-pages-dots-box-shadow=var(--flow-box-shadow)]
+ * @cssvar {border} [--flow-border-color=var(--flow-primary-color, rgba(0,151,115,1))]
+ * @cssvar {border-color} [--flow-active-border-color=var(--flow-primary-color, rgba(0,151,115,1))]
+ * 
+ * @example
+ * <flow-pages>
+ * 	<flow-page>Page 1</flow-page>
+ *  <flow-page>Page 2</flow-page>
+ * </flow-pages>
+ *
+ */
+
+export class FlowPages extends BaseElement {
+	static get properties() {
+		return {
+			pages:{type:Array},
+			index:{type:Number},
+			dotoffset:{type:Number}
+		}
+	}
+	static get styles() {
+		return css`
+			:host{
+				display:flex;
+				flex-direction:column;
+			}
+
+			.wrapper{
+				flex:1;
+				position:relative;
+			}
+
+			.wrapper ::slotted(flow-page){
+				background-color:var(--flow-background-color, #FFF);
+				position:absolute;
+				left:0px;
+				top:0px;
+				width:100%;
+				height:100%;
+				z-index:1;
+				opacity:0;
+				transition:opacity 1s ease;
+			}
+			.wrapper ::slotted(flow-page.back),
+			.wrapper ::slotted(flow-page.active){
+				z-index:3;
+				opacity:1;
+			}
+
+			.dots{
+				pointer-events: none;
+				z-index:5;
+				position:absolute;bottom:10px;
+				display:none;
+				justify-content:center;
+				width:100%;
+			}
+			:host(.has-dots) .dots{
+				display:flex;
+			}
+			.dots i{
+				display:block;width:10px;height:10px;background-color:#FFF;
+				box-shadow:var(--flow-pages-dots-box-shadow, var(--flow-box-shadow));
+				margin:4px;
+				border:2px solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border-radius:50%;
+			}
+
+			.dots i.active{
+				background-color:var(--flow-primary-color, rgba(0,151,115,1));
+				border-color:var(--flow-active-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
+			}
+
+			.dots i:not(.active){cursor:pointer;}
+
+
+			.buttons flow-btn {
+				align-items:center;
+				display:flex;
+			}
+
+
+		`;
+	}
+	render(){
+		let dots = new Array((this.pages || []).length).fill(0);
+		if(dots.length)
+			dots[this.index||0] = 1;
+
+		let css = '';
+		if(this.dotoffset)
+			css = `bottom: -${this.dotoffset}px`;
+
+		return html`
+		<slot name="title"></slot>
+		<div class="wrapper">
+			<slot></slot>
+			<div class="dots" style="${css}" @click="${this.onDotsClick}">${dots.map((active,i)=>{
+				return html`<i data-index="${i}" class="${active?'active':''}"></i>`
+			})}</div>
+		</div>
+		
+		<div @click="${this.onButtonClick}">
+			<slot name="buttons"></slot>
+		</div>
+		`;
+	}
+	firstUpdated(){
+		this.wrapper = this.renderRoot.querySelector(".wrapper");
+		this.buttons = this.renderRoot.querySelector(".buttons");
+		let slot = this.shadowRoot.querySelector('slot[name="buttons"]');
+		this.btns = {};
+		slot.addEventListener('slotchange', e=>{
+			this.updateBtns(slot.assignedNodes());
+			
+		});
+		this.updateBtns(slot.assignedNodes());
+
+		let pages = this.querySelectorAll("flow-page");
+		this.initiPages(pages);
+	}
+	updateBtns(nodes){
+		[...nodes].forEach(p=>{
+			p.querySelectorAll("[data-btn]").forEach(btn=>{
+				let name = btn.getAttribute("data-btn");
+				if(name)
+					this.btns[name] = btn;
+			})
+		})
+	}
+	get nextBtn(){
+		return this.btns.next;
+	}
+	get prevBtn(){
+		return this.btns.prev;
+	}
+	get skipBtn(){
+		return this.btns.skip;
+	}
+	initiPages(pages){
+		this.pages = [...pages];
+		this.maxIndex = this.pages.length-1;
+		let index = this.pages.findIndex(p=>p.classList.contains("active"))
+		this.setActive(index)
+	}
+	onDotsClick(e){
+		let target = e.target;
+		let index = parseInt(target.getAttribute("data-index"));
+		if(isNaN(index))
+			return
+
+		this.setActive(index);
+	}
+	onButtonClick(e){
+		let btnTypeToAction ={
+			'next': 'showNext',
+			'prev': 'showPrevious'
+		}
+		let target = e.target.closest('flow-btn');
+		if(!target)
+			return
+		let action = target.getAttribute("data-action");
+		if(!action){
+			let btnType = target.getAttribute("data-btn");
+			action = btnType && btnTypeToAction[btnType];
+		}
+		if(!action || !this[action])
+			return
+
+		this[action]();
+	}
+	showPrevious(){
+		this.setActive(this.index-1)
+	}
+	showNext(){
+		this.setActive(this.index+1)
+	}
+	closePages(){
+		this.fire("close-pages");
+	}
+	setActive(index){
+		if(index<0)
+			index = 0
+		else if(index > this.maxIndex){
+			this.closePages();
+			return
+		}
+		
+		let newPage = this.getPage(index)
+		if(!newPage)
+			return
+		this.lastIndex = this.index;
+		this.index = index;
+		if(this.index === this.lastIndex)
+			return
+		let lastPage = this.getPage(this.lastIndex)
+		if(lastPage){
+			lastPage.classList.remove("active");
+			lastPage.style.zIndex = 2
+		}
+
+		newPage.classList.add("active");
+		newPage.style.zIndex = 3
+
+		//console.log("index", index, this.maxIndex)
+		let prevBtn = this.prevBtn;
+		let nextBtn = this.nextBtn;
+		let skipBtn = this.skipBtn;
+		let nextBtnSpan = nextBtn?.querySelector("span");
+		if(prevBtn){
+			if(index<=0)
+				prevBtn.setAttribute("disabled", true);
+			else
+				prevBtn.removeAttribute("disabled");
+
+			if(nextBtnSpan)
+				nextBtnSpan.innerText = 'NEXT';				
+			skipBtn.style.display = "block";
+		}
+		if(nextBtn){
+			if(index>=this.maxIndex) {
+				skipBtn.style.display = "none";
+				if(nextBtnSpan)
+					nextBtnSpan.innerText = 'FINISH';
+			}
+			else
+				nextBtn.removeAttribute("disabled");
+		}
+		this.fireChangeEvent();
+	}
+	getPage(index){
+		return this.pages[index];
+	}
+	fireChangeEvent(){
+		this.fire("change", {index: this.index})
+	}
+}
+
+FlowPages.define('flow-pages');
+
+
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_I18N_379 : &'static str = r###"
+
+
+export const i18nDirMap = new Map();
+export const i18nElementsMap = new Map();
+
+class i18n extends BaseElement{
+
+	static hash(text) {
+        var A = 5381,
+            B = 9835,
+            i    = text.length;
+        while(i) {
+            var ch = text.charCodeAt(--i);
+            A = (A * 33) ^ ch;
+            B = (B * 55) ^ ch ^ A;
+        }
+        A = A >= 0 ? A : (A & 0x7FFFFFFF) + 0x80000000;
+        B = B >= 0 ? B : (B & 0x7FFFFFFF) + 0x80000000;
+        return A.toString(16)+B.toString(16);
+    }
+
+    static entriesChanged(){
+    	let entriesAll = this.getAllEntries();
+    	let entries = this.getEntries();
+    	let detail = {entries, entriesAll}
+    	let ce = new CustomEvent("flow-i18n-entries-changed", {detail})
+    	window.dispatchEvent(ce);
+    }
+
+	static stripWhitespace(text) {
+		return text.replace(/\s\s+/g,' ').trim();
+	}
+
+    static createEntry(text, values=false){
+		let hash = this.hash(text);
+		//console.log("i18n.entries", this.entries, text)
+		if(!this.entries[hash]){
+			this.entries[hash] = Object.assign({en:text}, values || {});
+			this.entriesChanged();
+		}else if(values){
+			Object.assign(this.entries[hash], values);
+			this.entriesChanged();
+		}
+		return hash;
+	}
+
+	static t(text, defaults, locale){
+		text = this.stripWhitespace(text);
+		let hash = this.createEntry(text);
+		if(this.testing)
+			return `[${locale||this.locale}:${text}]`;
+		let entry = this.entries[hash];
+		let value = entry[locale||this.locale];
+		//console.log("value", value, this.locale, text)
+		//if(value !== undefined)
+		//	return value;
+		return value || defaults || text;
+	}
+
+	static setConfig(_config){
+		config = _config;
+	}
+	static getConfig(){
+		return config;
+	}
+	static setActiveLanguages(locales){
+		let newLocale = false;
+		config.languages.forEach(l=>{
+			l.active = locales.includes(l.locale);
+			if(l.locale == this.locale && !l.active)
+				newLocale = 'en';
+		});
+
+		if(newLocale)
+			this.setLocale(newLocale);
+	}
+	static getActiveLanguages(){
+		return config.languages.filter(l=>l.active)
+	}
+	static getActiveLocales(){
+		return this.getActiveLanguages().map(l=>l.locale);
+	}
+	static setEntries(list){
+		(list ||[]).forEach(entry=>{
+			this.entries[this.hash(entry.en)] = entry;
+		});
+
+		onLocaleChange();
+	}
+	static setTesting(testing){
+		this.testing = testing;
+		onLocaleChange();
+	}
+	static getEntries(){
+		let activeLocales = this.getActiveLocales();
+    	let entry;
+    	return this.getAllEntries().map(e=>{
+    		entry = {en:e.en};
+    		activeLocales.forEach(l=>{
+    			entry[l] = e[l] || "";
+    		})
+    		return entry;
+    	})
+	}
+	static getAllEntries(){
+		return Object.values(this.entries);
+	}
+	static get properties() {
+		return {
+			text:{type:String}
+			//xx:{type:String}
+		}
+	}
+
+	static setLocale(locale='en'){
+		this.locale = locale;
+		this.setLocalSetting('i18n-locale', locale);
+		onLocaleChange();
+	}
+
+	static cleanText(text){
+		return text
+		.replace(/<\!\-\-\?lit([^>]*)\$-\->/g, "")
+		.replace(/<\!\-\-\-\->/g, "")
+	}
+
+	constructor(){
+		super();
+		this.text = "";
+		//this.setAttribute("c1", `${this.text}`)
+		//console.log("constructor:", this.innerHTML, this.text)
+	}
+
+	createRenderRoot() {
+		//this.innerHTML_ = this.innerHTML;
+		return this;
+	}
+
+	connectedCallback(){
+		super.connectedCallback();
+		this._cb = this._cb || this.onLocaleChange.bind(this);
+		window.addEventListener("flow-i18n-locale", this._cb)
+		//this.setAttribute("c2", `${this.text}`)
+		this.update();
+	}
+
+	disconnectedCallback(){
+		super.disconnectedCallback();
+		this._cb && window.removeEventListener("flow-i18n-locale", this._cb)
+		//TODO MAYBE:: _parts.delete(this.renderRoot)
+	}
+
+	onLocaleChange(){
+		this.update();
+	}
+
+	/*
+	updated(changed){
+		super.updated();
+		console.log("changed", changed)
+		this.setAttribute("c3", `${this.text}:${JSON.stringify(changed)}`)
+	}
+	*/
+
+	render() {
+		if(this.innerHTML_ == undefined){
+			this.innerHTML_ = i18n.cleanText(this.innerHTML)
+			this.innerHTML = "";
+		}
+		//if(this.getAttribute("xx") == 1)
+		//this.log("innerHTML", i18n.locale, "inner:"+this.innerHTML_, " text:"+this.text)
+		let strings = [i18n.t(this.text || this.innerHTML_)];
+		strings.raw = [];
+		return html(strings);
+	}  
+}
+
+
+let config = {
+	// languages:[
+	// 	{title:'English', locale:'en'},
+	// 	{title:'Russian', locale:'ru'},
+	// 	{title:'Hindi', locale:'hi'},
+	// 	{title:'Punjabi', locale:'pu'}
+	// ]
+	languages : [
+		{"title":"العربية‎", "locale": "ar", rtl: true },
+		{"title":"Български", "locale": "bg" },
+		{"title":"বাংলা", "locale": "bn" },
+		{"title":"English", "locale": "en" },
+		{"title":"Español", "locale": "es" },
+		{"title":"Greek", "locale": "el" },
+		{"title":"Esti", "locale": "et" },
+		{"title":"Français", "locale": "fr" },
+		{"title":"Deutsch", "locale": "de" },
+		{"title":"Danish", "locale": "da" },
+		{"title":"Czech", "locale": "cs" },
+		{"title":"Farsi", "locale": "fa" },
+		{"title":"Finnish", "locale": "fi" },
+		{"title":"Filipino", "locale": "fil" },
+		{"title":"עברית", "locale": "he", rtl: true },
+		{"title":"Hindi", "locale": "hi" },
+		{"title":"Croatian", "locale": "hr" },
+		{"title":"Hungarian", "locale": "hu" },
+		{"title":"Italiano", "locale": "it" },
+		{"title":"Icelandic", "locale": "is" },
+		{"title":"日本語", "locale": "ja" },
+		{"title":"Korean", "locale": "ko" },
+		{"title":"Korean", "locale": "kr" },
+		{"title":"Lithuanian", "locale": "lt" },
+		{"title":"Norwegian", "locale": "nb" },
+		{"title":"Dutch", "locale": "nl" },
+		{"title":"Norwegian", "locale": "no" },
+		{"title":"Polski", "locale": "pl" },
+		{"title":"PortuguÃªs", "locale": "pt" },
+		{"title":"Romanian", "locale": "ro" },
+		{"title":"Русский", "locale": "ru" },
+		{"title":"Slovak", "locale": "sk" },
+		{"title":"Serbian", "locale": "sr" },
+		{"title":"Slovenian", "locale": "sl" },
+		{"title":"Swedish", "locale": "sv" },
+		{"title":"Tamil", "locale": "ta" },
+		{"title":"Thai", "locale": "th" },
+		{"title":"Turkish", "locale": "tr" },
+		{"title":"Ukrainian", "locale": "uk" },
+		{"title":"Urdu", "locale": "ur" },
+		{"title":"Vietnamese", "locale": "vi" },
+		{"title":"Mongolian", "locale": "mn" },
+		{"title":"中文", "locale": "zh_HANS" },
+		{"title":"繁體中文", "locale": "zh_HANT" }
+	],
+	aliases : {
+		"en-GB": "en",
+		"en-US": "en",
+		"zh-CN": "zh_HANS",
+		"zh-TW": "zh_HANT"
+	}
+
+}
+
+i18n.entries = {};
+i18n.locale = BaseElement.getLocalSetting('i18n-locale', 'en');
+i18n.entries[i18n.hash('Hello')] = {
+	en: "Hello",
+	ru : 'Ð-Ð´Ñ€Ð°Ð²ÑÑ‚Ð²ÑƒÐ¹Ñ‚Ðµ',
+	pu: 'ਸਤ ਸ੍ਰੀ ਅਕਾਲ',
+	hi: 'नमस्ते!'
+}
+
+window.addEventListener("flow-i18n-entries", e=>{
+	i18n.setEntries(e.detail.entries);
+})
+
+let Mixin = (Base, tag)=>{
+	class Child extends Base{
+		connectedCallback() {
+			if(!this.innerHTML_)
+				this.innerHTML_ = i18n.cleanText(this.innerHTML);
+			this._cb = this._cb || this.onLocaleChange.bind(this);
+			window.addEventListener("flow-i18n-locale", this._cb)
+			this.onLocaleChange();
+		}
+
+		disconnectedCallback(){
+			this._cb && window.removeEventListener("flow-i18n-locale", this._cb)
+		}
+
+		onLocaleChange(){
+			this.innerHTML = this.htmlToElement(i18n.t(this.innerHTML_))
+		}
+		htmlToElement(html) {
+		    let template = document.createElement('template');
+		    template.innerHTML = `<span>${html.trim()}</span>`;
+		    return template.content.firstChild.innerHTML;
+		}
+	}
+
+	customElements.define('i18n-'+tag, Child, {extends: tag});
+
+}
+
+Mixin(HTMLDivElement, 'div');
+Mixin(HTMLSpanElement, 'span')
+Mixin(HTMLParagraphElement, 'p')
+Mixin(HTMLLabelElement, 'label')
+Mixin(HTMLTableCellElement, 'td')
+Mixin(HTMLTableCellElement, 'th')
+Mixin(HTMLAnchorElement, 'a')
+
+export const buildLitHTML = (...strParts)=>{
+	let strings = [...strParts];
+	strings.raw = [];
+	return html(strings);
+}
+
+export const i18nFormat = (str, ...values)=>{
+	str = i18n.t(str);
+	values.forEach(n=>{
+		str = str.replace('[n]', n)
+	})
+	return str;
+}
+
+export const i18nHTMLFormat = (str, ...values)=>{
+	str = i18n.t(str);
+	values.forEach(n=>{
+		str = str.replace('[n]', n)
+	})
+	return buildLitHTML(str);
+}
+
+class I18nDirective extends AsyncDirective{
+	constructor(...args){
+		super(...args);
+		i18nDirMap.set(this, {});
+	}
+	render(text) {
+		this.__text = text;
+		return i18n.t(text);
+	}
+
+	disconnected() {
+		i18nDirMap.delete(this);
+	}
+
+	reconnected() {
+		i18nDirMap.set(this, {});
+	}
+}
+
+const T = directive(I18nDirective);
+
+let onLocaleChange = ()=>{
+	let ce = new CustomEvent("flow-i18n-locale", {detail:{locale:i18n.locale}})
+	window.dispatchEvent(ce);
+
+	i18nDirMap.forEach((v, dir)=>{
+		//console.log("dir", dir)
+		dir.setValue(dir.__text?i18n.t(dir.__text):'')
+	})
+
+	i18nElementsMap.forEach((v, ele)=>{
+		//console.log("dir", dir)
+		ele.setI18nValue(ele.__i18nText?i18n.t(ele.__i18nText):'')
+	})
+}
+
+i18n.setLocale(i18n.locale);
+
+
+export class FlowI18nDialog{
+	static open(alignTarget){
+		if(this.dialog)
+			return
+		this._click = this._click || this.onClick.bind(this);
+		
+		let p = this._open(alignTarget);
+		setTimeout(()=>{
+			window.addEventListener("click", this._click)
+		}, 100);
+		return p;
+	}
+	static close(data){
+		if(this.dialog){
+			this.dialog.resolve(data);
+			this.dialog = null;
+		}
+		this.removeEventListener();
+	}
+	static onClick(e){
+		if(!this.dialog){
+			this.removeEventListener();
+			return
+		}
+		let t = e.target;
+		let menu = t && t.closest && t.closest("flow-dialog.flow-menu");
+		if(menu != this.dialog){
+			this.removeEventListener();
+			this.close();
+		}
+	}
+	static removeEventListener(){
+		window.removeEventListener("click", this._click)
+	}
+	static _open(alignTarget){
+		let menuClick = e=>{
+			let li = e.target.closest("li");
+			let locale = li.getAttribute("data-locale");
+			i18n.setLocale(locale);
+			dialog.resolve({locale});
+			this.dialog = false;
+			this.removeEventListener();
+		}
+
+		let body = html
+			`<ul class="menu" @click="${menuClick}">${
+				config.languages.filter(l=>l.active).map(l=>html
+					`<li data-locale="${l.locale}" 
+						class="${l.locale==i18n.locale?'active':''}">${l.title}</li>`
+				)
+			}</ul>`
+
+		let promise = FlowDialog.show({
+			body,
+			btns:[],
+			cls:"flow-menu hide-close-btn",
+			modal:false
+		})
+
+		let {dialog} = promise;
+		this.dialog = dialog;
+		if(alignTarget){
+			let dialogBox = dialog.getBoundingClientRect();
+			FlowDialog.alignTo(alignTarget, dialog, {
+				targetPos:'right-bottom',
+				dialogPos:'left-top',
+				hOffset: -dialogBox.width,
+				vOffset: 2
+			})
+		}
+
+		return promise
+	}
+}
+
+
+//window.xxxxx_setLocale = i18n.setLocale.bind(i18n)
+
+
+export class I18nTest extends LitElement{
+	static get styles(){
+		return css`:host{display:inline-block;border:1px solid #DDD;padding:10px;}`
+	}
+	static get properties(){
+		return {
+			loop:{type:Boolean}
+		}
+	}
+	constructor(){
+		super();
+		this.start();
+	}
+	start(){
+		let i=0, ls = ['ru', 'pu', 'hi', 'en'];
+		this.intervalId = setInterval(()=>{
+			let l = ls[i++];
+			if(!l){
+				if(this.loop){
+					i=0;
+					l = ls[i++];
+				}else{
+					this.remove();
+					clearInterval(this.intervalId);
+				}
+			}
+			i18n.setLocale(l)
+		}, 1000)
+	}
+	render(){
+		return html`Hello: ${T('Hello')} <div title="${T('abc')}">How are You</div>`
+	}
+}
+
+customElements.define('i18n-test', I18nTest);
+customElements.define('flow-i18n', i18n);
+
+
+export {i18n, T}
+
+
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_CODE_408 : &'static str = r###"
+
+if (!window.PR) {
+	let prettify = document.createElement("script");
+	prettify.src = baseUrl + 'resources/extern/google-prettify/prettify.js';
+	document.head.appendChild(prettify);
+}
+
+/**
+ * @export
+ * @class FlowCode
+ * @prop {Boolean} fixindent
+ * @prop {String} lang
+ * @extends {BaseElement}
+ * @cssvar {white-space} [--flow-code-white-space=nowrap]
+ * @cssvar {font-family} [--flow-code-font-family=monospace]
+ * @cssvar {font-size} [--flow-code-font-size=1rem]	
+ * @cssvar {padding} [--flow-code-padding=5px]
+ * @cssvar {margin} [--flow-code-margin=1px]
+ * @cssvar {border} [--flow-code-border=none]
+ */
+export class FlowCode extends BaseElement {
+	static get properties() {
+		return {
+			lang : {type:String},
+			fixindent:{type:Boolean},
+			theme:{type:String}
+		}
+	}
+	static get styles() {
+		return css`
+
+			.pln{
+				color:var(--flow-code-pln, #000);
+			}
+			@media screen{
+				.str{color:var(--flow-code-str, #080)}
+				.kwd{color:var(--flow-code-kwd, #008)}
+				.com{color:var(--flow-code-com, #800)}
+				.typ{color:var(--flow-code-typ, #606)}
+				.lit{color:var(--flow-code-lit, #066)}
+				.opn{color:var(--flow-code-opn, #660)}
+				.clo{color:var(--flow-code-clo, #660)}
+				.pun{color:var(--flow-code-pun, #660)}
+				.tag{color:var(--flow-code-tag, #008)}
+				.atn{color:var(--flow-code-atn, #606)}
+				.atv{color:var(--flow-code-atv, #080)}
+				.dec{color:var(--flow-code-dec, #606)}
+				.var{color:var(--flow-code-var, #606)}
+				.fun{color:var(--flow-code-fun, red)}
+			}
+			@media print,projection{
+				.kwd,.tag,
+				.typ{font-weight:var(--flow-code-print-tag-font-weight, 700)}
+				.str{color:var(--flow-code-print-str, #060)}
+				.kwd{color:var(--flow-code-print-kwd, #006)}
+				.com{
+					color:var(--flow-code-print-com, #600);
+					font-style:var(--flow-code-print-com-font-style, italic)
+				}
+				.typ{color:var(--flow-code-print-typ, #404)}
+				.lit{color:var(--flow-code-print-lit, #044)}
+				.opn{color:var(--flow-code-print-opn, #440)}
+				.clo{color:var(--flow-code-print-clo, #440)}
+				.pun{color:var(--flow-code-print-pun, #440)}
+				.tag{color:var(--flow-code-print-tag, #006)}
+				.atn{color:var(--flow-code-print-atn, #404)}
+				.atv{color:var(--flow-code-print-atv, #060)}
+			}
+			pre{
+				background:var(--flow-code-pre-bg);
+			}
+			pre.prettyprint{padding:2px;}
+			ol.linenums{
+				margin-top:var(--flow-code-linenums-margin-top, 0);
+				margin-bottom:var(--flow-code-linenums-margin-bottom, 0);
+				color:var(--flow-code-linenums-color, inherit);
+			}
+			li.L0,li.L1,li.L2,li.L3,li.L4,li.L5,li.L6,li.L7,li.L8,li.L9{
+				list-style-type:none;
+				padding-left:var(--flow-code-lines-padding-left, 0);
+				background-color:var(--flow-code-lines-bg, initial);
+			}
+			li.L1,li.L3,li.L5,li.L7,li.L9{
+				background:var(--flow-code-odd-line-bg, #eee)
+			}
+
+			pre{
+				margin:0px;
+				white-space:var(--flow-code-white-space, nowrap);
+				font-family:var(--flow-code-font-family, monospace);
+				font-size:var(--flow-code-font-size, 1rem);
+				padding:var(--flow-code-pre-padding, 0px 0px 16px);
+			}
+
+			:host{
+				display:inline-block;max-width:100%;box-sizing: border-box;
+				overflow:auto;
+				padding:var(--flow-code-padding, 5px);
+				margin:var(--flow-code-margin, 1px);
+				border:var(--flow-code-border, none);
+				background:var(--flow-code-pre-bg);
+			}
+
+			:host(.block),
+			:host([block]){display:block}
+			:host(.hide){display:none}
+
+			/*:host(:not(.no-border):not([no-border])){*/
+			:host(.border, [border]){
+				border:2px solid var(--flow-primary-color);
+			}
+
+
+			/* hemisu-light */
+			/*
+			pre.theme-hemisu-light{
+				font-family:Menlo,Bitstream Vera Sans Mono,DejaVu Sans Mono,Monaco,Consolas,monospace;
+				border:0!important
+			}
+			*/
+			.theme-hemisu-light{
+				--flow-code-pre-bg:#fff;
+				--flow-code-lines-bg:#fff;
+				--flow-code-pln:#111;
+				--flow-code-linenums-color:#999;
+
+				--flow-code-lines-padding-left:1em;
+				--flow-code-linenums-margin-top:0;
+				--flow-code-linenums-margin-bottom:0;
+
+				--flow-code-str:#739200;
+				--flow-code-kwd:#739200;
+				--flow-code-com:#999;
+				--flow-code-typ:#f05;
+				--flow-code-lit:#538192;
+				--flow-code-pun:#111;
+				--flow-code-opn:#111;
+				--flow-code-clo:#111;
+				--flow-code-tag:#111;
+				--flow-code-atn:#739200;
+				--flow-code-atv:#f05;
+				--flow-code-dec:#111;
+				--flow-code-var:#111;
+				--flow-code-fun:#538192;
+			}
+
+
+			.theme-hemisu-dark{
+				--flow-code-pre-bg:#000000;
+				--flow-code-lines-bg:#000000;
+				--flow-code-pln:#EEEEEE;
+				--flow-code-linenums-color:#777777;
+
+				--flow-code-lines-padding-left:1em;
+				--flow-code-linenums-margin-top:0;
+				--flow-code-linenums-margin-bottom:0;
+
+				--flow-code-str:#B1D631;
+				--flow-code-kwd:#B1D631;
+				--flow-code-com:#777777;
+				--flow-code-typ:#BBFFAA;
+				--flow-code-lit:#9FD3E6;
+				--flow-code-pun:#EEEEEE;
+				--flow-code-opn:#EEEEEE;
+				--flow-code-clo:#EEEEEE;
+				--flow-code-tag:#EEEEEE;
+				--flow-code-atn:#B1D631;
+				--flow-code-atv:#BBFFAA;
+				--flow-code-dec:#EEEEEE;
+				--flow-code-var:#EEEEEE;
+				--flow-code-fun:#9FD3E6;
+			}
+
+			.theme-atelier-lakeside-dark{
+				--flow-code-pre-bg:#161b1d;
+				--flow-code-lines-bg:#161b1d;
+				--flow-code-pln:#ebf8ff;
+				--flow-code-linenums-color:#5a7b8c;
+
+				--flow-code-lines-padding-left:1em;
+				--flow-code-linenums-margin-top:0;
+				--flow-code-linenums-margin-bottom:0;
+
+				--flow-code-str:#568c3b;
+				--flow-code-kwd:#6b6bb8;
+				--flow-code-com:#6b6bb8;
+				--flow-code-typ:#257fad;
+				--flow-code-lit:#935c25;
+				--flow-code-pun:#ebf8ff;
+				--flow-code-opn:#ebf8ff;
+				--flow-code-clo:#ebf8ff;
+				--flow-code-tag:#d22d72;
+				--flow-code-atn:#935c25;
+				--flow-code-atv:#2d8f6f;
+				--flow-code-dec:#935c25;
+				--flow-code-var:#d22d72;
+				--flow-code-fun:#257fad;
+			}
+
+			.theme-atelier-lakeside-light{
+				--flow-code-pre-bg:#ebf8ff;
+				--flow-code-lines-bg:#ebf8ff;
+				--flow-code-pln:#161b1d;
+				--flow-code-linenums-color:#7195a8;
+
+				--flow-code-lines-padding-left:1em;
+				--flow-code-linenums-margin-top:0;
+				--flow-code-linenums-margin-bottom:0;
+
+				--flow-code-str:#568c3b;
+				--flow-code-kwd:#6b6bb8;
+				--flow-code-com:#7195a8;
+				--flow-code-typ:#257fad;
+				--flow-code-lit:#935c25;
+				--flow-code-pun:#161b1d;
+				--flow-code-opn:#161b1d;
+				--flow-code-clo:#161b1d;
+				--flow-code-tag:#d22d72;
+				--flow-code-atn:#935c25;
+				--flow-code-atv:#2d8f6f;
+				--flow-code-dec:#935c25;
+				--flow-code-var:#d22d72;
+				--flow-code-fun:#257fad;
+			}
+
+		`;
+	}
+	constructor() {
+		super();
+		this.lang = 'html';
+	}
+	render() {
+		//let indent = this.clcIndent();
+		if (!this.innerHTML_) {
+			
+			let ta = this.querySelector("textarea"); 
+			let v = ta ? ta.value : this.innerHTML;
+			if(this.fixindent){
+				v = v.split("\n");
+				let c = v[0]; 
+				let count = 0;
+				let spaces = true;
+				while(spaces) {
+					if(/^\t/.test(c)) {
+						count++;
+						c = c.substring(1); 
+					} else if(/^    /.test(c)) {
+						count++;
+						c = c.substring(4);
+					} else 
+						spaces = false;
+				}
+				if(count>0){
+					let regExp = `^(\t|    ){1,${count}}`;
+					regExp = new RegExp(regExp)
+					v = v.map(l => {
+						l = l.replace(regExp, "");
+						return l;
+					}).join("\n");
+				}else{
+					v = v.join("\n");
+				}
+			}
+			this.innerHTML_ = v;
+		}
+
+		let theme = this.theme?' theme-'+this.theme:'';
+		return html`<pre class="lang-${this.lang}${theme}">${this.innerHTML_}</pre>`
+	} 
+	htmlEscape(s) {
+		return s
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;');
+	}
+
+	updated() {
+		this.updateStyle();
+	}
+
+	updateStyle() {
+		if (!window.PR) {
+			if (!this.count)
+				this.count = 0;
+			this.count++;
+			if (this.count > 1000)
+				return
+			return setTimeout(() => this.updateStyle(), 100);
+		}
+
+		let pre = this.renderRoot.querySelector("pre");
+		//console.log("window.PR ready", pre)
+		//window.PR.prettyPrint(null, this.renderRoot.querySelector("pre"))
+		let code = PR.prettyPrintOne(this.htmlEscape(this.innerHTML_))
+		if (this.code != code) {
+			this.code = code;
+			//console.log("updating....")
+			//this.update()
+			pre.innerHTML = code;
+		}
+
+	}
+}
+
+FlowCode.define("flow-code");
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_COLOR_SELECTOR_423 : &'static str = r###"
+
+
+
+
+/**
+* @class FlowColorSlider
+* @extends BaseElement
+* @prop {Number} min
+* @prop {Number} max
+* @prop {Boolean} vertical
+* @prop {Object} color
+* @prop {String} chanel
+* @example
+*   <flow-color-slider></flow-color-slider>
+*/
+
+export class FlowColorSlider extends FlowCanvasElement {
+	static get properties() {
+		return {
+			min : { type:Number },
+			max : { type:Number },
+			vertical:{ type:Boolean },
+			color:{ type: Object, reflect: true },
+			channel : { type:String }
+		}
+	}
+
+	static get styles(){
+		return css`
+			:host{
+				display:block;
+			}
+			:host([disabled]){
+				opacity:0.5;
+				cursor:default;
+				pointer-events:none;
+			}
+			:host(:not([disabled])){
+				cursor:pointer;
+			}
+		`;
+	}
+
+	constructor(){
+		super();
+
+		this.min = 0;
+		this.max = 255;
+		this.vertical = false;
+		this.color = { };
+		this.channel = '?';
+
+		this.mixer = new ColorMixer();
+	}
+
+	render() {
+		let box = this.getBoundingClientRect();
+		return html`
+		<canvas id="canvas" style="height:100%;width:100%;" width="${box.width*this.scale}" height="${box.height*this.scale}">Your browser does not support the HTML5 canvas tag</canvas>
+		`;
+	}
+
+	click(e) {
+		console.log('flow-color-slider click:',e);
+		this.fire("flow-color-slider-click", {el:this, e})
+	}
+
+	firstUpdated(){
+		if(window.ResizeObserver){
+			this.resizeObserver = new ResizeObserver(e => {
+				this.fire('flow-resize', {}, {bubbles:true})
+			});
+			this.resizeObserver.observe(this);
+		}
+
+		['mousedown','mouseup','mousemove','click', 'pointerdown', 'pointerup', 'pointermove','mouseenter','mouseleave'].forEach((event) => {
+			this.addEventListener(event, (e) => { this.onMouseEvent(event,e); });
+		})
+
+		this.addEventListener('flow-resize', (e)=>{
+			this.debounce("flow-resize", this._onResize.bind(this), 100);
+		})
+
+		this.canvas = this.renderRoot.getElementById('canvas');
+		this.ctx = this.canvas.getContext('2d');
+		this.ctx.globalAlpha = 0;
+		this.updateCanvas();
+
+		this.color.registerSink(()=>{
+			this.redraw();
+		})
+	}
+
+	_onResize() {
+		console.log('_onResize!');
+		this.updateCanvas();
+		// this.verbose && console.log('resize:', this.getBoundingClientRect());
+	}
+
+	registerSink(sink) {
+		this.sink = sink;
+	}
+
+	onMouseEvent(event,e) {
+		//console.log('onMouseEvent',event,e,this);
+
+		let update = false;
+		if(event == 'click')
+			update = true;
+		else
+		if(event == 'mousedown') {
+			this.drag = true;
+			this.setCapture();
+		}
+		else
+		if(event == 'mouseup')
+			this.drag = false;
+		else
+		if(event == 'mousemove' && this.drag)
+			update = true;
+
+		if(update) {
+			let x = e.offsetX;
+			let v = x / this.size.width * (this.max - this.min) + this.min;
+			this.color.change(v, this.channel);
+			this.color.notify();
+		}
+	}
+
+	redraw(){
+		let parentBox = this.getBoundingClientRect();
+		let canvasBox = this.canvas.getBoundingClientRect();
+//		this.verbose && console.log('parentBox:',parentBox);
+//		this.verbose && console.log('canvasBox:',canvasBox);
+		this.canvasBox = canvasBox;
+		let { width, height } = canvasBox;
+		this.size = { width, height };
+
+		width *= this.scale;
+		height *= this.scale;
+		let absolute = this.value / this.max;
+
+		const { ctx } = this;
+		ctx.clearRect(0, 0, width, height);
+		ctx.lineWidth = 1;
+
+		for(let v = 0; v < width; v++) {
+			const c = (v * this.max / width);
+			this.mixer.assign(this.color);
+			this.mixer.change(c, this.channel);
+
+			ctx.strokeStyle = `rgba(${this.mixer.r},${this.mixer.g},${this.mixer.b},1.0)`;
+			ctx.beginPath();
+			ctx.moveTo(v, 0);
+			ctx.lineTo(v, height);
+			ctx.stroke();
+		}
+
+		let v = this.color[this.channel] / this.max * width;
+		ctx.strokeStyle = `rgba(0,0,0,1.0)`;
+		ctx.beginPath();
+		ctx.moveTo(v, 0);
+		ctx.lineTo(v, height);
+		ctx.stroke();
+	}
+}
+
+FlowColorSlider.define('flow-color-slider');
+
+
+class ColorMixer {
+	constructor(v = { r : 0, g : 0, b : 0, h : 0, s : 0, v : 0, a : 1, }) {
+		this.sinks = [ ];
+		Object.assign(this,v);
+	}
+
+	registerSink(sink) {
+		this.sinks.push(sink);
+	}
+
+	notify() {
+		this.sinks.forEach(fn=>fn(this));
+		// this.sinks.forEach(fn=>fn(this));
+	}
+
+	assign(src) {
+		const { r, g, b, h, s, v, a } = src;
+		Object.assign(this, { r, g, b, h, s, v, a });
+	}
+
+	change(value, channel) {
+
+		if(channel == 'h' || channel == 's' || channel == 'v') {
+			this[channel] = value;
+			Object.assign(this, HSVtoRGB(this));
+		}
+		else {
+			this[channel] = Math.round(value);
+			Object.assign(this, RGBtoHSV(this));
+		}
+	}
+}
+
+/**
+* @class FlowColorSolid
+* @extends BaseElement
+* @prop {Object} color
+* @example
+*   <flow-color-solid></flow-color-solid>
+*/
+export class FlowColorSolid extends BaseElement {
+	static get properties() {
+		return {
+			color : { type : Object, reflect : true }
+		}
+	}
+
+	static get styles() {
+		return css`
+			:host {
+				display : block;
+				border: 1px solid #ccc;
+			}
+
+			.solid {
+				min-width: 32px;
+				min-height: 32px;
+				width: 100%;
+				height: 100%;
+			}
+		`;
+	}
+
+	constructor() {
+		super();
+	}
+
+
+	firstUpdated() {
+		this.color.registerSink(()=>{
+			this.requestUpdate();
+		});
+	}
+
+	render() {
+		let clr = `rgba(${this.color.r},${this.color.g},${this.color.b}, 1.0)`;
+		return html`
+			<div class='solid' style="background-color: ${clr}">
+			</div>			
+		`;
+	}
+}
+
+FlowColorSolid.define('flow-color-solid');
+
+/**
+* @class FlowColorSelector
+* @extends BaseElement
+* @prop {String} caption
+* @example
+*   <flow-color-selector></flow-color-selector>
+*/
+
+export class FlowColorSelector extends BaseElement {
+	static get properties() {
+		return {
+			caption : { type : String },
+		}
+	}
+
+	static get styles() {
+		return css`
+			:host {
+				display : block;
+				border: 1px solid #ccc;
+				padding: 6px;
+				margin: 6px;
+			}
+			
+			#wrapper {
+				display: flex;
+				flex-direction: column;
+			}
+
+			#caption {
+				text-align: left;
+			}
+
+			#ctl {
+				display: flex;
+				flex-direction: row;
+			}
+
+			.sliders {
+				flex: 1;
+				display: flex;
+				flex-direction: column;
+			}
+
+			flow-color-slider {
+				min-height: 24px;
+				margin: 4px;
+				border: 1px solid #000;
+			}
+
+			flow-color-solid {
+				width: 96px;
+				height: 96px;
+			}
+		`;
+	}
+
+	constructor() {
+		super();
+
+		this.color = new ColorMixer();
+		this.color.registerSink(()=>{
+
+		})
+	}
+
+	firstUpdated() {
+		this.addEventListener('flow-color-slider-click', (e)=>{
+			console.log("color selector receiving flow-color-slider-click!");
+			//this.debounce("flow-resize", this._onResize.bind(this), 100);
+		})
+
+	}
+
+	render() {
+		return html`
+			<div id="wrapper">
+				<div id="caption">${this.caption}</div>
+				<div id="ctl">
+					<div class='sliders'>
+						<flow-color-slider .color=${this.color} channel="r"></flow-color-slider>
+						<flow-color-slider .color=${this.color} channel="g"></flow-color-slider>
+						<flow-color-slider .color=${this.color} channel="b"></flow-color-slider>
+						<flow-color-slider .color=${this.color} channel="h" max="1"></flow-color-slider>
+						<flow-color-slider .color=${this.color} channel="s" max="1"></flow-color-slider>
+						<flow-color-slider .color=${this.color} channel="v" max="1"></flow-color-slider>
+					</div>
+					<div>
+						<flow-color-solid .color=${this.color}></flow-color-solid>
+					</div>			
+				</div>
+			</div>
+		`;
+	}
+}
+
+FlowColorSelector.define('flow-color-selector');
+
+
+/* accepts parameters
+ * h  Object = {h:x, s:y, v:z}
+ * OR 
+ * h, s, v
+*/
+function HSVtoRGB(h, s, v) {
+    var r, g, b, i, f, p, q, t;
+    if (arguments.length === 1) {
+        s = h.s, v = h.v, h = h.h;
+    }
+    i = Math.floor(h * 6);
+    f = h * 6 - i;
+    p = v * (1 - s);
+    q = v * (1 - f * s);
+    t = v * (1 - (1 - f) * s);
+    switch (i % 6) {
+        case 0: r = v, g = t, b = p; break;
+        case 1: r = q, g = v, b = p; break;
+        case 2: r = p, g = v, b = t; break;
+        case 3: r = p, g = q, b = v; break;
+        case 4: r = t, g = p, b = v; break;
+        case 5: r = v, g = p, b = q; break;
+    }
+    return {
+        r: Math.round(r * 255),
+        g: Math.round(g * 255),
+        b: Math.round(b * 255)
+    };
+}
+
+/* accepts parameters
+ * r  Object = {r:x, g:y, b:z}
+ * OR 
+ * r, g, b
+*/
+function RGBtoHSV(r, g, b) {
+    if (arguments.length === 1) {
+        g = r.g, b = r.b, r = r.r;
+    }
+    var max = Math.max(r, g, b), min = Math.min(r, g, b),
+        d = max - min,
+        h,
+        s = (max === 0 ? 0 : d / max),
+        v = max / 255;
+
+    switch (max) {
+        case min: h = 0; break;
+        case r: h = (g - b) + d * (g < b ? 6: 0); h /= 6 * d; break;
+        case g: h = (b - r) + d * 2; h /= 6 * d; break;
+        case b: h = (r - g) + d * 4; h /= 6 * d; break;
+    }
+
+    return {
+        h: h,
+        s: s,
+        v: v
+    };
+}
+
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_REFERENCE_350 : &'static str = r###"
+
+
+
+/**
+* @class FlowReference
+* @extends BaseElement
+* @property {String} [for]
+* @property {String} [type]
+* @example
+*   <flow-tooltip>Button 1</flow-tooltip>
+*
+*
+*/
+
+export class FlowReference extends BaseElement {
+	static get properties() {
+		return {
+			for : { type : String },
+            type : { type : String },
+            icon : {type : String},
+            visible : { type : Boolean },
+            'right-align-tooltip':{type:Boolean}
+		}
+	}
+
+	static get styles() {
+		return css`
+			:host {
+		
+            }
+			.icon-box{
+				display:inline-block;
+				width:20px;
+				max-width:20px;
+				text-align:center;
+				/*border: 1px solid red;*/
+			}
+	
+			.icon-box svg{
+				width:15px;
+				height:15px;
+				margin-right: 8px;
+				margin-bottom: 8px;
+				/*margin-left: 8px;*/
+				/*fill:var(--flow-primary-color, rgba(0,151,115,1.0));*/
+				fill: #666;
+			}
+			.tooltip-content{display:none}			
+		`;
+	}
+	constructor() {
+        super();
+    }
+
+	render() {
+		let iconSrc = "";
+		if(this.icon != "-")
+			iconSrc = this.iconPath(this.icon || "fal:info-circle");
+		// const iconSrc = this.iconPath(this.icon || "info-circle");
+
+		return html`
+			<slot></slot>
+			<span class="tooltip" @mouseenter="${this.onTooltipMouseEnter}">
+				<div class="icon-box"><svg><use href="${iconSrc}"></use></svg></div>
+				<slot class="tooltip-content" name="tooltip"></slot>
+			</span>
+		`;
+	}
+
+	firstUpdated(){
+		super.firstUpdated();
+		this.tooltipEl = this.renderRoot.querySelector(".tooltip");
+		this.tooltipTextEl = document.createElement("div");
+		this.tooltipTextEl.classList.add("flow-tooltip-text")
+		this.tooltipSlot = this.renderRoot.querySelector(".tooltip-content");
+		this.tooltipSlot.addEventListener('slotchange', e=>{
+			this.updateTooltipContent();
+		});
+		document.body.append(this.tooltipTextEl);
+		this.updateTooltipContent();
+
+		this.tooltipTextEl.addEventListener("mouseenter", ()=>{
+			this.mouseInTooltipContent = true;
+		})
+
+		this.tooltipTextEl.addEventListener("mouseleave", ()=>{
+			this.mouseInTooltipContent = false;
+			this.tooltipTextEl.classList.remove("active")
+			if(this.timeoutId){
+				clearTimeout(this.timeoutId)
+				delete this.timeoutId;
+			}
+		})
+	}
+
+	updateTooltipContent(){
+		let nodes = this.tooltipSlot.assignedNodes();
+		this.tooltipTextEl.innerHTML = "";
+		nodes.forEach(n=>{
+			this.tooltipTextEl.append(n.cloneNode(true));
+		})
+	}
+
+	onTooltipMouseEnter(e){
+		let box = this.tooltipEl.getBoundingClientRect();
+		//console.log("box", box)
+		let cX = box.left + box.width/2;
+		let cY = box.top + box.height/2;
+		let winWidth = window.innerWidth;
+		let winHWidth = winWidth/2;
+		let winHeight = window.innerHeight;
+		let winHHeight = winHeight/2;
+
+		let style = this.tooltipTextEl.style;
+		if(this['top-align-tooltip'] || cY > winHHeight){
+			style.top = 'initial';
+			style.bottom = (winHeight-box.top)+"px";
+		}else{
+			style.bottom = 'initial';
+			style.top = box.bottom+"px";
+		}
+		
+		if(this['right-align-tooltip'] || cX > winHWidth){
+			style.left = 'initial';
+			style.right = (winWidth - box.right)+"px";
+		}else{
+			style.right = 'initial';
+			style.left = box.left+"px";
+		}
+
+		this.tooltipTextEl.classList.add("active")
+		this.checkAndCloseTooltipIfAway();
+	}
+	checkAndCloseTooltipIfAway(e){
+		this.timeoutId = setTimeout(()=>{
+			if(this.mouseInTooltipContent)
+				return this.checkAndCloseTooltipIfAway();
+			this.tooltipTextEl.classList.remove("active")
+		}, 1000)
+	}
+}
+
+FlowReference.define('flow-reference');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_CANVAS_432 : &'static str = r###"
+
+
+export class FlowCanvasElement extends BaseElement {
+	constructor() {
+		super();
+
+		this.canvasScale = 0.75;
+	}
+
+	getPixelRatio(){
+    	const ctx = this.canvas.getContext("2d"),
+        dpr = window.devicePixelRatio || 1,
+        bsr = ctx.webkitBackingStorePixelRatio ||
+              ctx.mozBackingStorePixelRatio ||
+              ctx.msBackingStorePixelRatio ||
+              ctx.oBackingStorePixelRatio ||
+              ctx.backingStorePixelRatio || 1;
+
+    	return dpr / bsr * 2;
+	}
+
+	setHiDPICanvas(w, h, ratio) {
+		const can = this.canvas;
+		let w_ = w;
+		let h_ = h;
+		can.width = w_ * ratio;
+		can.height = h_ * ratio;
+		// can.style.width = w_ + "px";
+		// can.style.height = h_ + "px";
+		can.getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
+	}
+
+	updateCanvas() {
+		if(!this.canvas)
+			return;
+
+		let parentBox = this.getBoundingClientRect();
+		let canvasBox = this.canvas.getBoundingClientRect();
+		let { width, height } = canvasBox;
+		this.PIXEL_RATIO = this.getPixelRatio();
+		this.setHiDPICanvas(width*this.canvasScale,height*this.canvasScale,this.PIXEL_RATIO);
+		this.redraw(this.canvasContext2d, canvasBox);
+	}
+
+	get htmlCanvasElement() {
+		let box = this.getBoundingClientRect();
+		return html`<canvas id="canvas" style="height:100%;width:100%;" width="${box.width*this.canvasScale}" height="${box.height*this.canvasScale}">Your browser does not support the HTML5 canvas tag</canvas>`;
+	}
+
+	firstUpdated() {
+		if(window.ResizeObserver){
+			this.resizeObserver = new ResizeObserver(e => {
+				this.fire('flow-canvas-resize', {}, {bubbles:true})
+			});
+			this.resizeObserver.observe(this);
+		}
+
+		[
+			'mousedown','mouseup','mousemove','click', 'pointerdown',
+			'pointerup', 'pointermove','mouseenter','mouseleave'
+		].forEach((event) => {
+			this.addEventListener(event, (e) => { this.onMouseEvent(event,e); });
+		})
+
+		this.addEventListener('flow-canvas-resize', (e)=>{
+			this.debounce("flow-canvas-resize", this.handleResize.bind(this), 100);
+		})
+
+		this.canvas = this.renderRoot.getElementById('canvas');
+		this.canvasContext2d = this.canvas.getContext('2d');
+		this.ctx.globalAlpha = 0;
+		this.updateCanvas();
+	}
+
+	handleResize() {
+		this.updateCanvas();
+	}
+
+	redraw(ctx, size) {
+		throw new Error('BaseCanvasElement::redraw() - missing implementation!');
+	}
+}
+
+
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_D3_391 : &'static str = r###"
+
+
+export class Flowd3Element extends BaseElement {
+	static get properties() {
+		return {
+		};
+	}
+
+	static get styles(){
+		return css `
+			
+			:host([hidden]){display:none;}
+			.d3-holder{
+				min-height:100px;
+				min-width:100px;
+				display:flex;
+				flex-direction:column;
+				box-sizing:border-box;
+				position:relative;
+				user-select: none;      
+			}
+            
+            #d3 {flex:1;overflow:hidden}
+		`;
+	}
+	constructor() {
+		super();
+	}
+
+    render() {
+		return html`<div id="d3"></div>`;
+	}
+
+    firstUpdated() {
+		this.el_d3 = this.renderRoot.getElementById('d3');
+		if(this.el_d3){
+			this._firstUpdated();
+		}else{
+			this.debounce("_firstUpdated", ()=>{
+				this._firstUpdated()
+			}, 500)
+		}
+	}
+	_firstUpdated() {
+		this.el_d3 = this.renderRoot.getElementById('d3');
+		if(!this.el_d3)
+			return
+		this.el_d3Rect = this.getBoundingClientRect.call(this.el_d3);
+		this.el_d3.getBoundingClientRect = ()=>{
+			if(this.el_d3Rect.width==0 && this.el_d3Rect.height==0)
+				this.el_d3Rect = this.getBoundingClientRect.call(this.el_d3);
+			return this.el_d3Rect;
+		}
+	
+    
+        this.init_d3();
+    }
+   
+    
+    init_d3() {
+		this.svg = d3.select(this.el_d3).append("svg");
+		//this.svg.attr("viewBox", this.svgViewBox || [0,0,1,1]);
+		this.svg.attr("width", this.svgWidth || '100%');
+		this.svg.attr("height", this.svgHeight || '100%');
+		this.svg.attr('preserveAspectRatio', this.svgPreserveAspectRatio || 'xMidYMid meet');
+    	this.el = this.svg.append("g")
+    	this.el.transform = d3.zoomIdentity.translate(0, 0).scale(1);
+		this.updateSVGSize();
+		//setTimeout(()=>{
+		//	this.updateSVGSize();
+		//}, 100)
+
+		this.fire("ready", {})
+    }
+
+    onElementResize(){
+    	if(this.el_d3)
+    		this.el_d3Rect = this.getBoundingClientRect.call(this.el_d3);
+		this.updateSVGSize();
+    }
+
+    connectedCallback(){
+    	super.connectedCallback();
+    	//this._onWindowResize = this._onWindowResize || this.onWindowResize.bind(this);
+		//window.addEventListener("resize", this._onWindowResize)
+		if(!this.__resizeObserver){
+    		this.__resizeObserver = new ResizeObserver(()=>{
+	    		this.onElementResize();
+			});
+			this.__resizeObserver.observe(this);
+	    }
+    }
+
+    disconnectedCallback() {
+		super.disconnectedCallback();
+		//if(this._onWindowResize)
+		//	window.removeEventListener("resize", this._onWindowResize)
+		if(this.__resizeObserver){
+			this.__resizeObserver.unobserve(this);
+			this.__resizeObserver.disconnect();
+			delete this.__resizeObserver;
+		}
+	}
+
+    updateSVGSize(){
+    	if(!this.el_d3)
+    		return
+    	let {width, height} = this.el_d3.getBoundingClientRect();
+    	this.svg.attr("viewBox", this.svgViewBox || [0,0, width, height]);
+    	this.draw();
+    }
+
+    draw(){
+    	//
+    }
+}
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_GRAPH_351 : &'static str = r###"
+
+
+
+
+
+/**
+* @class FlowGraph
+* @extends Flowd3Element
+* @prop {Boolean} disabled
+* @prop {String} title 
+* @prop {String} prefix
+* @prop {String} suffix
+* @prop {String} align
+* @prop {Number} value
+* @prop {String} data
+* @prop {String} sampler
+* @prop {Number} range
+* @prop {Boolean} overlay
+* @prop {String} format
+* @prop {Number} precision 
+* @prop {Boolean} axes
+* @prop {Boolean} info
+* @cssvar {font-family} [--flow-data-field-font-family="Julius Sans One"]
+* @cssvar {font-weight} [--flow-data-field-font-weight=bold]
+* @cssvar {background-color} [--flow-background-color]
+* @cssvar {background} [--flow-graph-info-bg=#FFF);
+* @cssvar {border} [--flow-graph-info-border=1px solid #DDD]
+* @example
+*   <flow-graph>overlay content</flow-graph>
+*
+*/
+export class FlowGraph extends Flowd3Element {
+	static get properties() {
+		return {
+			disabled:{type:Boolean, reflect:true},
+			title:{type:String},
+			prefix:{type:String },
+			suffix:{type:String},
+			align:{type:String},
+			value:{type:Number},
+			data:{type:String},  // sampler: 'kaspad.kd0.info.
+			sampler:{type:String},
+			range:{type:Number},
+			overlay:{type:Boolean},
+			format:{type:String},
+			precision:{type:Number},
+			axes:{type:Boolean},
+			info:{type:Boolean},
+		}
+	}
+
+	static get styles(){
+		return [Flowd3Element.styles, css`
+			:host{
+				display:inline-flex;
+				font-weight:bold;
+				font-size:13px;
+				text-transform:uppercase;
+				cursor:pointer;
+				font-family:var(--flow-data-field-font-family, "Julius Sans One");
+				font-weight:var(--flow-data-field-font-weight, bold);
+				border-radius: 10px;
+				overflow: hidden;
+				position:relative;
+			}
+			:host([disabled]){opacity:0.5;cursor:default;pointer-events:none;}
+			.colon{display:none}
+			:host(.has-colon) .colon{display:inline;}
+			.container{
+				white-space: nowrap;
+				padding:2px 6px 6px 6px;
+				height: 100%;
+			}
+			
+			.container>div{padding:2px;}
+			.title{flex:1; text-align:left; opacity:1;xmargin-top:7px; font-size: 10px; color: var(--flow-data-badge-caption); xtext-shadow: 0px 0px 0px var(--flow-data-badge-caption-shadow, #fff); }
+			.value{text-align:right; opacity:1;font-size:14px;font-family:"Exo 2";font-weight:normal;background-color: var(--flow-background-color:);}
+			.prefix{opacity:0.9;margin-right:3px;margin-top:3px; font-size: 10px;}
+			.suffix{opacity:0.9;margin-left:3px;margin-top:3px; font-size: 10px;}
+			.col{display: flex; flex-direction: column; align-items: left;}
+			.row{display: flex; flex-direction: row; flex:0;}
+
+			.wrapper {
+				/*width:100%;height:100%;*/
+				position:relative;
+				flex:1;
+				margin:6px;overflow:hidden;
+				/*
+				min-width: var(--flow-data-badge-graph-with,240px);
+				min-height: var(--flow-data-badge-graph-height,80px);				
+				*/				
+			}
+			
+			:host([border]) .wrapper {
+				border: 2px solid var(--flow-primary-color,#333);
+				box-shadow: 2px 2px 1px rgba(1, 123, 104, 0.1);
+				border-radius: 10px;
+
+			}
+
+			.wrapper > div {
+				width:100%;height:100%;
+				position:relative;left:0px;top:0px;bottom:0px;right:0px;
+			}
+
+			.d3-holder{
+				min-height:10px;
+				min-width:10px;
+				opacity:1;
+				border-radius:10px;
+			}
+			.wrapper>div.d3-holder{position:absolute;}
+			.overlay{pointer-events:none}
+			.info{
+				position:absolute;pointer-events:none;
+				background:var(--flow-graph-info-bg, #FFF);
+				border:var(--flow-graph-info-border, 1px solid #DDD);
+				padding:3px;font-size:0.7rem;left:10px;top:10px;
+				opacity:0;max-width:48%;
+			}
+			.info-dot{opacity:0}
+			[flex] {
+				flex: 1;
+			}
+
+
+			.axis {
+				font-size:12px;
+				font-family: "Consolas", "Source Sans Pro";
+				font-weight: 300;
+				strokeColor: #333;
+			}
+
+			.axis text {
+				fill:var(--flow-background-inverse-soft, #aaa);
+			}
+			.axis path {
+				stroke:var(--flow-background-inverse-soft, #aaa);
+			}
+			.axis line {
+				stroke:var(--flow-background-inverse-soft, #aaa);
+			}
+
+			.value-container {
+				/*background-color: var(--flow-background-color, rgba(0,0,0,0));*/
+				display:flex;
+				flex-direction:row;
+			}
+
+			.title-bottom { display: none; }
+			.host([bottom])	.title-bottom { display: block; }
+			.host([bottom])	.title-top { display: none; }
+			.host([top])	.title-bottom { display: none; }
+			.host([top])	.title-top { display: block; }
+		`];
+	}
+
+	constructor() {
+		super();
+		this.sampler = '';
+		this.range = 60 * 5;
+		this.refresh = 1e3;
+		this.precision = 0;
+		this.axes = false;
+		this.info = false;
+
+		this.svgPreserveAspectRatio = 'xMaxYMax meet';
+	}
+
+	onElementResize(){
+		super.onElementResize();
+		dpc(()=>{
+			super.onElementResize();
+			this.requestUpdate("element-resize", null);
+		})
+		dpc(1000, ()=>{
+			super.onElementResize();
+			this.requestUpdate("element-resize", null);
+		})
+	}
+
+	connectedCallback() {
+		super.connectedCallback();
+		if(this.sampler)
+			this.interval = setInterval(this.requestUpdate.bind(this), this.refresh);
+	}
+
+	disconnectedCallback() {
+		super.disconnectedCallback();
+
+		if(this.interval)
+			clearInterval(this.interval);
+	}
+
+	render() {
+
+		dpc(()=>{
+			this.draw();
+		})
+
+		let value = '';
+		//this.log("render flow-graph");
+		if(this.sampler) {
+			let idents = this.sampler.split(':');
+			let ident = idents.shift(); 
+			let sampler =  FlowSampler.get(ident);
+			value = sampler.last() || '';
+			if(value !== undefined) { 
+				value = FlowFormat[this.format || 'default'](value || 0, this);
+			}
+		}
+		else {
+			console.log("no sampler", this);
+		}
+
+
+		if(this.overlay) {
+			return html`
+			<div class='wrapper'>
+				<div class="d3-holder">${super.render()}</div>
+				<div class="overlay">
+					<div class="container col">
+						<!-- div class="title title-top">${this.title}<span class="colon">:</span></div -->
+						<div class="row">
+							<div class="title title-top">${this.title}<span class="colon">:</span></div>
+							${ (!this.align || this.align == 'right') ? html`<div style="flex:1;"></div>` : '' }
+							<div class="value-container">
+								<div class="prefix">${this.prefix}</div>
+								<div class="value">${value}</div>
+								<div class="suffix">${this.suffix}</div>
+							</div>
+							${ (this.align == 'left') ? html`<div style="flex:1;"></div>` : '' }
+						</div>
+						<div flex></div>
+						<!-- div class="row">
+							<div class="title title-bottom">${this.title}<span class="colon">:</span></div>
+							${ (!this.align || this.align == 'right') ? html`<div style="flex:1;"></div>` : '' }
+							<div class="value-container">
+								<div class="prefix">${this.prefix}</div>
+								<div class="value">${value}</div>
+								<div class="suffix">${this.suffix}</div>
+							</div>
+							${ (this.align == 'left') ? html`<div style="flex:1;"></div>` : '' }
+						</div -->
+					</div>
+				</div>
+			</div>
+			<div class="info"></div>
+			`;	
+		} else {
+
+			return html`
+			<div class='wrapper'>
+				<div class="d3-holder">${super.render()}</div>
+				<div>
+					<div class="container col">
+						<slot></slot>
+					</div>
+				</div>
+			</div>
+			<div class="info"></div>
+			`;	
+		}
+	}
+
+	getMargin(){
+		if(this.axes){
+			return {
+				bottom:40,
+				top:30,
+				left:20,
+				right:20
+			}
+		}
+		return {
+			bottom:0,
+			top:10,
+			left:0,
+			right:0
+		}
+	}
+	draw(){
+		let margin = this.getMargin();
+		let {height:fullHeight, width:fullWidth} = this.el_d3.getBoundingClientRect();
+		let width = fullWidth - margin.left - margin.right;
+    	let height = fullHeight - margin.top - margin.bottom;
+
+		if(!this.sampler)
+			return;
+		let samplerIdents = this.sampler.split(':');
+		
+		let samplers = samplerIdents.map((ident) => {
+			let sampler =  FlowSampler.get(ident);
+			if(!this._draw){
+				this._draw = this.draw.bind(this);
+				sampler.on('data', this._draw);
+			}
+			return sampler;
+		})
+		
+		let data = samplers[0].data;
+
+		//console.log(JSON.stringify(data, null))
+		let [min,max] = d3.extent(data, d => d.date);
+		//console.log("processing min-max[1]",min,max);
+		if(!this.axes)
+			min = max - 1000*this.range;
+		let maxTextLength = 0;
+		data.forEach(d=>{
+			if(d.value.toFixed(this.precision).length>maxTextLength)
+				maxTextLength = d.value.toFixed(this.precision).length;
+		})
+
+		if(this.axes && margin.left < maxTextLength * 10){
+			let oldLeft = margin.left
+			margin.left = maxTextLength * 10;
+			width += oldLeft - margin.left;
+		}
+
+
+		const x = d3.scaleUtc()
+		.domain([min, max])
+		.range([0, width])
+
+		const y = d3.scaleLinear()
+		.domain(d3.extent(data, d => d.value)).nice()
+		.range([height, 0]);
+
+		let xAxis, yAxis;
+		if(this.axes){
+			xAxis = g => g
+			.attr("transform", `translate(0,${height})`)
+			.call(d3.axisBottom(x).ticks(width / 80).tickSizeOuter(0));
+
+			yAxis = g => g
+			//.attr("transform", `translate(${margin.left},0)`)
+			.call(d3.axisLeft(y).ticks(height / 20).tickSizeOuter(0))
+			//.call(g => g.select(".domain").remove())
+		}
+		
+		// .call(g => g.select(".tick:last-of-type text").clone()
+		// 	.attr("x", 3)
+		// 	.attr("text-anchor", "start")
+		// 	.attr("font-weight", "bold")
+		// 	.text(this.title));
+
+		const area = d3.area()
+			.curve(d3.curveLinear)
+			.x(d => x(d.date))
+			.y0(height)
+			.y1(d => y(d.value));
+
+		const { el } = this;
+		// el.append('path')
+		// 	.datum(data)
+		// 	.attr('fill','var(--flow-graph-fill, steelblue)')
+		// 	.attr('stroke','var(--flow-graph-stroke, steelblue)')
+		// 	.attr('d',area);
+		let t = `translate(${margin.left},${margin.top})`;
+		if(el.__t != t){
+			el.__t = t
+			el.attr("transform", t)
+		}
+
+		if(this.svg.__w != fullWidth){
+			this.svg.__w = fullWidth;
+			this.svg
+				.attr("width", fullWidth)
+		}
+		if(this.svg.__h != fullHeight){
+			this.svg.__h = fullHeight;
+			this.svg
+				.attr("height", fullHeight)
+		}
+			
+
+		if(!this.path)
+			this.path = el.append('path')
+				.attr('stroke-opacity', 'var(--flow-graph-stroke-opacity, 1.0)')
+				.attr("stroke-linejoin", "round")
+				.attr("stroke-linecap", "round")
+				.attr("stroke-width", 'var(--flow-graph-stroke-width, 0)')
+				.attr('fill','var(--flow-graph-fill, steelblue)')
+				.attr('stroke','var(--flow-graph-stroke, "#000)')
+
+		try {				
+			this.path.datum(data)
+				.attr('d', area);
+		} catch(ex) {
+			if(this.sampler)
+				console.log('error while processing sampler:',this.sampler);
+			console.log(ex);
+
+		}
+
+		if(this.info){
+			let me = this;
+			let bisect = d3.bisector(d=>d.date).left;
+			//let _data = data.map(d=>d.date.getTime());
+			let timeFormat = d3.timeFormat("%x %X");
+			this.getDataByPoint = (p)=>{
+				let x0 = x.invert(p-margin.left);
+				/*let t = x0.getTime();
+				let dif = -1, _dif, index=-1;
+				_data.forEach((ts, i)=>{
+					_dif = Math.abs(ts-t)
+					if(dif<0 || dif>_dif){
+						index = i;
+						dif = _dif
+					}
+				})
+				//console.log("index", index, x0, p)*/
+				let index = bisect(data, x0);
+				let d = data[index];
+				if(!d)
+					return
+				let cx = x(d.date);
+				let cy = y(d.value);
+				let l = null;
+				let r = null;
+				if(cx>width*0.5){
+					r = width-cx+margin.right+12;
+				}else{
+					l = cx+12+margin.left
+				}
+				return {cx, cy, d, l, r, t:cy+12+margin.top};
+			}
+			if(!this.infoEl){
+				this._infoEl = this._infoEl||this.renderRoot.querySelector('.info')
+				this.infoEl = d3.select(this._infoEl);
+				this.infoDot = el.append("circle")
+					.attr("class", "info-dot")
+			        .attr("fill", "var(--flow-graph-info-dot-fill, red)")
+			        .attr("stroke", "var(--flow-graph-info-dot-stroke, none)")
+			        .attr("r", 3)
+				this.svg 
+					.on('mousemove', function(_d){
+						let p = d3.mouse(this)[0];
+					    let data = me.getDataByPoint(p);
+						//console.log("ddd", d.value, x0)
+						if(!data)
+							return
+						let {cx, cy, l, r, t, d} = data;
+						let infoEl = me.infoEl;
+						infoEl
+							.html(FlowFormat[me.format||'default'](d.value, me)+", "+timeFormat(d.date))
+		     				.style("top", t+"px")
+		     			if(l){
+		     				infoEl.style("right", 'initial')
+		     				infoEl.style("left", l+"px")
+		     			}else{
+		     				infoEl.style("right", r+"px")
+		     				infoEl.style("left", 'initial')
+		     			}
+						infoEl.transition()
+							.duration(50)
+							.style("opacity", 1)
+						me.infoDot
+							.style("opacity", 1)
+							.attr("cx", cx)
+			        		.attr("cy", cy)
+					})
+					.on('mouseout', ()=>{
+						this.infoDot.style("opacity", 0);
+						this.infoEl.transition()
+							.duration(50)
+							.style("opacity", 0);
+					});
+			}
+		}
+
+
+		if(this.axes){
+			this.xAxis = this.xAxis || el.append("g")
+			this.xAxis.call(xAxis);
+			this.yAxis = this.yAxis || el.append("g")
+			this.yAxis.call(yAxis);
+
+			this.xAxis.classed('axis', true);
+			this.yAxis.classed('axis', true);
+		}
+
+	}
+}
+
+FlowGraph.define('flow-graph');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_SAMPLER_401 : &'static str = r###"
+
+
+if(!flow.samplers) {
+	flow.samplers = {
+        inst : { },
+        sinks : [ ],
+		get : (ident, options) => {
+			let sampler = flow.samplers.inst[ident];
+			if(!sampler)
+				sampler = flow.samplers.inst[ident] = new FlowSampler(ident, options);
+			return sampler;
+        },
+        registerSink : (fn) => {
+            flow.samplers.sinks.push(fn);
+        },
+        unregisterSink : (fn) => {
+            let idx = flow.samplers.sinks.indexOf(fn);
+            if(idx >= 0)
+                flow.samplers.sinks.splice(idx, 1);
+        }        
+	}
+}
+
+export class FlowSampler {
+
+	static get(...args) {
+		return flow.samplers.get(...args);
+	}
+
+	constructor(ident, options = { }) {
+		this.ident = ident;
+		if(!this.ident)
+			throw new Error('fatal: FlowSampler::constructor() missing options.ident');
+		
+		this.options = options;
+		this.generator = this.options.generator;
+        this.data = [ ];
+		this.eventHandlers = new Map();
+		this.eventHandlers.set("data", new Map());
+
+		if(this.options.interval)
+			this.start();
+	}
+
+	async start() {
+		if(this.running)
+			return Promise.reject('already running');
+
+		const { interval } = options;
+		this.interval = setInterval(this.poller.bind(this), interval);
+
+		this.running = true;
+	}
+
+	stop() {
+		if(this.interval) {
+			clearInterval(this.interval);
+			delete this.interval;
+		}
+
+		this.running = false;
+	}
+
+	poll(poller) {
+		this.generator = poller;
+	}
+
+	poller() {
+		if(!this.generator) {
+			console.error('FlowSampler::poller() missing generator');
+			return;
+		}
+
+		if(typeof this.generator != 'function') {
+			console.error('FlowSampler::poller() generator must be a function');
+			return;
+		}
+
+        
+		this.generator(ts, lastTS);
+		
+	}
+
+	put(value) {
+        const { ident, data, options, sinks } = this;
+		const date = new Date();
+		data.push({date,value});
+		let max = options.maxSamples || (60*5);
+		while(data.length > max)
+			data.shift();
+        this.fire('data', {ident,data});
+        flow.samplers.sinks.forEach((sink) => {
+            sink(ident, value, date);
+        })
+    }
+
+    lastEntry() {
+        if(!this.data.length)
+            return undefined;
+        return this.data[this.data.length-1];
+    }
+
+
+    last(_default) {
+        if(!this.data.length)
+            return _default;
+        return this.data[this.data.length-1].value;
+    }
+
+    first(_default = undefined) {
+        if(!this.data.length)
+            return _default;
+        return this.data[0].value;
+    }
+
+	fire(name, data={}){
+		let ce = new CustomEvent(`flow-sampler-${name}-${this.ident}`, {detail:data})
+		document.body.dispatchEvent(ce);
+		let handlers = this.eventHandlers.get(name);
+		if(handlers){
+			handlers.forEach((v, fn)=>{
+				fn({data});
+			})
+		}
+	}
+	on(name, fn){
+		let handlers = this.eventHandlers.get(name);
+		if(!handlers)
+			return
+		handlers.set(fn, 1);
+		//document.body.addEventListener(`flow-sampler-${name}-${this.ident}`, fn);
+	}
+	off(name, fn){
+		let handlers = this.eventHandlers.get(name);
+		if(!handlers)
+			return
+		handlers.delete(fn);
+		//document.body.removeEventListener(`flow-sampler-${name}-${this.ident}`, fn);
+    }
+    
+
+}
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_BASE_ELEMENT_410 : &'static str = r###"
+/*
+* Flow-UX: src/base-element.js
+* version: 1.0.0
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+* @class BaseElement
+* @extends LitElement
+*/
+export class BaseElement extends LitElement{
+
+	static get baseUrl(){
+		return baseUrl;
+	}
+
+	static hashCode(str){//java String#hashCode
+	    var hash = 0;
+	    for (var i = 0; i < str.length; i++) {
+	       hash = str.charCodeAt(i) + ((hash << 5) - hash);
+	    }
+	    return hash;
+	} 
+
+	static intToRGB(i){
+	    var c = (i & 0x00FFFFFF)
+	        .toString(16)
+	        .toUpperCase();
+
+	    return "00000".substring(0, 6 - c.length) + c;
+	}
+
+	/**
+	* convert any string to color hex code
+	* @param {String} str any string i.e 'hello'
+	* @return {String} color hex code i.e `#DDFFAA`
+	*/
+	static strToColor(str){
+		return '#'+this.intToRGB(this.hashCode(str));
+	}
+
+	/**
+	* @desc define customElements. you can call on drived/child class as <code class="prettyprint js">CoolElement.define('my-cool-element')</code>
+	* @param {String} name name of tag i.e. 'my-cool-element'
+	* @since 0.0.1
+	*/
+	static define(name, deps){
+		if(deps) {
+			DeferComponent(this,name,deps);
+		}
+		else
+			this.defineElement(name);
+	}
+
+	static defineElement(name){
+		customElements.define(name, this);
+	}
+
+	static get svgStyle(){
+		return css`
+			svg.icon{
+				width:28px;
+				height:28px;
+				margin:0px 5px;
+				fill:var(--flow-primary-color);
+			}
+		`
+	}
+
+	static createElement(name, attr={}, props={}){
+		let el = document.createElement(name);
+		Object.keys(attr).forEach(k=>{
+			el.setAttribute(k, attr[k])
+		})
+		Object.keys(props).forEach(k=>{
+			el[k] = props[k];
+		})
+
+		return el;
+	}
+
+	static setLocalSetting(name, value, prefix='flow-'){
+		if(!window.localStorage)
+			return
+
+		window.localStorage[prefix+name] = value;
+	}
+
+	static getLocalSetting(name, defaults, prefix='flow-'){
+		if(!window.localStorage)
+			return defaults;
+
+		let value = window.localStorage[prefix+name];
+		if(typeof(value) == 'undefined')
+			return defaults
+
+		return value;
+	}
+
+	/**
+	* fire CustomEvent
+	* @param {String} eventName name of event
+	* @param {Object=} detail event's [detail]{@link https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/detail} property
+	* @param {Object=} options [CustomEventInit dictionary]{@link https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/CustomEvent}
+	* @param {HTMLElement=} event target (default: window)
+	* @return {boolean} The return value is false if event is cancelable and at least one of the event handlers which handled this event called Event.preventDefault(). Otherwise it returns true.
+	* @since 0.0.1
+	*/
+	static fire(eventName, detail={}, options={}, el=null, returnEvent=false){
+		let ev = new CustomEvent(eventName, Object.assign({}, options, {detail}));
+		let result = (el || window).dispatchEvent(ev);
+		return returnEvent?ev:result
+	}
+
+	static get sizeClsMap(){
+		return sizeClsMap
+	}
+	static setElementSizeClass(cmp, width){
+
+		width = width || cmp.getBoundingClientRect().width;
+		let found = [...this.sizeClsMap.entries()].find(([key, size])=>{
+			//console.log("foundfoundfound:key,size", key, size)
+			return width<=size
+		}) || ["LG"];
+
+		//console.log("foundfoundfound", width, found)
+		let cls = [...this.sizeClsMap.keys(), "LG"];
+		let [clsToAdd] = found;
+		cls.splice(cls.indexOf(clsToAdd), 1);
+		cmp.classList.remove(...cls);
+		
+		//temporarily remove XSS size for accounts panel
+		// if(clsToAdd == "XXS")
+		// 	clsToAdd = "TINY";
+		//console.log("foundfoundfound:adding cls", cls, clsToAdd, cmp)
+		cmp.classList.add(clsToAdd);
+		cmp.sizeCls = clsToAdd;
+
+	}
+
+	constructor(){
+		super();
+		const name = this.constructor.name;
+		this.__cname = name.toLowerCase().replace("flow", "");
+		this._initLog();
+	}
+
+	initPropertiesDefaultValues(props=null){
+		this.constructor.elementProperties.forEach((v, key)=>{
+			//console.log("key, v", key, v)
+			let type = typeof v.value;
+			if(!['undefined', 'function'].includes(type))
+				this[key] = v.value;
+		})
+		if(props){
+			Object.keys(props).forEach(name=>{
+				if(typeof props[name].value != 'undefined')
+					this[name] = props[name].value
+			})
+		}
+	}
+
+	_initLog(forceLog = false, name){
+		let {localStorage:lS} = window;
+		let {debug} = lS||{};
+		name = name || this.constructor.name;
+		if(forceLog||debug=="all"||debug=="*"||
+			(debug+"").indexOf(this.__cname)>-1 ||
+			(debug+"").indexOf(name) >-1){
+			this.log = Function.prototype.bind.call(
+				console.log,
+				console,
+				`%c[${name}]`,
+				`font-weight:bold;color:${this.constructor.strToColor(name)}`
+			);
+		}else{
+			this.log = ()=>{
+				//
+			}
+		}
+	}
+
+	cloneValue(value){
+		if( value instanceof Array )
+			return value.map(v=>this.cloneValue(v))
+		else if( value instanceof Object ){
+			let r = {}
+			Object.entries(value).forEach( ([k,v])=>{
+				r[k] = this.cloneValue(v);
+			})
+			return r;
+		}
+
+		return value;	
+	}
+
+	/**
+	* update the property by its path
+	* @param {String} path propery path i.e `tabs.2.disable`
+	* @param {*} value new value
+	*
+	*/
+	set(path, value){
+		const parts = path.split(".");
+		let v = this;
+		let last = parts.length-1;
+		let updated = false;
+		let lastValue = this.cloneValue(v[parts[0]]);
+		
+		parts.find((p, i)=>{
+			if( !(v instanceof Object) )
+				return
+			if(i==last){
+				v[p] = value;
+				//this.log("v, p, i, v", {v, p, i, value})
+				updated = true;
+				return true;
+			}
+			v = v[p];
+		})
+		if(updated){
+			this.requestUpdate(parts[0], lastValue)
+			//this.log("requestUpdate, prop, lastValue", parts[0], lastValue)
+		}
+		return updated;
+	}
+ 
+	/**
+	* fire CustomEvent
+	* @param {String} eventName name of event
+	* @param {Object=} detail event's [detail]{@link https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/detail} property
+	* @param {Object=} options [CustomEventInit dictionary]{@link https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/CustomEvent}
+	* @param {HTMLElement=} event target (default: this element)
+	* @return {boolean} The return value is false if event is cancelable and at least one of the event handlers which handled this event called Event.preventDefault(). Otherwise it returns true.
+	* @since 0.0.1
+	*/
+	fire(eventName, detail={}, options={}, el=null, returnEvent=false){
+		let ev = new CustomEvent(eventName, Object.assign({}, options, {detail}));
+		let result = (el || this).dispatchEvent(ev);
+		return returnEvent?ev:result
+
+	}
+
+	/**
+	* debounce provided function for given time
+	* @param {String} name key name to debounce function
+	* @param {Function} fn a function to debounce
+	* @param {Number} time time in milliseconds for delay
+	* @return {Object} a reference to debounced function
+	* @since 0.0.1
+	*/
+	debounce(name, fn, time){
+		this._debounce = this._debounce || new Map();
+		if(this._debounce.has(name))
+			this._debounce.get(name).cancel();
+
+		this._debounce.set(name, {
+			id:setTimeout(fn, time),
+			cancel(){
+				if(!this.id){
+					clearTimeout(this.id)
+					this.id = null;
+				}
+
+			}
+		})
+
+		return this._debounce.get(name);
+	}
+
+	buildUrl(url){
+		return this.constructor.baseUrl + url;
+	}
+	iconPath(name, i){
+		return resolveIcon(this.__cname, name, i);
+	}
+
+	/**
+	* Logs given values
+	* @param {...*} args
+	*/
+	log(...args){
+	}
+
+
+	renderOnStateChange(state, ON=true){
+		if(!this._renderOnStateChange)
+			this._renderOnStateChange = {};
+		this._renderOnStateChange[state] = ON;
+	}
+
+	connectedCallback() {
+		super.connectedCallback();
+
+		let stateChange = this._renderOnStateChange || {};
+		let ONLINE = stateChange[FlowStates.ONLINE];
+		let AUTH = stateChange[FlowStates.AUTH];
+		let GET_NETWORK_AND_USER_STATE = false;
+		if(this.onlineCallback || ONLINE) {
+			this.onlineCallback_ = (...args)=>{
+				this.__online = true;
+				this.onlineCallback?.(...args);
+				if(ONLINE)
+					this.requestUpdate("FLOW-NETWORK-ONLINE", false)
+			}
+			window.addEventListener('network-iface-online', this.onlineCallback_);
+			GET_NETWORK_AND_USER_STATE = true;
+		}
+
+		if(this.offlineCallback || ONLINE) {
+			this.offlineCallback_ = (...args)=>{
+				this.__online = false;
+				this.offlineCallback?.(...args);
+				if(ONLINE)
+					this.requestUpdate("FLOW-NETWORK-ONLINE", true)
+			}
+			window.addEventListener('network-iface-offline', this.offlineCallback_);
+			GET_NETWORK_AND_USER_STATE = true;
+		}
+
+		if(this.signinCallback || AUTH) {
+			this.signinCallback_ = (...args)=>{
+				this.__signedin = true;
+				this.signinCallback?.(...args);
+				if(AUTH)
+					this.requestUpdate("FLOW-USER-AUTH", false)
+			}
+			window.addEventListener('flow-user-signin', this.signinCallback_);
+			GET_NETWORK_AND_USER_STATE = true;
+		}
+
+		if(this.signoutCallback || AUTH) {
+			this.signoutCallback_ = (...args)=>{
+				this.__signedin = false;
+				this.signoutCallback?.(...args);
+				if(AUTH)
+					this.requestUpdate("FLOW-USER-AUTH", true)
+			}
+			window.addEventListener('flow-user-signout', this.signoutCallback_);
+			GET_NETWORK_AND_USER_STATE = true;
+		}
+
+		if(GET_NETWORK_AND_USER_STATE){
+			let ce = this.fire("flow-network-and-user-state-get", {}, {}, window, true);
+			//console.log("signedin, online", ce.detail, this)
+			let {signedin, online} = ce.detail || {};
+
+			if(typeof online != 'undefined'){
+				if(online){
+					this.onlineCallback_?.()
+				}else{
+					this.offlineCallback_?.()
+				}
+			}
+			if(typeof signedin != 'undefined'){
+				if(signedin){
+					this.signinCallback_?.()
+				}else{
+					this.signoutCallback_?.()
+				}
+			}
+		}
+
+		if(this.onReCaptchaReady){
+			this._onReCaptchaReady = this.onReCaptchaReady.bind(this);
+			window.addEventListener("g-recaptcha-ready", this._onReCaptchaReady)
+		}
+
+		if(this.registeredListeners) {
+			this.registeredListeners.forEach(({ name, handler }) => {
+				window.addEventListener(name, handler);
+			})
+		}
+
+		if(this.socketSubscriptions) {
+			this.socketSubscriptions.forEach((subscription) => {
+				subscription.resubscribe();
+			})
+		}
+
+	}
+
+	onlineCallback() {
+		super.onlineCallback?.();
+		if(this.pendingSocketSubscriptions) {
+			this.pendingSocketSubscriptions.forEach((subscription) => {
+				const { subject } = subscription;
+				this.subscribe(subject, subscription);
+				//subscription.resubscribe();
+			})
+		}
+
+	}
+
+	disconnectedCallback() {
+		super.disconnectedCallback();
+		
+		if(this.onlineCallback_) {
+			window.removeEventListener('network-iface-online', this.onlineCallback_);
+			delete this.onlineCallback_;
+		}
+		if(this.offlineCallback_) {
+			window.removeEventListener('network-iface-offline', this.offlineCallback_);
+			delete this.offlineCallback_;
+		}
+		if(this.signinCallback_) {
+			window.removeEventListener('flow-user-signin', this.signinCallback_);
+			delete this.signinCallback_;
+		}
+		if(this.signoutCallback) {
+			window.removeEventListener('flow-user-signout', this.signoutCallback);
+			delete this.signoutCallback;
+		}
+		if(this._onReCaptchaReady){
+			window.removeEventListener("g-recaptcha-ready", this._onReCaptchaReady)
+		}
+
+		if(this.registeredListeners) {
+			this.registeredListeners.forEach(({ name, handler }) => {
+				window.removeEventListener(name, handler);
+			})
+		}
+
+		if(this.socketSubscriptions) {
+			this.socketSubscriptions.forEach((subscription)=>{
+				subscription.unsubscribe();
+			})
+		}
+	}
+
+	registerListener(name_, handler_) {
+		const {name, handler} = this.addToListenersStack(name_, handler_);
+		window.addEventListener(name, handler);
+		//console.log("window.addEventListener",name,handler);
+	}
+	addToListenersStack(name, handler_, stack){
+		if(!this.registeredListeners)
+			this.registeredListeners = [];
+		const handler = handler_ || (() => { this.requestUpdate(); });//.bind(this);
+		(stack||this.registeredListeners).push({name,handler});
+		return {name,handler};
+		
+	}
+
+	removeListeners() {
+		if(this.registeredListeners) {
+			this.registeredListeners.forEach(({ name, handler }) => {
+				window.removeEventListener(name, handler);
+			})
+		}
+		this.registeredListeners = [];
+	}
+
+	bindDDTriggers(skipEventBind=false){
+		
+		let triggers = this.renderRoot.querySelectorAll("[data-trigger-for]");
+		//console.log("bindDDTriggers", this, triggers)
+		triggers.forEach(node=>{
+			let id = node.getAttribute("data-trigger-for");
+			//console.log("idididid", id)
+			if(!id)
+				return
+			let selector = id;
+			if(id[0]!="#")
+				selector = "#"+selector;
+			let key = node.dataset.ddKey
+			if(!key){
+				key = id.replace("#", "");
+				if(!/DD$/.test(key))
+					key = key+"DD";
+			}
+			let dd = this[key]||this.renderRoot.querySelector(selector);
+			//console.log("idididid", {id, key, selector, dd})
+			if(!dd)
+				node.flowDropdown = null;
+			this[key] = dd;
+			node.flowDropdown = dd;
+			if(skipEventBind)
+				return
+			if(!node["event-bind-"+id]){
+				node["event-bind-"+id] = true;
+				node.addEventListener("click", ()=>{
+					if(!this[key])
+						return
+					this[key].toggle();
+				})
+			}
+		})
+	}
+
+	isOnline(){
+		return this.__online;
+	}
+	isSignedin(){
+		return this.__signedin;
+	}
+	serialize(){
+		return {
+			nodeName: this.nodeName
+		}
+	}
+	deserialize(){
+		//
+	}
+	subscribe(subject, subscriber){
+		if(!flow.app.defaultRPC) {
+			subscriber = new AsyncQueueSubscriber(null,subject);
+			if(!this.pendingSocketSubscriptions)
+				this.pendingSocketSubscriptions = [];
+			this.pendingSocketSubscriptions.push(subscriber);
+			return subscriber;
+		} else {
+			subscriber = flow.app.defaultRPC.subscribe(subject, subscriber);
+			if(!this.socketSubscriptions)
+				this.socketSubscriptions = new Map();
+			this.socketSubscriptions.set(subscriber.uid, subscriber);
+			return subscriber;
+		}
+	}
+	request(subject, data, callback){
+		return flow.app.defaultRPC.request(subject, data, callback);
+	}
+}
+
+export const ScrollbarStyle = css`
+*::-webkit-scrollbar-track,
+:host::-webkit-scrollbar-track{
+    box-shadow:var(--flow-scrollbar-track-box-shadow, initial);
+    background:var(--flow-scrollbar-track-bg, initial);
+}
+
+*::-webkit-scrollbar,
+:host::-webkit-scrollbar{
+	width:var(--flow-scrollbar-width, initial);
+	height:var(--flow-scrollbar-width, initial);
+	background:var(--flow-scrollbar-bg, initial);
+}
+*::-webkit-scrollbar-thumb,
+:host::-webkit-scrollbar-thumb{
+    box-shadow:var(--flow-scrollbar-thumb-box-shadow, initial);
+    background:var(--flow-scrollbar-thumb-bg, initial);
+}
+`
+
+ScrollbarStyle.appendTo = styleAppendTo(ScrollbarStyle);
+
+let getLocalSetting = BaseElement.getLocalSetting;
+let setLocalSetting = BaseElement.setLocalSetting;
+export {getLocalSetting, setLocalSetting}
+
+export const SpinnerStyle = css`
+	@keyframes spinner-animation{0%{transform:rotate(0deg)}100%{transform:rotate(359deg)}}
+	.spinner{
+		webkit-animation: spinner-animation 2s linear infinite;
+	    animation: spinner-animation 2s linear infinite;
+	    transform-origin:center;
+	}
+	fa-icon.spinner:not([hidden]){display:inline-block;position:relative}
+`
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_SOCKET_417 : &'static str = r###"
+
+
+
+
+export class FlowSocket {
+	constructor(options){
+		this.online = false;
+		
+
+		this.options = Object.assign({
+			path:'/rpc',
+			id:UID(),
+			timeout:30,
+			origin:window.location.origin
+		}, options || {});
+
+		this.timeout  = this.options.timeout;
+		this.id = this.options.id;
+		this.transport = this.options.transport || 'ws';
+
+		this.init();
+	}
+
+	init() {
+		this.initEvent();
+		this.connected = false;
+		if (this.options.path)
+			this.connect();
+	}
+
+	initEvent() {
+		this.pending = new Map();
+		this.events = new FlowEvents();
+	}
+
+	connect_impl() {
+
+		switch(this.transport) {
+			case 'ws': {
+				const url = this.options.origin.replace(/^http/,'ws')+this.options.path;
+				// console.log('WS connecting to',url);
+				this.socket_impl = new WebSocket(this.options.origin.replace(/^http/,'ws')+this.options.path);
+			} break;
+
+			case 'sockjs': {
+				this.socket_impl = SockJS(this.options.origin+this.options.path, this.options.args || {});
+			} break;
+		}
+
+		this.socket_impl.onopen=(event)=>{
+			this.online = true;
+			console.log("RPC connected");
+			this.events.emit('open');
+		}
+		this.socket_impl.onerror=(err)=>{
+			console.log("RPC connect_error", err);
+			this.events.emit('connect.error', err);
+			this.socket_impl.close();
+//			this.reconnect_impl();
+		}
+		this.socket_impl.onmessage=(msg)=>{
+			let [ event, data ] = JSON.parse(msg.data);
+			this.intake.emit(event, data);
+		}
+		this.socket_impl.onclose=(event)=>{
+			this.online = false;
+			console.log("RPC disconnected");
+			this.events.emit('disconnect');
+
+			this.pending.forEach((info, id)=>{
+				info.callback({ error : "Connection Closed"});
+			});
+
+			this.pending.clear();
+
+			this.reconnect_impl();
+		};
+	}
+
+	reconnect_impl() {
+		dpc(1000, ()=>{
+			this.connect_impl();
+		})
+	}
+
+	async connect(){
+		if (this._connected || !this.options.path)
+			return;
+		this._connected = true;
+		this.events.emitAsync('rpc-connecting');
+		//let io = this.options.io || window.SockJS;
+		this.intake = new FlowEvents();
+		this.socket = {
+			on : (...args) => { this.intake.on(...args); },
+			emit : (subject, msg) => { this.socket_impl.send(JSON.stringify([subject,msg])); }
+		}
+		this.socket.on('auth.setcookie', (msg)=>{
+			document.cookie = msg.cookie;
+		})
+		this.socket.on('auth.getcookie', ()=>{
+			let cookie = (document.cookie.length === 0) ? null : document.cookie;
+			let response = {
+				cookie: cookie
+			}
+			this.socket_impl.send(JSON.stringify(['auth.cookie', response]));
+		})
+		this.socket.on('ready', (msg) => {
+			if(msg.websocketMode != this.options.websocketMode)
+				throw new Error(`Error - incompatible websocket mode: client ${this.options.websocketMode} server: ${msg.websocketMode}`);
+			this.events.emit('connect');
+		})
+
+		this.connect_impl();
+
+		await this.initSocketHandlers();
+
+		let timeoutMonitor = ()=>{
+			let ts = Date.now();
+			let purge = [ ]
+			this.pending.forEach((info, id)=>{
+				if(ts - info.ts > this.timeout * 1000) {
+					info.callback({ error : "Timeout "});
+					purge.push(id);
+				}
+			});
+			purge.forEach(id=>{
+				this.pending.delete(id);
+			});
+			dpc(1000, timeoutMonitor);
+		}
+		dpc(1000, timeoutMonitor);
+
+	}
+
+	close(){
+		if(this.socket)
+			this.socket.close();
+	}
+
+    
+	on(op, callback) {
+		this.events.on(op, callback);
+	}
+
+
+	initSocketHandlers() { return Promise.resolve(); }
+}
+
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_SOCKET_RPC_400 : &'static str = r###"
+
+
+
+
+export class FlowSocketRPC extends FlowSocket {
+	constructor(options) {
+		super(Object.assign({},options,{websocketMode:'RPC'}));
+		this.asyncSubscribers = new AsyncQueueSubscriberMap();
+	}
+
+	initSocketHandlers() {
+
+		this.socket.on('publish', msg=>{
+			let {subject, data} = msg;
+			if(this.trace) {
+				if(this.trace === 1 || this.trace === true)
+					console.log('RPC ['+this.id+']:', subject);
+				else
+				if(this.trace === 2)
+					console.log('RPC ['+this.id+']:', subject, data);
+			}
+			this.asyncSubscribers.post(subject, {data});
+		})
+
+		this.socket.on('response', (msg)=>{
+			let {rid, error, data} = msg;
+			let info = rid && this.pending.get(rid);
+			if(info) {
+				try {
+					info.callback.call(this, error, data);
+				} catch(ex) {
+					console.error('RPC handler error:', msg);
+					console.error(ex);
+				}
+			}
+			else if(rid) {
+				console.log("RPC received unknown rpc callback (strange server-side retransmit?)");
+			}
+
+			rid && this.pending.delete(rid);
+		})
+
+		return Promise.resolve();
+	}
+
+	subscribe(subject) {
+		return this.asyncSubscribers.subscribe(subject);
+	}
+
+	publish(subject, data) {
+		return this.socket.emit('publish', {subject, data});
+	}
+
+	request(subject, data, callback) {
+		return new Promise((resolve, reject) => {
+
+			if(typeof(data)=='function') {
+				callback = data;
+				data = undefined;
+			}
+
+			let rid = UID();
+
+			this.pending.set(rid, {
+				ts:Date.now(),
+				callback : (err, resp) => {
+					if(callback)
+						callback(err,resp);
+					else
+					if(err)
+						reject(err);
+					else
+						resolve(resp);
+				}
+			});
+
+			this.socket.emit('request', {
+				rid,
+				req : {subject, data}
+			});
+		})
+	}
+
+}
+
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_SOCKET_NATS_359 : &'static str = r###"
+
+
+
+
+export class FlowSocketNATS extends FlowSocket {
+	constructor(options) {
+		super(Object.assign({},options,{websocketMode:'NATS'}));
+		this.trace = false;
+		this.subscribers = new Map();
+		this.subscriptionTokenMap = new Map();
+		this.handlers = new Map();
+
+		this.asyncSubscribers = new AsyncQueueSubscriberMap();
+	}
+
+	initSocketHandlers() {
+
+		this.on('connect', ()=>{
+			// reconnect subscribers
+			this.connectSubscribers(this.asyncSubscribers);
+		});
+
+		this.socket.on('message', msg=>{
+			this.trace && console.log("sio/message",msg);
+			let {subject, data} = msg;
+			if(msg.op){
+				subject = msg.op;
+				data = msg;
+			}
+			if(this.trace) {
+				if(this.trace === 1 || this.trace === true)
+					console.log('RPC ['+this.id+']:', subject);
+				else
+				if(this.trace === 2)
+					console.log('RPC ['+this.id+']:', subject, data);                
+			}
+			this.events.emit(subject, data);
+		})
+
+		this.socket.on('publish::response', (msg)=>{
+			this.trace && console.log("sio/publish::response",msg);
+			let {rid, error, data} = msg;
+			let info = rid && this.pending.get(rid);
+			if(info)
+				info.callback.call(this, error, data);
+			else if(rid)
+				console.log("RPC received unknown rpc callback (strange server-side retransmit?)");
+
+			rid && this.pending.delete(rid);
+		})
+
+		this.socket.on('subscribe::response', (msg)=>{
+			this.trace && console.log("sio/subscribe::response",msg);
+			let {rid, error, token, subject} = msg;
+			let info = rid && this.pending.get(rid);
+			if(info) {
+				info.callback.call(this, error, token);
+				let handler = this.handlers.get(rid);
+				if(!error && subject?.length && handler) {
+					let subscribers = this.subscribers.get(subject);
+					if(!subscribers){
+						subscribers = new Map();
+						this.subscribers.set(subject, subscribers)
+					}
+					//subscribers.set(rid, {token, handler});
+					subscribers.set(token, {token, handler});
+					this.handlers.delete(rid);
+					this.subscriptionTokenMap.set(token, { subscribers, rid });
+				}
+			}
+			else if(rid)
+				console.log("RPC received unknown subscribe::response rid");
+
+			rid && this.pending.delete(rid);
+		})
+
+		this.socket.on('unsubscribe::response', (msg)=>{
+			this.trace && console.log("sio/subscribe::response",msg);
+			let {rid, error, ok} = msg;
+			let info = rid && this.pending.get(rid);
+			if(info)
+				info.callback.call(this, error, ok);
+			else if(rid)
+				console.log("RPC received unknown unsubscribe::response rid");
+
+			rid && this.pending.delete(rid);
+		})
+
+
+		this.socket.on('request', (msg)=>{
+			this.trace && console.log("sio/request",msg);
+			let { req : { subject, data }, rid } = msg;
+			
+			// TODO - check this.events for handlers
+		})
+
+
+		this.socket.on('publish', (msg)=>{
+			this.trace && console.log("sio/publish",msg);
+			let { subject, data,  token} = msg;
+
+//			console.log("PUBLISH",msg);
+
+			//this.events.emit(subject, data);
+			const subscribers = this.subscribers.get(subject);
+			if(subscribers){
+				const target = subscribers.get(token);
+				if(target){
+					//console.log("PUBLISHING     SUBJECT::::", subject, "  TOKEN:", token, "    DATA:", data);
+					target.handler(data);
+				}
+				//subscribers.forEach(subscriber=>subscriber.handler(data));
+			}
+			// TODO - check this.events for handlers
+
+			this.asyncSubscribers.post(subject, {data});
+		})
+
+		this.socket.on('response', (msg)=>{
+			this.trace && console.log("sio/response",msg);
+			let {rid, error, data} = msg;
+			error = error || data?.error;
+			if(error?.code == "TIMEOUT" && !error.error)
+				error.error = "NATS TIMEOUT";
+			let info = rid && this.pending.get(rid);
+			if(info)
+				info.callback.call(this, error, data);
+			else if(rid)
+				console.log("NATS RPC received unknown rpc callback (strange server-side retransmit?)");
+
+			rid && this.pending.delete(rid);
+		})
+
+		return Promise.resolve();
+	}
+
+	on(op, callback) {
+		this.events.on(op, callback);
+	}
+
+	request(subject, data, callback) {
+		return new Promise((resolve, reject) => {
+			if(typeof(data)=='function'){
+				callback = data;
+				data = undefined;
+			}
+
+			let rid = UID();
+			this.pending.set(rid, {
+				ts:Date.now(),
+				callback : (error, data)=>{
+					if(callback) {
+						callback(error, data);
+					} else {
+						if(error) {
+							console.log('NATS request error - Subject:',subject,'Error:',error)
+							reject(error);
+						}
+						else
+							resolve(data);
+					}
+				}
+			})
+
+			this.socket.emit('request', {
+				rid,
+				req : {subject, data}
+			});
+		});
+	}
+
+	publish(subject, data, callback) {
+		return new Promise((resolve, reject) => {
+			let rid = UID();
+
+			let ack = !!callback;
+
+			ack && this.pending.set(rid, {
+				ts:Date.now(),
+				callback : (err, data)=>{
+					if(typeof callback == 'function')
+						return callback(err, data);
+					else
+						return err ? reject(err) : resolve();
+				}
+			})
+
+			this.socket.emit('publish', {
+				req : { subject, data },
+				rid,
+				ack
+			})
+		});
+	}
+
+
+	subscribe(subject, opt) {
+
+		//this.create_nats_subscription_(subject);
+
+		let subscriber = this.asyncSubscribers.subscribe(subject);
+
+		subscriber.on('subscribe',(subject)=>{
+			this.registerSubscriptionWithNATS_(subject, subscriber, opt);	
+		})
+
+		subscriber.on('unsubscribe',(subject)=>{
+			this.unsubscribe(subscriber);	
+		})
+
+//		this.registerSubscriptionWithNATS_(subject, subscriber, opt);
+		// console.log("NATS SUBSCRIPTION:", subject);
+		return subscriber;
+	}
+
+	connectSubscribers(subscribers) {
+
+		// this.asyncSubscribers
+		subscribers.forEach((subscriber)=>{
+			const { subject } = subscriber;
+			subscriber.ready = this.registerSubscriptionWithNATS_(subject, subscriber);
+		});
+
+	}
+
+
+	registerSubscriptionWithNATS_(subject, subscriber, opt = { }) {
+		subscriber.state = 'connecting';
+		let rid = UID();
+		let p = new Promise((resolve, reject)=>{
+			// if(handler)
+			// 	this.handlers.set(rid, handler);
+			this.pending.set(rid, {
+				ts:Date.now(),
+				callback:(err, token)=>{
+					if(err)
+						console.error('subscribe failure for subject:',subject);
+					subscriber.token = token;
+					subscriber.state = 'connected';
+					//console.log("NATS - SUCCESSFUL SUBSCRIPTION to",subject,token,subscriber.state);
+					return err?reject(err):resolve(subscriber);
+				}
+			});
+
+			this.socket.emit('subscribe', {
+				req : { subject, opt },
+				rid
+			})
+		});
+		p.rid = rid;
+		return p;
+	}
+
+
+	unsubscribe(subscriber) {
+//		this.unsubscribe_local_refs(token);
+//		if(subscriber.state == 'connecting')
+
+		const { token } = subscriber;
+		let rid = UID();
+		let p = new Promise((resolve, reject)=>{
+			this.pending.set(rid, {
+				ts:Date.now(),
+				callback:(err, ok)=>{
+					return err?reject(err):resolve(ok);
+				}
+			});
+
+			this.socket.emit('unsubscribe', {
+				req : { token },
+				rid
+			})
+		});
+		p.rid = rid;
+		return p;
+	}
+
+/*
+	unsubscribe_local_refs(token) {
+		// this.subscriptionTokenMap.set(token, { subscribers, rid });
+		let rec = this.subscriptionTokenMap.get(token);
+		if(!rec)
+			return;
+
+		const { rid } = rec;
+
+		this.handlers.delete(rid);
+		this.pending.delete(rid);
+		this.subscribers.forEach(subscribers=>{
+			subscribers.delete(rid);
+		})
+	}
+*/
+}
+
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_APP_381 : &'static str = r###"
+
+
+
+
+
+
+/**
+* @class FlowApp
+* @extends BaseElement
+* @example <flow-app></flow-app>
+* 
+* @property {String} ["menu-icon"] 
+* @property {Boolean} [floating-drawer]
+* @property {Boolean} [open-drawer]
+* @cssvar {font-family} [--flow-btn-font-family=var(--flow-font-family, initial)]
+* @cssvar {width} [--flow-app-width=100vw]
+* @cssvar {height} [--flow-app-height=100vh]
+* @cssvar {align-items} [--flow-app-header-align-items=center]
+* @cssvar {height} [--flow-app-header-height=60px]
+* @cssvar {background-color} [--flow-app-header-bg=#161926]
+* @cssvar {color} {--flow-app-header-color=#91aec1]
+* @cssvar {padding} [--flow-app-header-padding=0px 100px]
+* @cssvar {padding} [--flow-app-header-link-padding=0px 0px 0px 16px]
+* @cssvar {color} [--flow-app-header-color=#91aec1]
+* @cssvar {background-color} [--flow-app-drawer-bg=var(--flow-background-color, inherit)]
+* @cssvar {color} [--flow-app-drawer-color=var(--flow-color, inherit)]
+* @cssvar {width} [--flow-app-drawer-width=300px]
+* @cssvar {overflow} [--flow-app-drawer-overflow=initial]
+* @cssvar {transition} [--flow-app-drawer-transition=left 0.5s ease]
+* @cssvar {z-index} [--flow-app-drawer-z-index=10001]
+* @cssvar {left} [--flow-app-drawer-hidden-left=-500px]
+* @cssvar {transition} [--flow-app-drawer-transition=right 0.5s ease]
+* @cssvar {right} [--flow-app-drawer-hidden-right=-500px]
+* @cssvar {overflow} [--flow-app-main-overflow=auto]
+* @cssvar {position} [--flow-app-main-position=initial]
+* @cssvar {display} [--flow-app-main-display=initial]
+* @cssvar {align-items} (--flow-app-main-align-items=stretch]
+* @cssvar {justify-content} [--flow-app-main-align-justify-content=space-between);
+* @cssvar {height} [--flow-app-header-height=60px]
+* @cssvar {padding} --flow-app-header-padding=0px 100px]
+* @cssvar {z-index} --flow-app-body-mask-z-index=10000]
+* @cssvar {background-color} [--flow-app-body-mask-bg=initial]
+* @cssvar {padding} [--flow-app-header-sm-padding=0px 15px]
+* #cssvar {overflow} [--flow-app-body-overflow=hidden]
+*/
+	// {--fa-icon-color} [--flow-app-drawer-close-icon-color=var(--flow-color)]
+	// {--fa-icon-color} [--flow-app-menu-icon-color=var(--flow-color)]		
+	// {--flow-dropdown-trigger-bg} [--flow-app-header-bg=#161926]
+	// {--flow-dropdown-trigger-color} [--flow-app-header-color=#91aec1]
+	// {--flow-dropdown-trigger-hover-color} [--flow-app-header-color=#91aec1]
+export const FlowAppMixin = (baseClass)=>{
+	class base extends baseClass{
+		constructor(...args) {
+			super(...args)
+			this.uid = UID();
+			this.setTheme(this.getTheme("light"));
+			flow.app = this;
+		}
+
+		getDefaultRPC() { return this.defaultRPC; }
+
+		getTheme(defaultTheme){
+			return getTheme(defaultTheme);
+		}
+
+		setTheme(theme){
+			setTheme(theme);
+		}
+
+		initSocketRPC(options={}){
+			return new Promise((resolve, reject) => {
+				this.rpc = new FlowSocketRPC(Object.assign({
+					path:"/rpc"
+				}, options||{}));
+
+				this.rpc.events.on("connect", ()=>{
+					this.log("RPC:init");
+					console.log("READY!!!!!")
+					this.onNetworkIfaceOnline();
+					resolve();
+				})
+				this.rpc.events.on('disconnect', () => {
+					console.log("disconnected...");
+					this.onNetworkIfaceOffline();
+				});
+
+				this.defaultRPC = this.rpc;
+			})
+		}
+
+		// taken from BaseElement...
+		fireEvent(eventName, detail={}, options={}){
+			let ev = new CustomEvent(eventName, Object.assign({}, options, {detail}));
+			return window.dispatchEvent(ev);
+		}
+	
+		initSocketNATS(options={}){
+			return new Promise((resolve, reject) => {
+				this.nats = new FlowSocketNATS(Object.assign({
+					path:"/nats"
+				}, options));
+
+				this.nats.events.on("connect", ()=>{
+					this.log("NATS:init");
+					this.onNetworkIfaceOnline();
+					resolve();
+				})
+
+				this.nats.events.on('disconnect', () => {
+					console.log("disconnected...");
+					this.onNetworkIfaceOffline();
+				})
+
+				this.defaultRPC = this.nats;
+			})
+		}
+
+		setLoading(isLoading=true, el=null){
+			(el || document.body).classList.toggle("loading", isLoading)
+		}
+
+		initLog(...args){
+			if(super._initLog)
+				return super._initLog(...args)
+			const name = this.constructor.name;
+			this.log = Function.prototype.bind.call(
+				console.log,
+				console,
+				`%c[${name}]`,
+				`font-weight:bold;color:#41c7ef`
+			);
+		}
+
+		onNetworkIfaceOnline(){
+			this._online = true;
+			this.fireEvent('network-iface-online');
+		}
+		onNetworkIfaceOffline(){
+			if(this._online) {
+				this._online = false;
+				this.fireEvent('network-iface-offline');
+			}
+		}
+
+		isOnline(){
+			return this._online;
+		}
+	}
+	return base;
+}
+
+export class FlowAppLayout extends BaseElement{
+	static get properties(){
+		return {
+			"menu-icon":{type:String},
+			"floating-drawer":{type:Boolean, reflect:true},
+			"open-drawer":{type:Boolean, reflect:true},
+		}
+	}
+	static get styles(){
+		return [ScrollbarStyle, css`
+			:host{
+				display:flex;
+				flex-direction:column;
+				width:var(--flow-app-width, 100vw);
+				height:var(--flow-app-height, 100vh);
+			}
+			.header{
+				display:flex;flex-direction:row;
+				align-items:var(--flow-app-header-align-items, center);
+				height:var(--flow-app-header-height, 60px);
+				background-color:var(--flow-app-header-bg, #161926);
+				color:var(--flow-app-header-color, #91aec1);
+				padding:var(--flow-app-header-padding, 0px 100px);
+				--flow-dropdown-trigger-bg:var(--flow-app-header-bg, #161926);
+				--flow-dropdown-trigger-color:var(--flow-app-header-color, #91aec1);
+				--flow-dropdown-trigger-hover-bg:transparent;
+				--flow-dropdown-trigger-hover-color:var(--flow-app-header-color, #91aec1);
+				--flow-dropdown-trigger-width:20px;
+				--flow-dropdown-trigger-padding:0px;
+			}
+			:host([no-header]) .header{display:none}
+			.header-sm{display:none}
+			.header ::slotted(.logo){
+				height:100%;
+				max-height:80%;
+			}
+			.logo ::slotted(.logo){
+				max-height:80%;
+			}
+			.header ::slotted(a.link){
+				padding:var(--flow-app-header-link-padding, 0px 0px 0px 16px);
+				color:var(--flow-app-header-color, #91aec1);
+				text-decoration:none;
+			}
+			.footer {
+				height: var(--flow-app-footer-height, initial);
+				color:var(--flow-app-footer-color, #000);
+				background:var(--flow-app-footer-bg, #91aec1);				
+			}
+			
+			.body{
+				flex:1;display:flex;flex-direction:row;
+				overflow:var(--flow-app-body-overflow, hidden);
+			}
+			.drawer{
+				background-color:var(--flow-app-drawer-bg, var(--flow-background-color, inherit));
+				color:var(--flow-app-drawer-color, var(--flow-color, inherit));
+				width:var(--flow-app-drawer-width, 300px);
+				overflow:var(--flow-app-drawer-overflow, initial);
+				position:relative;
+			}
+			:host([no-drawer]) .drawer{display:none}
+			:host([floating-drawer]) .drawer{
+				position:absolute;
+				left:0px;top:0px;bottom:0px;
+				transition:var(--flow-app-drawer-transition, left 0.5s ease);
+				z-index:var(--flow-app-drawer-z-index, 10001);
+			}
+			:host([floating-drawer]:not([open-drawer])) .drawer{
+				left:var(--flow-app-drawer-hidden-left, -500px);
+			}
+			:host([floating-drawer][right-drawer]) .drawer{
+				left:initial;right:0px;
+				transition:var(--flow-app-drawer-transition, right 0.5s ease);
+			}
+			:host([floating-drawer][right-drawer]:not([open-drawer])) .drawer{
+				right:var(--flow-app-drawer-hidden-right, -500px);
+			}
+			.main{
+				flex:1;
+				overflow:var(--flow-app-main-overflow, hidden);
+				position:var(--flow-app-main-position, initial);
+				display:var(--flow-app-main-display, flex);
+				flex-direction:var(--flow-app-main-flex-direction, column);
+			}
+
+			.wrapper {
+				/*
+				min-height: 100%;
+				height:var(--flow-app-wrapper-height, 100%);
+				margin-bottom: calc(-1 * var(--flow-app-footer-height,0px));
+				*/
+				height:var(--flow-app-wrapper-height, 100px);
+				overflow:var(--flow-app-wrapper-overflow, auto);
+				position:var(--flow-app-wrapper-position, initial);
+				display:var(--flow-app-wrapper-display, initial);
+				flex:var(--flow-app-wrapper-flex, 1);
+			}
+			:host([main-v-box]) .main{
+				display:flex;flex-direction:column;
+				align-items:var(--flow-app-main-align-items, stretch);
+				justify-content:var(--flow-app-main-align-justify-content, space-between);
+			}
+			fa-icon{
+				--fa-icon-color:var(--flow-color);
+			}
+
+			.menu-icon{
+				cursor:pointer;
+				--fa-icon-color:var(--flow-app-menu-icon-color, var(--flow-color));
+			}
+			.drawer-top{
+				height:var(--flow-app-header-height, 60px);
+				display:flex;align-items:center;
+				padding:var(--flow-app-header-padding, 0px 100px);
+			}
+			.main-mask{
+				position:absolute;z-index:var(--flow-app-body-mask-z-index, 10000);
+				left:0px;top:0px;right:0px;bottom:0px;width:100%;height:100%;
+				background-color:var(--flow-app-body-mask-bg, initial);
+			}
+			:host([floating-drawer][open-drawer]) .main{position:relative}
+			:host(:not([floating-drawer])) .drawer-top,
+			:host(:not([floating-drawer])) .main-mask,
+			:host(:not([open-drawer])) .main-mask{display:none}
+			.drawer-close-icon{
+				cursor:pointer;
+				--fa-icon-color:var(--flow-app-drawer-close-icon-color, var(--flow-color));
+			}
+
+			@media(max-width:760px){
+				:host([floating-drawer]) .header-sm{display:flex}
+				:host([floating-drawer]) .header:not(.header-sm){display:none}
+				.drawer-top,
+				.header{
+					padding:var(--flow-app-header-sm-padding, 0px 15px);
+				}
+			}
+
+
+
+			::slotted(.flex){flex:1}
+		`]
+	}
+
+	render(){
+		return html`
+		<div class="header"><slot name="logo"></slot><slot name="header"></slot></div>
+		<div class="header header-sm"><fa-icon class="menu-icon"
+			icon="${this['menu-icon'] || 'bars'}" 
+			@click="${this.toggleFloatingDrawer}"></fa-icon><slot 
+			name="header-sm"></slot></div>
+		<div class="body">
+			<div class="drawer sbar">
+			<div class="drawer-top">
+				<fa-icon class="drawer-close-icon"
+				icon="${this['drawer-close-icon'] || 'times'}" 
+				@click="${this.toggleFloatingDrawer}"></fa-icon>
+			</div>
+			<slot name="drawer"></slot></div>
+			<div class="main sbar">
+				<div class="wrapper">
+					<slot name="main"></slot><div 
+					class="main-mask" @click="${this.toggleFloatingDrawer}"></div>
+				</div>
+				<div class="footer">
+					<slot name="footer"></slot>
+				</div>
+			</div>
+		</div>
+		`
+	}
+
+	toggleFloatingDrawer(){
+		if(!this['floating-drawer'])
+			return
+		this['open-drawer'] = !this['open-drawer'];
+	}
+}
+
+FlowAppLayout.define("flow-app-layout");
+
+
+export class FlowApp extends FlowAppMixin(BaseElement){
+	static get properties(){
+		return {
+			"menu-icon":{type:String},
+			"floating-drawer":{type:Boolean, reflect:true},
+			"open-drawer":{type:Boolean, reflect:true},
+			"external-dom":{type:Boolean}
+		}
+	}
+	constructor(...args){
+		super(...args);
+		this.registerListener("flow-network-and-user-state-get", (e)=>{
+			//e.detail = e.detail||{};
+			e.detail.online = this.isOnline();
+			e.detail.signedin = this.signedin;
+		})
+	}
+	createRenderRoot(){
+		this.usingExternalDom = this.getAttribute("external-dom")!=null 
+			|| this.querySelector("flow-app-layout, .flow-app-layout")
+		if(this.usingExternalDom)
+			return this.attachShadow({mode:"open"});
+		return this;
+	}
+	render(){
+		if(this.usingExternalDom)
+			return html`<slot></slot>`;
+
+		return html``;
+	}
+	firstUpdated(){
+		this.setLoading(false);
+	}
+	signinCallback(){
+		this.signedin = true;
+		document.body.classList.toggle("flow-user-signedin", true);
+	}
+	signoutCallback(){
+		this.signedin = false;
+		document.body.classList.toggle("flow-user-signedin", false);
+	}
+	connectedCallback() {
+		super.connectedCallback();
+		this.signinCallback_ = (...args)=>{
+			this.signinCallback(...args);
+		}
+		window.addEventListener('flow-user-signin', this.signinCallback_);
+
+		this.signoutCallback_ = (...args)=>{
+			this.signoutCallback(...args);
+		}
+		window.addEventListener('flow-user-signout', this.signoutCallback_);
+	}
+	disconnectedCallback() {
+		super.disconnectedCallback();
+		if(this.signinCallback_){
+			window.removeEventListener('flow-user-signin', this.signinCallback_);
+			delete this.signinCallback_;
+		}
+		if(this.signoutCallback_){
+			window.removeEventListener('flow-user-signout', this.signoutCallback_);
+			delete this.signoutCallback_;
+		}
+	}
+}
+
+FlowApp.define("flow-app");
+
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_APP_DRAWER_368 : &'static str = r###"
+
+
+
+/**
+* @class FlowAppDrawer
+* @extends BaseElement
+
+* @property {Boolean} [disabled]
+* @property {String} [btnText]
+* @property {String} [value]
+* @property {Boolean} [opened]
+* @property {String} [parentSelector]
+*
+* @cssvar {font-family} [--flow-font-family="Julius Sans One"]
+* @cssvar {font-weight} [--flow-font-weight=bold]
+* @cssvar {border-radius} [--flow-appdrawer-btn-border-radius=50%]
+* @cssvar {box-shadow} [--flow-appdrawer-btn-box-shadow=0px 0px 3px 1px var(--flow-background-inverse-soft))]
+* @cssvar {padding} [--flow-appdrawer-btn-padding=10px]
+* @cssvar {right} [--flow-appdrawer-btn-right=-10px]
+* @cssvar {top} [--flow-appdrawer-btn-right=10px]
+* @cssvar {background-color} [--flow-appdrawer-btn-bg=var(--flow-background-color)]
+* @cssvar {width} [-flow-appdrawer-btn-width=15px]
+* @cssvar {height} [--flow-appdrawer-btn-height=15px]
+* @cssvar {left} [--flow-appdrawer-btn-left=15px]
+* @cssvar {top} [--flow-appdrawer-btn-top=5px]
+* @cssvar {top} [--flow-appdrawer-wrapper-top=20px]
+* @cssvar {border} [--flow-appdrawer-border=2px solid var(--flow-primary-color]
+
+* @example
+*   <flow-app-drawer></flow-app-drawer>
+*
+*/
+export class FlowAppDrawer extends BaseElement {
+	static get properties() {
+		return {
+			opened:{type:Boolean, reflect:true},
+			parentSelector:{type:String}
+		}
+	}
+
+	static get styles(){
+		return css`
+			:host{
+				display:block;
+				position:absolute;left:0px;top:0px;right:0px;bottom:0px;
+			}
+			.warpper{
+				position:absolute;left:0px;top:0px;right:0px;bottom:0px;
+				overflow:auto;
+			}
+			.toggle-btn{
+				border-radius:var(--flow-appdrawer-btn-border-radius, 50%);
+				box-shadow:var(--flow-appdrawer-btn-box-shadow, 0px 0px 3px 1px var(--flow-background-inverse-soft));
+				padding:var(--flow-appdrawer-btn-padding, 10px);
+				position:absolute;
+				right:var(--flow-appdrawer-btn-right, -10px);
+				top:var(--flow-appdrawer-btn-right, -10px);
+				background-color:var(--flow-appdrawer-btn-bg, var(--flow-background-color));
+				width:var(--flow-appdrawer-btn-width, 15px);
+				height:var(--flow-appdrawer-btn-height, 15px);
+				z-index:1000;box-sizing:border-box;cursor:pointer;
+			}
+
+			:host(.top-btn) .toggle-btn{
+				right:initial;
+				left:var(--flow-appdrawer-btn-left, 15px);
+				top:var(--flow-appdrawer-btn-top, 5px);
+			}
+			:host(.top-btn) .warpper{
+				top:var(--flow-appdrawer-wrapper-top, 20px);
+			}
+			.toggle-btn:after{
+				content:"";
+				border:var(--flow-appdrawer-border, 2px solid var(--flow-primary-color));
+				border-left-color:transparent;
+				border-bottom-color:transparent;
+				box-sizing:border-box;
+				width:50%;height:50%;
+				position:absolute;
+				left:15%;
+				top:25%;
+				transition:transform 0.2s ease;
+				transform-origin:center;
+				transform:rotate(45deg);
+			}
+			:host([opened]) .toggle-btn:after{
+				transform:translateX(4px) rotate(225deg);
+			}
+			:host(.hide-btn) .toggle-btn{display:none}
+
+		`;
+    }
+    constructor() {
+        super();
+    }
+	render() {
+		return html`<div class="warpper"><slot></slot></div>
+		<span class="toggle-btn" @click="${this.toggle}"></span>`;
+	}
+	toggle() {
+		this.opened = !this.opened;
+	}
+	updated(changes){
+		super.updated(changes);
+		if(changes.has("opened")){
+			let el = document.querySelector(this.parentSelector || "body");
+			el?.classList.toggle("drawer-opened", this.opened);
+		}
+	}
+}
+
+FlowAppDrawer.define('flow-app-drawer');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_DROPDOWN_352 : &'static str = r###"
+
+
+/**
+ * @export
+ * @class FlowDropdown
+ * @extends {BaseElement}
+
+ * @prop {Boolean} opened 
+ * @prop {Boolean} disabled
+ * 
+ * @cssvar {color} [--flow-color, #000);
+ * @cssvar {color}[--flow-dropdown-trigger-color=#FFF]
+ * @cssvar {color} [--flow-dropdown-trigger-hover-color=#FFF]
+ * @cssvar {color} [--flow-dropdown-color=var(--flow-color, #000)]
+ * @cssvar {font-size} [--flow-dropdown-trigger-font-size=var(--flow-input-font-size, 1rem)]
+ * @cssvar {font-weight} [--flow-dropdown-trigger-font-weight=var(--flow-input-font-weight, 400)]
+ * @cssvar {line-height} [--flow-dropdown-trigger-line-height=var(--flow-input-line-height, 1.2)]
+ * @cssvar {background-color} [--flow-dropdown-trigger-hover-bg=var(--flow-primary-color, #3498DB)]
+ * @cssvar {background-color} [--flow-dropdown-trigger-bg=var(--flow-primary-color, #3498DB)]
+ * @cssvar {background-color} [--flow-dropdown-bg=var(--flow-background-color, #FFF)]
+ * @cssvar {box-shadow} [--flow-box-shadow]
+ * @cssvar {box-shadow} [--flow-box-shadow]
+ * @cssvar {min-width} [--flow-dropdown-trigger-width=80px]
+ * @cssvar {min-width} [--flow-dropdown-content-min-width=160px]
+ * @cssvar {min-width} [--flow-dropdown-trigger-width=80px]
+ * @cssvar {top} [--flow-dropdown-top=0px]
+ * @cssvar {padding} [--flow-dropdown-trigger-padding, 21px 20px 20px);
+ * @cssvar {padding} [--flow-dropdown-content-padding=5px]
+ * @cssvar {padding} [--flow-dropdown-trigger-padding=21px 20px 20px]
+ * @cssvar {border} [--flow-dropdown-border=none]
+ * 
+ * @example
+ * <flow-dropdown>
+ *   <div slot="trigger">Menu</div>
+ *   <ul>
+ *		<li>Menu Item 1</li>
+ *	 	<li>Menu Item 2</li>
+ *   </ul>
+ * </flow-dropdown>
+ */
+export class FlowDropdown extends BaseElement {
+	static get properties() {
+		return {
+			opened:{type:Boolean, reflect:true},
+			modal:{type:Boolean},
+			backdrop:{type:Boolean},
+			disabled:{type:Boolean, reflect:true},
+			absolute:{type:Boolean, reflect:true},
+			"right-align":{type:Boolean},
+			xMargin:{type:Number, value:10},
+			yMargin:{type:Number, value:10},
+			yOffset:{type:Number, value:8},
+			yOverflowMargin:{type:Number, value:-10}
+		}
+	}
+
+	static get styles() {
+		return [ScrollbarStyle, css`
+		:host{
+			display:var(--flow-dropdown-display, inline-block);margin:5px 0px;
+			vertical-align:middle;
+			color:var(--flow-color, #000);
+		}
+		.trigger{
+			background-color:var(--flow-dropdown-trigger-bg, var(--flow-primary-color, #3498DB));
+			color:var(--flow-dropdown-trigger-color, #FFF);
+			border-radius:var(--flow-dropdown-trigger-border-radius, 3px);
+			border:none;
+			user-select:none;
+			padding:var(--flow-dropdown-trigger-padding, 21px 20px 20px);
+			min-width:var(--flow-dropdown-trigger-width, 80px);
+			font-size:var(--flow-dropdown-trigger-font-size, var(--flow-input-font-size, 1rem));
+			font-weight:var(--flow-dropdown-trigger-font-weight, var(--flow-input-font-weight, 400));
+			line-height:var(--flow-dropdown-trigger-line-height, var(--flow-input-line-height, 1.2));
+		}
+		:host(:not([disabled])) .trigger{cursor:pointer;}
+
+		.trigger:hover, .trigger:focus {
+			background-color:var(--flow-dropdown-trigger-hover-bg, var(--flow-primary-color, #3498DB));
+			color:var(--flow-dropdown-trigger-hover-color, #FFF);
+		}
+		.dropdown{position:relative;display:block;}
+		.dropdown-content{
+			display:none;
+			position:absolute;
+			background-color:var(--flow-dropdown-bg, var(--flow-background-color, #FFF));
+			color:var(--flow-dropdown-color, var(--flow-color, #000));
+			min-width:var(--flow-dropdown-content-min-width, 160px);
+			overflow:auto;border-radius:3px;
+			box-shadow:var(--flow-box-shadow);
+			z-index:1000;
+			top:var(--flow-dropdown-content-top, var(--flow-dropdown-top, 0px));
+			left:var(--flow-dropdown-content-left, 0px);
+			right:var(--flow-dropdown-content-right, initial);
+			padding:var(--flow-dropdown-content-padding, 5px);
+			border:var(--flow-dropdown-border, none);
+			box-sizing:border-box;
+			transform:translate(var(--flow-transform-translate-x), var(--flow-transform-translate-y));
+		}
+		:host([opened]) .dropdown-content,
+		:host([opened]:not([absolute])) .backdrop{display:block;}
+		:host(.right-align) .dropdown-content,
+		:host([right-align]) .dropdown-content{
+			left:var(--flow-dropdown-content-left, initial);
+			right:var(--flow-dropdown-content-right, 0px);
+		}
+		:host([no-trigger]) .trigger{display:none}
+		:host([no-trigger]){margin:0px;}
+		:host([absolute]) .dropdown-content{
+			position:absolute;
+		}
+		:host(:not([absolute])) .dropdown-content{
+			position:fixed;z-index:1010;
+		}
+		:host(:not([absolute])) .backdrop{
+			position:fixed;z-index:1009;
+			top:0px;
+			bottom:0px;
+			left:0px;
+			right:0px;
+			display:none;
+			background:var(--flow-dropdown-backdrop-bg, var(--flow-backdrop-bg))
+		}
+		`];
+	}
+	render() {
+		return html`
+			<div class="trigger"><slot name="trigger"></slot></div><div class="dropdown">
+				<div class="dropdown-content">
+					<slot></slot>
+				</div>${this.renderBackdrop()}
+			</div>
+		`;
+	}
+	renderBackdrop(){
+		if(!this.backdrop && !isSmallScreen)
+			return '';
+		
+		return html`<a href="javascript:void(0)" class="backdrop"></a>`;
+	}
+	constructor(){
+		super();
+		this.initPropertiesDefaultValues();
+	}
+	firstUpdated(){
+		if(this.classList.contains("right-align"))
+			this["right-align"] = true;
+		this.triggerEl = this.renderRoot.querySelector(".trigger");
+		this.triggerEl.addEventListener("click", this._onClick.bind(this));
+		this.dropdownEl = this.renderRoot.querySelector(".dropdown");
+		this.dropdownContentEl = this.renderRoot.querySelector(".dropdown-content");
+	}
+	updated(changes){
+		this.updateDropdownSize();
+		if(changes.has("opened"))
+			this.fire(this.opened?"opened":"closed", {opened:this.opened, dd:this})
+	}
+
+	_onClick(e){
+		if(this.disabled)
+			return
+		this.toggle();
+	}
+
+	open(){
+		this.opened = true;
+	}
+	close(){
+		this.opened = false;
+	}
+	toggle(){
+		this.opened = !this.opened;
+	}
+	onWindowClick(e){
+		if(!this.opened)
+			return
+		let target = e.target;
+		//let log = document.createElement("pre");
+		//let data = [];
+		//for (let k in e){
+		//	data.push(k)
+		//}
+		//log.innerHTML = JSON.stringify(data, null, " ");
+		//target.parentNode.appendChild(log)
+		if(!target){
+			this.opened = false;
+			return
+		}
+		let dropdown = target.flowDropdown || target.closest?.('flow-dropdown');
+		let isBackdrop = target.classList?.contains("backdrop")||false;
+		if(!dropdown){
+			let path = e.path || (typeof e.composedPath == "function" ? e.composedPath() : null);
+			let p = path?.[0] || target;
+			while(p){
+				isBackdrop = isBackdrop||p.classList?.contains("backdrop")||false;
+				//data.push(p.tagName)
+				if(p.flowDropdown){
+					dropdown = p.flowDropdown;
+					break;
+				}
+				if(p.matches?.("flow-dropdown")){
+					dropdown = p;
+					break;
+				}
+				if(p instanceof ShadowRoot){
+					p = p.host;
+					continue;
+				}
+				p = p.parentNode;
+			}
+		}
+		if(!dropdown || dropdown!=this){
+			//log.innerHTML = JSON.stringify(data, null, " ");
+			this.opened = false;
+		//if clicked on this DD's backdrop and this DD is not a modal
+		}else if(isBackdrop && !this.modal){
+			this.opened = false;
+		}
+	}
+	onWindowResize(){
+		this.updateDropdownSize();
+	}
+	onParentScroll(){
+		this.updateDropdownSize();
+	}
+	updateDropdownSize(){
+		let {dropdownContentEl, dropdownEl, scrollParants, triggerEl} = this;
+
+		if(!triggerEl||!dropdownContentEl||!dropdownEl||!scrollParants||!scrollParants.length)
+			return
+
+		let parentBox = dropdownEl.getBoundingClientRect();
+		if(!this.absolute){
+			let {left, bottom, right} = parentBox;
+			let width = window.innerWidth;
+			let height = window.innerHeight;
+			let DCElStyle = dropdownContentEl.style;
+			bottom -= this.yOffset;
+			if(this["right-align"]){
+				DCElStyle.maxWidth = `${right-this.xMargin}px`;
+				DCElStyle.left = 'initial';
+				DCElStyle.right = `${width-right}px`;
+			}else{
+				DCElStyle.maxWidth = `calc(100vw - ${left+this.xMargin}px)`;
+				DCElStyle.right = 'initial';
+				DCElStyle.left = `${left}px`;
+			}
+			DCElStyle.bottom = 'unset';
+			DCElStyle.top = `${bottom}px`;
+			let maxHeight = height-(bottom+this.yMargin);
+			DCElStyle.maxHeight = `${maxHeight}px`;//`calc(100vh - ${bottom+this.yMargin}px)`;
+			//let box = dropdownContentEl.getBoundingClientRect();
+			//console.log("box.height", height, maxHeight, DCElStyle.maxHeight);
+			let triggerELBox = triggerEl.getBoundingClientRect();
+			let maxHeightInUpperPosition = triggerELBox.top+this.yOverflowMargin;
+			if (maxHeight < maxHeightInUpperPosition){
+				DCElStyle.top = 'unset';
+				DCElStyle.bottom = `calc(100% - ${triggerELBox.top}px)`;
+				DCElStyle.maxHeight = `${maxHeightInUpperPosition}px`;
+			}
+			return
+		}
+
+		//let box = dropdownContentEl.getBoundingClientRect();
+		let firstScrollParent = scrollParants[0];
+		//console.log("firstScrollParent", firstScrollParent)
+		let firstScrollParentBox = firstScrollParent.getBoundingClientRect();
+		
+
+		let topMargin = Math.max(parentBox.top - firstScrollParentBox.top, 0);
+		let top = Math.max(firstScrollParentBox.top - parentBox.top, 0);
+		let height = firstScrollParentBox.height - topMargin - 20
+
+		let leftMargin = Math.max(parentBox.left - firstScrollParentBox.left, 0);
+		let left = Math.max(firstScrollParentBox.left - parentBox.left, 0);
+		let width = firstScrollParentBox.width - leftMargin - 20
+
+		/*this.log("width, height",
+			top,
+			topMargin,
+			firstScrollParent.scrollTop,
+			firstScrollParentBox,
+			parentBox,
+			width,
+			height
+		)*/
+		DCElStyle.transform = `translate(${left}px, ${top}px)`;
+		DCElStyle.maxWidth = width+"px";
+		DCElStyle.maxHeight = height+"px";
+	}
+	connectedCallback(){
+    	super.connectedCallback();
+    	this._onWindowClick = this._onWindowClick||this.onWindowClick.bind(this);
+    	this._onWindowResize = this._onWindowResize||this.onWindowResize.bind(this);
+    	this._onParentScroll = this._onParentScroll||this.onParentScroll.bind(this);
+    	window.addEventListener("click", this._onWindowClick, {capture:true})
+    	window.addEventListener("resize", this._onWindowResize, {capture:true});
+    	let buildScrollEvents = ()=>{
+	    	this.scrollParants = this.findScrollParents();
+	    	this.scrollParants.forEach(p=>{
+	    		p.addEventListener("scroll", this._onParentScroll);
+	    	});
+	    }
+	    buildScrollEvents();
+    	if(!this.scrollParants.length){//Safari/FF issue
+    		dpc(1000, ()=>{
+    			buildScrollEvents();
+    			//this.log("this.scrollParants", this.scrollParants)
+    		});
+    	}
+    }
+	disconnectedCallback(){
+    	super.disconnectedCallback();
+    	window.removeEventListener("click", this._onWindowClick);
+    	window.removeEventListener("resize", this._onWindowResize);
+    	this.scrollParants.forEach(p=>{
+    		p.removeEventListener("scroll", this._onParentScroll);
+    	});
+    	this.scrollParants = [];
+    }
+    findScrollParents(){
+    	let list = [];
+    	let p = this.parentNode;
+    	while(p){
+    		if(p instanceof ShadowRoot){
+    			p = p.host;
+    			continue;
+    		}
+    		if(!(p instanceof HTMLElement))
+    			break;
+    		if(p.nodeName=="BODY"){
+    			list.push(p);
+    			break;
+    		}
+    		if(this.isScrollEl(p))
+    			list.push(p);
+    		p = p.parentNode;
+    	}
+
+    	return list;
+    }
+
+    isScrollEl(element){
+    	const { overflow, overflowX, overflowY } = getComputedStyle(element);
+    	//this.log("overflow:::", element, overflow, overflowX, overflowY)
+  		return /auto|scroll|overlay|hidden/.test(overflow + overflowY + overflowX);
+    }
+}
+
+FlowDropdown.define('flow-dropdown');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_MENU_374 : &'static str = r###"
+
+
+/**
+ * @export
+ * @class FlowMenu
+ * @extends {BaseElement}
+
+
+ * 
+ * @example
+ * <flow-menu selected="one">
+ * 	<flow-menu-item value="one">One</flow-menu-item>
+ * 	<flow-menu-item value="two">Two</flow-menu-item>
+ * </flow-menu>
+ */
+
+ export class SelectOption{
+	constructor(text, value){
+		this.text = text;
+		this.value = value;
+	}
+}
+
+export class FlowMenu extends BaseElement {
+	static get properties() {
+		return {
+			selected:{type:String, reflect:true},
+			selector:{type:String},
+			valueAttr:{type:String},
+			multiple:{type:Boolean}
+		}
+	}
+
+	static get styles() {
+		return css`
+		:host{
+			display:block;padding:5px 0px;
+			--flow-menu-item-margin-internal: var(--flow-menu-item-margin, 1px);
+			--flow-menu-item-margin-internal2x:calc(var(--flow-menu-item-margin-internal) * 2);
+		}
+
+		::slotted(flow-menu-item){
+			display:flex;align-items:center;
+		}
+		
+		::slotted(flow-menu-item),
+		::slotted(.menu-item),
+		.menu-item{
+			box-sizing:border-box;
+			cursor:pointer;user-select:none;
+			padding:var(--flow-menu-item-padding, 10px);
+			margin:var(--flow-menu-item-margin-internal);
+			background-color:var(--flow-menu-item-bg, var(--flow-background-color));
+			color:var(--flow-menu-item-color, var(--flow-color));
+			pointer-events:auto;
+		}
+		::slotted(flow-menu-item:hover:not(.disabled):not(.selected)),
+		::slotted(.menu-item:hover:not(.disabled):not(.selected)),
+		.menu-item:hover:not(.disabled):not(.selected){
+			background-color:var(--flow-menu-item-hover-bg, #DDD);
+			color:var(--flow-menu-item-hover-color, #000);
+		}
+		::slotted(flow-menu-item.selected),
+		::slotted(.menu-item.selected),
+		.menu-item.selected{
+			background-color:var(--flow-menu-item-selected-bg, var(--flow-primary-color));
+			color:var(--flow-menu-item-selected-color, var(--flow-primary-invert-color));
+		}
+		:host(.grid),
+		:host(.grid) .menu-list-container{
+			display:flex;
+			flex-wrap:wrap;
+			width:var(--flow-menu-grid-width, 500px);
+		}
+		:host(.grid.full),
+		:host(.grid.full) .menu-list-container{
+			width:var(--flow-menu-gridfull-width, 1000px);
+		}
+		:host(.grid:not(.full)) ::slotted(flow-menu-item),
+		:host(.grid:not(.full)) ::slotted(.menu-item),
+		:host(.grid:not(.full)) .menu-item{
+			min-width:calc(20% - var(--flow-menu-item-margin-internal2x));
+			max-width:calc(20% - var(--flow-menu-item-margin-internal2x));
+		}
+		:host(.grid.full) ::slotted(flow-menu-item),
+		:host(.grid.full) ::slotted(.menu-item),
+		:host(.grid.full) .menu-item{
+			min-width:var(--flow-menu-gridfull-item-min-width, 100px);
+			max-width:var(--flow-menu-gridfull-item-max-width, initial);
+			flex:var(--flow-menu-gridfull-item-flex, 1);
+		}
+		::slotted(div.divider),
+		::slotted(div.section){
+			padding:var(--flow-menu-divider-padding, 10px);
+			box-shadow:var(--flow-menu-divider-box-shadow, var(--flow-box-shadow));
+			margin:var(--flow-menu-divider-margin, 0 0 5px 0);
+			background-color:var(--flow-menu-divider-bg-color, var(--flow-background-inverse-soft));
+			color:var(--flow-menu-divider-color, var(--flow-background-color));
+		}
+		::slotted(flow-menu-item.disabled),
+		::slotted(.menu-item.disabled),
+		.menu-item.disabled{
+			cursor:var(--flow-menu-disabled-item-cursor, default);
+			opacity:var(--flow-menu-disabled-item-opacity, 0.7);
+		}
+		`;
+	}
+	constructor(){
+		super();
+		this.selected = "";
+		this.selector = "flow-menu-item, .menu-item";
+		this.valueAttr = "value";
+		this._selected = []
+	}
+	render(){
+		return html`
+		<slot></slot>
+		`;
+	}
+	static SelectOption=SelectOption
+	static createOption(text, value, cls=""){
+		return {text, value, cls};
+	}
+	static createOptionItem(text, value, cls=""){
+		let isDivider = cls.includes("divider")||cls.includes("section")
+		let item = document.createElement(isDivider?"div":"flow-menu-item");
+		if(cls){
+			item.setAttribute("class", cls);
+		}
+		item.setAttribute("value", value);
+		item.innerHTML = text;
+		return item;
+	}
+	static createOptionItems(items=[]){
+		return items.map(item=>{
+			return this.createOptionItem(item.text, item.value, item.cls||"")
+		})
+	}
+	changeOptions(items=[]){
+		let children = this.querySelectorAll("*");
+		children.forEach(c=>{
+			c.remove();
+		});
+
+		FlowMenu.createOptionItems(items).forEach(el=>{
+			this.appendChild(el)
+		})
+		this.onSlotChange();
+	}
+	firstUpdated(){
+		this.renderRoot
+			.addEventListener("click", this._onClick.bind(this));
+
+		let slot = this.renderRoot.querySelector('slot');
+		this.listSlot = slot;
+		if(slot){
+			slot.addEventListener('slotchange', (e)=>{
+				//let items = slot.assignedElements();
+				//this.items = items
+				//TODO update selection 
+				this.onSlotChange()
+			});
+		}
+	}
+	onSlotChange(){
+		this.updateList();
+	}
+	updated(changes){
+		//this.log("changes", changes)
+		if(changes.has("selected")){
+			this.parseSelected();
+			this.requestUpdate("_selected")
+		}
+
+		this.updateList(changes)
+		super.updated(changes)
+	}
+
+	parseSelected(){
+		let {selected} = this;
+		this.log("parseSelected:selected:"+JSON.stringify(selected), selected)
+		if(this.multiple){
+			if(!Array.isArray(selected)){
+				try{
+					selected = JSON.parse(selected);
+				}catch(e){
+					selected = undefined;
+				}
+				if(selected !== undefined)
+					selected = [selected];
+				else
+					selected = [];
+			}
+		}else{
+			if(Array.isArray(selected))
+				selected = selected[0];
+			if(selected !== undefined)
+				selected = [selected];
+			else
+				selected = []
+		}
+		selected = selected.filter(s=>s!==undefined).map(s=>s+"");
+		//this.log("updated:selected", selected)
+		this.select(selected);
+	}
+
+	get list(){
+		if(!this.listSlot)
+			return [];
+		return this.listSlot
+			.assignedElements()
+			.filter(item=>item.matches(this.selector))
+	}
+
+	updateList(){
+		this.list.forEach(item=>{
+			let value = item.getAttribute(this.valueAttr)
+			item.onclick = ()=>{};//<--- iphone issue
+			item.classList.toggle("selected", this.isSelected(value));
+		});
+	}
+
+	isSelected(value){
+		return this._selected.includes(value);
+	}
+
+	_onClick(e){
+		let target = e.target.closest(this.selector);
+		if(!target || target.classList.contains("disabled"))
+			return
+		let value = target.getAttribute(this.valueAttr);
+		if(this.multiple)
+			this.toggle(value);
+		else
+			this.selectOne(value)
+	}
+	selectFirst(){
+		let item = this.list[0];
+		if (item){
+			let value = item.getAttribute(this.valueAttr);
+			this.selectOne(value);
+			return value;
+		}
+		return "";
+	}
+	selectOne(value){
+		this._selected = [value];
+		this.selectionChanged();
+	}
+	select(values){
+		this._selected = values;
+		this.selectionChanged();
+	}
+	toggle(value){
+		let index = this._selected.indexOf(value);
+		if(index<0)
+			this._selected.push(value);
+		else
+			this._selected.splice(index, 1);
+		this.selectionChanged();
+	}
+	selectionChanged(){
+		this.updateList()
+		let selected = this._selected.slice(0);
+		let selected_str;
+		if(!this.multiple){
+			selected = selected[0];
+			selected_str = selected;
+		}else{
+			selected_str = JSON.stringify(selected)
+		}
+		this.selected = selected_str;
+		this.fire("select", {selected}, {bubbles:true})
+	}
+	get value(){
+		if(!this.multiple)
+			return this._selected[0]
+		return this._selected
+	}
+}
+
+FlowMenu.define('flow-menu');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_SELECT_413 : &'static str = r###"
+
+
+
+/**
+ * @export
+ * @class FlowSelect
+ * @extends {FlowMenu}
+
+* @cssvar {font-family} [--flow-font-family="Julius Sans One"]
+* @cssvar {font-size} [--flow-select-font-size-label=0.7rem]
+* @cssvar {font-weight} [--flow-input-font-weight=400]
+* @cssvar {font-size} [--flow-input-font-size=1rem]
+* @cssvar {height} [--flow-select-input-height]
+* @cssvar {line-height} [--flow-input-line-heigh=1.2]
+* @cssvar {min-height} [--flow-select-selected-min-height=44px]
+* @cssvar {min-width} [--flow-select-selected-min-width=100px]
+* @cssvar {max-width} [--flow-select-selected-max-width=500px]
+* @cssvar {background-color} [--flow-input-bg=inherit]
+* @cssvar {border} [--flow-select-border-label=2px solid  var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)))]
+* @cssvar {border} [--flow-select-border=2px solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)))]
+* @cssvar {color} [--flow-input-color=inherit]
+* @cssvar {color} [--flow-input-placeholder=#888]
+* @cssvar {padding} [--flow-select-padding-label=2px 5px]
+* @cssvar {padding} [--flow-select-padding=5px]
+* @cssvar {margin} [--flow-select-filter-input-margin=0px 0px 5px]
+* @cssvar {color} [--flow-select-trigger-bg=transparent]
+* @cssvar {color} [--flow-select-trigger-color= var(--flow-color, #000)]
+* @cssvar {padding} [--flow-select-trigger-padding=0px]
+* @cssvar {color} [--flow-select-trigger-hover-bg=transparent]
+* @cssvar {color} [--flow-select-trigger-hover-color=var(--flow-dropdown-trigger-color)]
+* @cssvar {height} [--flow-select-trigger-line-height=1]
+* @cssvar {margin} [--flow-select-input-margin=0px]
+
+ * @example
+ * <flow-select label="menu" selected="0">
+ *		<flow-menu-item value="0">Menu Item 1</flow-menu-item>
+ *	 	<flow-menu-item value="1">Menu Item 2</flow-menu-item>
+ * </flow-select>
+ */
+export class FlowSelect extends FlowMenu {
+	static get properties() {
+		return {
+			label:{type:String},
+			textAttr:{type:String},
+			showfilter:{type:Boolean},
+			backdrop:{type:Boolean},
+			modal:{type:Boolean},
+			filterText:{type:String},
+			searchIcon:{type:String},
+			disabled:{type:Boolean, reflect:true},
+			placeholder:{type:String},
+			"right-align":{type:Boolean}
+		}
+	}
+
+	static get styles() {
+		return [super.styles, css`
+			:host{
+				display:var(--flow-select-display, inline-block);vertical-align:middle;
+				font-family:var(--flow-font-family, "Julius Sans One");
+				padding:var(--flow-select-padding, 0px);
+				margin:var(--flow-select-margin, 5px);
+				width:var(--flow-select-width);
+				max-width:var(--flow-select-max-width, 100%);
+				height:var(--flow-select-height);
+				--flow-dropdown-border:var(--flow-select-dropdown-border, 1px solid var(--flow-primary-color, #000));
+				--flow-dropdown-trigger-bg:var(--flow-select-trigger-bg, transparent);
+				--flow-dropdown-trigger-color:var(--flow-select-trigger-color, var(--flow-color, #000));
+				--flow-dropdown-trigger-padding:var(--flow-select-trigger-padding, 0px);
+				--flow-dropdown-trigger-hover-bg:var(--flow-select-trigger-hover-bg, transparent);
+				--flow-dropdown-trigger-hover-color:var(--flow-select-trigger-hover-color, var(--flow-dropdown-trigger-color));
+				--flow-dropdown-trigger-line-height:var(--flow-select-trigger-line-height, 1);
+				--flow-dropdown-top:var(--flow-select-dropdown-border-top, -8px);
+				--flow-dropdown-trigger-font-size:0px;
+			}
+			flow-dropdown{margin:0px;}
+			.wrapper{
+				display:flex;
+				align-items:stretch;
+				min-width:50px;
+				text-align:center;
+				/*justify-content:center;*/
+				margin-top:var(--flow-select-wrapper-margin-top,-0.5rem);
+				
+				
+			}
+			label{
+				/*font-size:0.7rem;
+				padding:2px 5px;*/
+				font-size:var(--flow-select-label-font-size, 0.7rem);
+				padding:var(--flow-select-label-padding,2px 5px);
+				/*border:2px solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)));*/
+				border: var(--flow-select-label-border, 2px) solid  var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border-radius:8px;
+				margin-left:var(--flow-select-label-margin-left,10px);
+				margin-right: var(--flow-input-label-margin-right,20px);
+				z-index:1;
+    			position:relative;background-color:var(--flow-input-bg, inherit);
+    			font-weight:var(--flow-font-weight, bold);
+			}
+			.input{
+				
+				flex:1;box-sizing:border-box;
+			    /*border:2px solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)));*/
+				border: var(--flow-select-border, 2px) solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border-radius:var(--flow-select-input-border-radius, var(--flow-input-border-radius, 8px));
+    			margin:var(--flow-select-input-margin, 0px);
+    			padding:var(--flow-select-input-padding,16px 30px 10px 10px);
+				background-color:var(--flow-select-input-bg, var(--flow-input-bg, inherit));
+				color:var(--flow-input-color, inherit);
+				font-size:var(--flow-input-font-size, 1rem);
+				font-weight:var(--flow-input-font-weight, 400);
+				line-height:var(--flow-input-line-height, 1.2);
+				text-align:left;
+				height:var(--flow-select-input-height);
+				width:var(--flow-select-input-width);
+			}
+			:host(.no-border) .input.selected{
+				border:0px;
+			}
+			[no-label] .input.selected{
+				padding-top:var(--flow-select-no-label-input-padding-top, 10px);
+			}
+			.input:focus{outline:none}
+			.input::-webkit-input-placeholder { color: var(--flow-input-placeholder, #888 ); }
+			.input.selected{
+				min-width:var(--flow-select-selected-min-width, 100px);
+				max-width:var(--flow-select-selected-max-width, 500px);
+				min-height:var(--flow-select-selected-min-height, 44px);
+				position:relative;
+				box-shadow:var(--flow-input-box-shadow);
+				height:var(--flow-select-selected-height);	
+				width:var(--flow-select-selected-width);
+				overflow: hidden;
+    			text-overflow: ellipsis;
+			}
+			.placeholder{
+				color: var(--flow-input-placeholder, #888 );
+			}
+			[multiple] .input.selected span.item{
+				margin:var(--flow-select-selected-item-margin, 2px 4px 2px 0);
+				padding:var(--flow-select-selected-item-padding, 1px 5px);
+				border-radius:var(--flow-select-selected-item-border-radius, 5px);
+				border:var(--flow-select-selected-item-border, 1px solid var(--flow-primary-color, #DDD));
+				line-height:var(--flow-input-line-height, 1.3);
+			}
+			[multiple] .input.selected{
+				display:var(--flow-select-selection-display, flex);
+				flex-wrap:var(--flow-select-selection-flex-wrap, wrap);
+				min-height:var(--flow-select-selected-min-height, 60px);
+				align-items:var(--flow-select-selection-align-items, center);
+			}
+
+			:host(:not([disabled])) .input.selected::after{
+				content:"";display:inline-block;
+				position:absolute;right:10px;
+				top:var(--flow-select-dropdown-arrow, calc(50% - 2px));
+				width:0px;height:0px;
+				border:5px solid var(--flow-primary-color, #000);
+				border-left-color:transparent;
+				border-bottom-color:transparent;
+				border-right-color:transparent;
+			}
+			flow-dropdown:not([multiple]) .input.selected{white-space:nowrap}
+			.filter{
+				padding-top:10px;border-radius:3px;
+			}
+			.filter-box{
+				position:relative;display:flex;align-items:center;
+				margin:var(--flow-select-filter-input-margin, 0px 0px 5px);
+			}
+			.filter-box[hidden]{display:none}
+			.filter-box .clear-btn{
+				position:absolute;right:10px;cursor:pointer;display:none;
+				font-size:1.5rem;color:var(--flow-input-color, inherit);
+			}
+			.filter-box input[has-content]+.clear-btn{display:inline-block}
+			.filter-box input{
+				padding-left:30px;
+			}
+			.filter-box .icon{
+				width:15px;height:15px;fill:var(--flow-primary-color);
+				position:absolute;left:10px;
+			}
+
+			.dd ::slotted([flow-select-filtred]){display:none}
+		`];
+	}
+	constructor(){
+		super();
+		this.textAttr = "data-text";
+	}
+	//focus(){
+	//	console.log("focus", this, this.dropdown?.scrollIntoView())
+	//	//this.wrapperEl?.focus();
+	//	//super.focus();
+	//}
+	render() {
+		let iconSrc = this.iconPath(this.searchIcon || "search");
+		let isLabel = !!this.label;
+		return html
+		`<flow-dropdown ?multiple="${this.multiple}" ?backdrop="${this.backdrop}"
+			?modal="${this.modal}"
+			?disabled=${this.disabled}
+			?no-label=${!isLabel}
+			?right-align=${this["right-align"]}>
+			<div slot="trigger">
+				<label ?hidden=${!isLabel}>${this.label||""}</label>
+				<div class="wrapper" @click=${this.onWrapperClick}>
+					<slot name="prefix"></slot>
+					<div class="input selected">
+						${this.renderSelected()}&nbsp;
+					</div>
+					<slot name="sufix"></slot>
+				</div>
+				
+			</div><div class="dd">
+				<div class="filter-box" ?hidden=${!this.showfilter}>
+					<svg class="icon">
+						<use href="${iconSrc}"></use>
+					</svg>
+					<input class="input filter" type="text" 
+						placeholder="${this.placeholder || 'Search...'}"
+						?has-content=${this.filterText}
+						.value="${this.filterText||''}"
+						@keyup=${this.onSearch} />
+					<a class="clear-btn" @click=${this.clearFilter}>&times;</a>
+				</div>
+				<div class="menu-list-container">
+				<slot class="menu-list"></slot>
+				${this.renderItems()}
+				</div>
+			</div>
+		</flow-dropdown>`;
+	}
+	onWrapperClick(){
+		//
+	}
+
+	renderItems(){
+		return '';
+	}
+
+	renderSelected(){
+		let map = new Map();
+		this.list.forEach(item=>{
+			let text = item.getAttribute(this.textAttr) || item.innerText;
+			map.set(item.getAttribute(this.valueAttr), text)
+		});
+
+		let items = this._selected.map(s=>{
+			if(!s)
+				return '';
+			return html`<span class="item" value="${s}">${map.get(s) || s}</span>`
+		}).filter(a=>!!a);
+
+		if(items.length)
+			return items
+		return html`<span class="placeholder">${this.placeholder||""}</span>`;
+	}
+
+	selectionChanged(){
+		super.selectionChanged();
+		if(!this.multiple && this.dropdown)
+			this.dropdown.close();
+	}
+
+	firstUpdated(){
+		super.firstUpdated();
+		if(this.classList.contains("right-align"))
+			this["right-align"] = true;
+		this.wrapperEl = this.renderRoot.querySelector("flow-dropdown .wrapper");
+		this.dropdown = this.renderRoot.querySelector("flow-dropdown");
+		let slot = this.renderRoot.querySelector('slot.menu-list');
+		this.listSlot = slot;
+		slot.addEventListener('slotchange', (e)=>{
+			this.updateList();
+		});
+		this.parseSelected();
+		this.requestUpdate("_selected", [])
+	}
+
+	updateList(changes){
+		super.updateList();
+		if(!changes)
+			this.requestUpdate("_selected", this._selected.slice(0))
+	}
+
+	clearFilter(){
+		this.filterText = "";
+		this.filterList("");
+	}
+
+	onSearch(e){
+		let text = e.target.value;
+
+		this.filterText = text;
+		this.debounce('onSearch', ()=>{
+			this.filterList(text);
+		}, 200)
+	}
+	filterList(text){
+		const rg = new RegExp(`${text}`, 'i');
+		console.log("this.list", this.list);
+		this.list.forEach(item=>{
+			let text = item.getAttribute(this.textAttr) || item.innerText;
+			let value = item.getAttribute(this.valueAttr);
+			if(!text || rg.test(value) || rg.test(text)){
+				item.removeAttribute('flow-select-filtred')
+			}else{
+				item.setAttribute('flow-select-filtred', true)
+
+			}
+		})
+	}
+
+
+	/*
+	onWindowResize(){
+		this.updateDropdownSize();
+	}
+	onParentScroll(){
+		this.updateDropdownSize();
+	}
+	
+	connectedCallback(){
+    	super.connectedCallback();
+    	
+    }
+	disconnectedCallback(){
+    	super.disconnectedCallback();
+    	
+    }
+    */
+}
+
+FlowSelect.define('flow-select');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_TABLE_MIXIN_387 : &'static str = r###"
+
+export const TableMixin = baseClass=>{
+	class Table extends baseClass{
+
+		buildFetchRequest(options, name=""){
+			return {}//api.getRecords(options);
+		}
+
+		async loadRecords(options={}, name=""){
+			//this.log("loadRecords", this)
+			let {req, params} = this.buildFetchRequest(options, name);
+			if(!req)
+				return
+			let {result, error} = await req;
+			if(error)
+				return
+
+			let {total, items} = result;
+			let {skip, limit} = params;
+			let prefix = name?name+'_':'';
+			this[`${prefix}pagination`] = buildPagination(total, skip, limit);
+			this[`${prefix}pagination`].type = name;
+			this[`${prefix}state`] = {params};
+			this[`${prefix}items`] = items;
+			this.setLoading(false, name);
+			return result;
+		}
+		onPaginationClick(e){
+			const target = e.target;
+			if(target.matches(".disabled, .active"))
+				return
+
+			let paginationEl = target.closest("[data-pagination]");
+			let pageEl = target.closest('[data-skip]');
+			if(!paginationEl || !pageEl)
+				return
+			let name = paginationEl.getAttribute('data-pagination');
+			let skip = pageEl.getAttribute('data-skip');
+			let prefix = name?name+'_':'';
+
+			let {params={}} = this[`${prefix}state`];
+			params.skip = skip;
+			//console.log("params", params)
+			this.setLoading(true, name);
+			this.loadRecords(params, name);
+		}
+
+		setLoading(isLoading, listName=""){
+			let el = listName?this.querySelector(`.${listName}-holder`):this;
+			(el || this).classList.toggle("loading", !!isLoading)
+		}
+	}
+
+	return Table;
+}
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_LINK_419 : &'static str = r###"
+
+
+
+
+
+/**
+* @class FlowLink
+* Wraps content in a clickable element, simulating behavior of the `a` element.
+* Intended for opening a new browser tab regardless of whether the element is
+* instantiated inside of a browser environment or inside of NWJS.
+* @extends BaseElement
+*
+* @property {Boolean} [disabled] 
+* @property {Boolean} [icon]
+* @property {String} [href]
+* @property {String} [target]
+*
+* @cssvar {font-family} [--flow-font-family="Julius Sans One"]
+* @cssvar {font-weight} [--flow-font-weight=bold]
+* @cssvar {font-size} [--flow-link-font-size=1rem]
+* @cssvar {color} [--flow-link-color=#017b68]
+* @cssvar {color} [--flow-link-hover-color=#017b68]
+* @cssvar {fill} [--flow-primary-color=017b68]
+*
+* @example
+*   <flow-link href="href" target="_blank">text</flow-link>
+*
+*/
+export class FlowLink extends BaseElement {
+	static get properties() {
+		return {
+			disabled:{type:Boolean, reflect: true},
+			icon:{type:Boolean, reflect: true},
+			href : { type : String },
+			target : { type : String }
+		}
+	}
+
+	static get styles(){
+		return css`
+			:host{
+				display:inline-block;
+				font-family:var(--flow-link-font-family, var(--flow-font-family, "Julius Sans One"));
+				font-weight:var(--flow-link-font-weight, var(--flow-font-weight, bold));
+				font-size:var(--flow-link-font-size, 1rem);
+			}
+			:host([disabled]){
+				opacity:0.5;
+				cursor:default;
+				pointer-events:none;
+			}
+			:host(:not([disabled])){
+				cursor:pointer;
+			}
+
+			.link-wrapper {
+				color: var(--flow-link-color, #017b68);
+				display: flex;
+			}
+
+			.link-wrapper:hover {
+				color: var(--flow-link-hover-color, #017b68);
+			}
+
+			.icon-box {
+				display: block;
+				width: 16px;
+				height: 16px;
+				margin-bottom: -4px;
+				opacity: 0.65;
+			}
+
+			.icon-box svg {
+				fill: var(--flow-primary-color, #017b68);
+				width: 100%;
+				height: 100%;
+			}
+
+			.content {
+				display: block;
+			}
+		`;
+	}
+
+	constructor(){
+		super();
+	}
+
+	render() {
+		let iconSrc = this.iconPath(`external-link-square-alt`);
+		return html`
+		<div class="link-wrapper" @click=${this.click}>
+			<div class="content"><slot></slot></div>
+			${ this.icon ? html`<div class="icon-box"><svg><use href="${iconSrc}"></use></svg></div>` : '' }
+		</div>
+		`;
+	}
+
+	click() {
+		// console.log("opening href:",this.href,"target:",this.target);
+		this.fire("flow-link-click", {el:this})
+		if(!this.href)
+			return
+		if(typeof nw == 'undefined') {
+			let a = document.createElement('a');
+			a.href = this.href;
+			if(this.target)
+				a.target = this.target;
+			a.click();
+		} else {
+			require('nw.gui').Shell.openExternal(this.href);	
+		}
+	}
+
+}
+
+FlowLink.define('flow-link');
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_SELECTOR_395 : &'static str = r###"
+
+
+
+
+export class FlowSelector extends FlowSelect{
+
+    
+    static get properties(){
+        return {
+            mergeProps:{type:String},
+            mergeAttributes:{type:String},
+            mergeInnerHTML:{type:Boolean}
+        }
+    }
+
+    static get styles(){
+        return [FlowSelect.styles, css`
+            :host{
+                --flow-select-input-height:var(--flow-selector-input-height, auto);
+                width:var(--flow-selector-width, unset);
+            }
+            flow-dropdown{
+                width:var(--flow-selector-dropdown-width, auto);
+            }
+            .input.selected{
+                min-height:var(--flow-selector-selected-min-height, 50px);
+                min-width:var(--flow-selector-selected-min-width, 10px);
+                width:var(--flow-selector-selected-width, 100%);
+                font-size:0px;display:flex;align-items:center;
+                box-sizing:border-box;
+                padding:var(--flow-selector-selected-padding, 16px 30px 10px 10px);
+                flex-wrap:var(--flow-selector-selected-flex-wrap, wrap);
+            }
+            .input.selected::after{
+                top:calc(50% - 2px);
+            }
+            .input.selected .item{
+                margin:var(--flow-selector-item-margin, 0px);
+                font-size:var(--flow-selector-item-line-height, 1rem);
+                line-height:var(--flow-selector-item-line-height, 1.1);
+            }
+            :host([multiple]) .selected .item{
+                margin:var(--flow-selector-multiple-item-margin, 0px 5px 5px 0px);
+            }
+        `]
+    }
+
+    constructor(){
+        super();
+        this.mergeProps = "";
+    }
+
+    renderSelected(){
+        let map = new Map();
+        this.list.forEach(item=>{
+            map.set(item.getAttribute(this.valueAttr), item)
+        })
+        return this._selected.map(value=>{
+            let item = map.get(value)
+            if(!item)
+                return
+            let clone = item.cloneNode(this.mergeInnerHTML||false);
+            clone.removeAttribute('flow-select-filtred')
+            clone.classList.remove("menu-item", "selected");
+            clone.classList.add("item")
+            return this.mergeNobeProperties(clone, item);
+        }).filter(item=>!!item)
+    }
+
+    get selectedNodes(){
+        let map = new Map();
+        this.list.forEach(item=>{
+            map.set(item.getAttribute(this.valueAttr), item)
+        })
+        return this._selected.map(value=>{
+            return map.get(value)
+        }).filter(item=>!!item)
+    }
+
+    mergeNobeProperties(clone, org){
+        let props = [];
+        if(this.mergeProps){
+            props = this.mergeProps.split(",")
+        }else if(org.constructor?.properties){
+            props = Object.keys(org.constructor?.properties||{})
+        }
+        props.forEach(p=>{
+            clone[p] = org[p];
+        })
+        if(this.mergeAttributes){
+            let attributes = this.mergeAttributes.split(",");
+            attributes.forEach(name=>{
+                if(!name)
+                    return
+                clone.setAttribute(name, org.getAttribute(name));
+            })
+        }
+        return clone;
+    }
+}
+
+FlowSelector.define('flow-selector');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_FORMAT_378 : &'static str = r###"
+
+
+export class FlowFormat {
+	static 'duration'(v) {
+		let hrs = Math.floor(v/1000/60/60);
+		let min = Math.floor(v/1000/60%60);
+		let sec = Math.floor(v/1000%60);
+		if(!hrs && !min && !sec)
+			return this.commas(v);
+		let t = '';
+		if(hrs) t += (hrs < 10 ? '0'+hrs : hrs) + ' h ';
+		if(hrs || min) t += (min < 10 ? '0'+min : min) + ' m ';
+		if(hrs || min || sec) t += (sec < 10 ? '0'+sec : sec) + ' s ';
+		return t;
+	}
+	static 'commas'(v, precision = 0) {
+		var parts = parseFloat(v).toFixed(parseInt(precision)).toString().split('.');
+	    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+	    return parts.join('.');
+	}
+		
+	static 'cs'(v, ctx) {
+		const { precision } = ctx;
+		return FlowFormat.commas(v, precision || 0);
+	}
+	static 'fiat'(v) { return this.commas(v,2); }
+	static 'crypto'(v, opt) { 
+		let result = this.commas(v,8); 
+		if(opt?.noTrailingZeros) {
+			let [int,frac] = result.split('.');
+			frac = frac.replace(/0+$/,'');
+			return frac ? `${int}.${frac}` : int;
+		}
+		return result;
+
+	}
+	static 'int'(v) { return this.commas(parseInt(v)); }
+	static 'file-size-si'(v) { return parseFloat(v).toFileSize(true); }
+	static 'file-size'(v) { return parseFloat(v).toFileSize(); }
+	static 'hash-rate'(v, ctx) { return parseFloat(v).toHashMetric(ctx.precision, ctx.unit, ctx.commas) + "H/s"; }
+	static 'default'(v, ctx) {
+		return FlowFormat.cs(v, ctx);
+		// const { precision } = ctx;
+		// if(precision)
+		// 	return parseFloat(v).toFixed(parseInt(precision));
+		// return parseInt(v);
+	}
+}
+
+if(!Number.prototype.toFileSize)
+	Object.defineProperty(Number.prototype, 'toFileSize', {
+		value: function(a, asNumber){
+			var b,c,d;
+			var r = (
+				a=a?[1e3,'k','B']:[1024,'K','iB'],
+				b=Math,
+				c=b.log,
+				d=c(this)/c(a[0])|0,this/b.pow(a[0],d)
+			).toFixed(2)
+
+			if(!asNumber){
+				r += ' '+(d?(a[1]+'MGTPEZY')[--d]+a[2]:'Bytes');
+			}
+			return r;
+		},
+		writable:false,
+		enumerable:false
+	});
+
+
+if(!Number.prototype.toUnitSize)
+	Object.defineProperty(Number.prototype, 'toUnitSize', {
+		value: function(asNumber){
+			var a,b,c,d;
+			var r = (
+				a=1e3,
+				b=Math,
+				c=b.log,
+				d=c(this)/c(a)|0,this/b.pow(a,d)
+			).toFixed(2)
+
+			if(!asNumber){
+				r += ' '+(d?('KMGTPEZY')[--d]:' ');
+			}
+			return r;
+		},
+		writable:false,
+		enumerable:false
+	});
+
+
+if(!Number.prototype.toHashMetric)
+	Object.defineProperty(Number.prototype, 'toHashMetric', {
+		value: function(precision, unit, commas) {
+
+			var l = [
+				[1e24, 'Y'],
+				[1e21, 'Z'],
+				[1e18, 'E'],
+				[1e15, 'P'],
+				[1e12, 'T'],
+				[1e9, 'G'],
+				[1e6, 'M'],
+				[1e3, 'k']
+			];
+
+			var i = 0;
+			if(unit) {
+				while(i < l.length-1 && unit != l[i][1])
+					i++;
+
+			}
+			else {
+				while(i < l.length-1 && (this) < l[i][0])
+					i++;
+				unit = l[i][1];
+			}
+
+			var v = this / l[i][0];
+			
+			precision = _.isUndefined(precision) ? 2 : parseInt(precision);
+			if(commas) {
+				var parts = v.toFixed(precision).toString().split('.');
+				parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+				return parts.join('.') + ' ' + unit;
+			}
+			else {
+				return v.toFixed(precision) + ' ' + unit;
+			}
+		},
+		writable:false,
+		enumerable:false
+	});	
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_CLOCK_WIDGET_353 : &'static str = r###"
+
+let Defaults = [
+	'America/Los_Angeles:San_Francisco',
+	'America/New_York',
+	'Europe/London',
+	'Europe/Moscow',
+	'Asia/Dubai',
+	'Asia/Hong_Kong',
+	'Asia/Tokyo',
+//	'Asia/Tel_Aviv'
+]
+
+export class FlowClockWidget extends BaseElement {
+
+	static get properties() {
+		return {
+			locale: {type: String},
+			tz: {type: String},
+			city:{type:String}
+		}
+	}
+
+	static get styles() {
+		return css`
+			:host {
+				padding: 0px;
+			}
+			[col] { display: flex; flex-direction: column; }
+			[row] { display: flex; flex-direction: row; }
+			.caption { 
+				font-size: var(--flow-clock-widget-caption-font-size, 9px);
+				text-transform:var(--flow-clock-widget-caption-text-transform, uppercase);
+				white-space: nowrap;
+			}
+			.time-wrapper {
+				align-items: flex-start;
+				padding: 1px;
+			}
+			.time { 
+				font-size: var(--flow-clock-widget-time-font-size, 14px);
+				font-family: var(--flow-clock-widget-time-font-family, "Consolas");	
+			}
+			.suffix {
+				font-size: var(--flow-clock-widget-suffix-font-size, 10px);				
+			}
+		`;
+	}
+
+	constructor() {
+		super();
+
+		this.locale = 'en-US';
+		this.tz = '';
+		this.city = '';
+	}
+
+	connectedCallback() {
+		super.connectedCallback();
+		this.interval = setInterval(()=>{this.requestUpdate()}, 1000);
+	}
+
+	disconnectedCallback() {
+		super.disconnectedCallback();
+		if(this.interval) {
+			clearInterval(this.interval);
+			delete this.interval;
+		}
+	}
+
+	render() {
+
+		let city, timeZone;
+		if(this.tz.includes(':')) {
+
+			let parts = this.tz.split(':');
+			//console.log("TIMEZONE",this.tz,parts);
+			timeZone = parts.shift();
+			city = parts.shift();
+		} else {
+			city = this.city || this.tz.split('/').pop() || 'N/A';
+			timeZone = this.tz || 'UTC';
+		}
+
+		const tzTime = new Date().toLocaleString(this.locale,{timeZone});
+		const s = (new Date(tzTime)).toISOString();
+		const [time,ampm] = (new Date(tzTime)).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}).split(/\s/);
+		
+		return html`
+			<div col>
+				<div class='caption'>${city.replace(/_/g,' ')}</div>
+				<div row class='time-wrapper'>
+					<div class='time'>${time}</div>
+					${ampm?html`<div class="suffix"> ${ampm}</div>`:''}
+				</div>
+			</div>
+		
+		`;
+	}  
+}
+
+FlowClockWidget.Defaults = Defaults;
+
+/*
+class FlowClockWidgetChild extends FlowClockWidget{}
+class FlowClockWidgetChild2 extends FlowClockWidget{}
+FlowClockWidgetChild2.Defaults = [];
+console.log("FlowClockWidgetChild.Defaults", FlowClockWidgetChild.Defaults, FlowClockWidgetChild2.Defaults)
+*/
+
+FlowClockWidget.define('flow-clock-widget');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_THEME_SELECT_404 : &'static str = r###"
+
+
+
+
+/**
+ * @export
+ * @class FlowThemeSelect
+ * @extends {FlowSelect}
+ *
+ *
+ * 
+ * @example
+ * <flow-theme-select items="light,dark"></flow-dropdown>
+ *
+ */
+export class FlowThemeSelect extends FlowSelect {
+	static get properties() {
+		return {
+			items:{type:String}
+		}
+	}
+
+	static get styles() {
+		return [FlowSelect.styles, css`
+			.selected{
+				min-width: var(--flow-theme-select-selected-min-width, 150px);
+			}
+		`];
+	}
+
+	constructor(){
+		super();
+		this.items = "dark,light";
+		this.label = "Theme"
+		this.selected = this.getTheme("dark");
+		/*this.hidefilter = true;*/
+	}
+
+	renderItems(){
+		return this.items.split(",").map(item=>{
+			let name = this.buildItemName(item);
+			return html`<div class="menu-item" value="${item}">${name}</div>`
+		})
+	}
+	get list(){
+		if(!this.renderRoot){
+			return [];
+		}
+		return [...this.renderRoot.querySelectorAll(".menu-item")]
+	}
+	buildItemName(name){
+		name = name.toLowerCase()
+					.replace(/[_-]+/g, ' ')
+					.replace(/\s{2,}/g, ' ').trim();
+		return name.charAt(0).toUpperCase() + name.slice(1);
+	}
+	selectionChanged(){
+		super.selectionChanged();
+		let value = this.value;
+		if(value)
+			this.setTheme(value);
+	}
+
+	onThemeChange(){
+		//this.log("onThemeChange", getTheme())
+		this.selected = this.getTheme();
+		this.requestUpdate("selected")
+	}
+
+	connectedCallback(){
+		super.connectedCallback();
+		this._onThemeChange = this._onThemeChange || this.onThemeChange.bind(this);
+		document.body.addEventListener("flow-theme-changed", this._onThemeChange)
+	}
+	disconnectedCallback(){
+		super.disconnectedCallback();
+		document.body.removeEventListener("flow-theme-changed", this._onThemeChange)
+	}
+
+	getTheme(defaultTheme){
+		return getTheme(defaultTheme)
+	}
+
+	setTheme(theme){
+		setTheme(theme);
+	}
+}
+
+FlowThemeSelect.define('flow-theme-select');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_DROPZONE_FIELD_369 : &'static str = r###"
+
+import '../resources/extern/dz/min/dropzone.min.js';
+
+
+/**
+* @class FlowDropzoneField
+* @extends BaseElement
+
+* @property {Boolean} [disabled]
+* @property {String} [btnText]
+* @property {String} [value]
+* @property {String} [label]
+* @property {String} [type]
+* @property {String} [pattern]
+* @property {Function} [validator]
+* @property {String} [placeholder]
+* @property {Boolean} [readonly]
+* @property {Object} [postData]
+* @property {String} [uploadUrl]
+*
+*
+* @cssvar {font-family} [--flow-font-family="Julius Sans One"]
+* @cssvar {font-weight} [--flow-font-weight=bold]
+* @cssvar {font-weight} [--flow-input-font-weight=400]
+* @cssvar {font-size} [--flow-input-font-size-label=0.7rem]
+* @cssvar {font-size} [--flow-input-font-size=1rem]
+* @cssvar {width} [--flow-input-width=100%]
+* @cssvar {min-width} [--flow-input-min-width=100px]
+* @cssvar {max-width} [--flow-input-max-width=500px]
+* @cssvar {height} [--flow-input-height]
+* @cssvar {line-height} [--flow-input-line-height=1.2]
+* @cssvar {background-color} [--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1))]
+* @cssvar {background-color} [--flow-border-hover-color, var(--flow-primary-color, rgba(0,151,115,1))]
+* @cssvar {background-color} [--flow-input-bg=inherit]
+* @cssvar {background-color} [--flow-input-bg=inherit]
+* @cssvar {border} [--flow-input-label-border=2px solid  var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)))]
+* @cssvar {border} [--flow-input-border=2px solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1))]
+* @cssvar {border-top-left-radius} [--flow-input-btn-tlbr=0px]
+* @cssvar {border-bottom-left-radius} [--flow-input-btn-blbr=0px]
+* @cssvar {border-color} [--flow-border-hover-color, var(--flow-primary-color, rgba(0,151,115,1)]
+* @cssvar {color} [--flow-border-invert-color, var(--flow-primary-invert-color, #FFF)]
+* @cssvar {color} [--flow-input-color=inherit]
+* @cssvar {color} [--flow-input-placeholder=#888]
+* @cssvar {color} [--flow-input-invalid-color=red]
+* @cssvar {color} [--flow-dz-field-remove-icon-color=var(--flow-color,#000)]
+* @cssvar {padding} [--flow-input-label-padding=2px 5px]
+* @cssvar {margin} [--flow-input-margin=5px 0px]
+* @cssvar {margin-top} [--flow-input-wrapper-margin-top=-0.5rem]
+* @cssvar {margin-left} [--flow-input-label-margin-left=10px]
+* @cssvar {z-index} [--flow-input-label-z-index=1]
+* @cssvar {position} [--flow-input-label-position=relative]
+* @cssvar {background} [--flow-dz-field-remove-icon-bg=#FFF]
+* @cssvar {box-shadow} [--flow-dz-field-remove-icon-box-shadow=0px 0px 4px #ccc]
+* @example
+*   <flow-dz-field></flow-dz-field>
+*
+*/
+export class FlowDropzoneField extends BaseElement {
+	static get properties() {
+		return {
+			btnText:{type: String},
+            value:{type:String},
+            type:{type:String},
+			disabled:{type:Boolean},
+			pattern:{type:String},
+			validator:{type:Function},
+			placeholder:{type:String},
+			label:{type:String},
+			readonly:{type:Boolean},
+			postData:{type:Object},
+			uploadUrl:{type:String}
+		}
+	}
+
+	static get styles(){
+		return css`
+			:host{
+				display:inline-block;vertical-align:middle;
+				font-family:var(--flow-font-family, "Julius Sans One");
+				font-weight:var(--flow-font-weight, bold);
+				width:var(--flow-input-width, 100%);
+				min-width:var(--flow-input-min-width, 100px);
+				max-width:var(--flow-input-max-width, 500px);
+				margin:var(--flow-input-margin, 5px 0px);
+				font-size:0px;
+			}
+			:host(:not([disabled])) .btn,
+			:host(:not([disabled])) .input{
+				cursor:pointer;
+			}
+			
+			:host(:not([apply-btn])) .btn{
+				display: none;
+			}
+			
+			.wrapper{
+				display:flex;
+				align-items:stretch;
+				min-width_:50px;
+				text-align:center;
+				justify-content:center;
+				margin-top:var(--flow-input-wrapper-margin-top,-0.5rem);
+				height:var(--flow-input-wrapper-height);
+			}
+			label{
+				font-size:var(--flow-input-label-font-size, 0.7rem);
+				padding:var(--flow-input-label-padding,2px 5px);
+				border: var(--flow-input-label-border, 2px) solid  var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border-radius:var(--flow-input-label-border-radius, 8px);
+				margin-left: var(--flow-input-label-margin-left,10px);
+				z-index: var(--flow-input-label-z-index, 1);
+				position: var(--flow-input-label-position, relative);
+				background-color:var(--flow-input-bg, inherit);
+			}
+			.btn{
+				position:relative;
+				padding:5px;
+				background-color:var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border: 2px solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				overflow:hidden;
+				border-radius:8px;
+				border-top-left-radius: var(--flow-input-btn-tlbr, 0px);
+    			border-bottom-left-radius: var(--flow-input-btn-blbr, 0px);
+    			color:var(--flow-border-invert-color, var(--flow-primary-invert-color, #FFF));
+    			display: flex;
+			    justify-content: center;
+			    align-items: center;
+			}
+			:host(:not([disabled])) .btn:hover{
+				background-color:var(--flow-border-hover-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border-color:var(--flow-border-hover-color, var(--flow-primary-color, rgba(0,151,115,1)))
+			}
+			.input{
+				width:100px;flex:1;box-sizing:border-box;
+				min-height:var(--flow-input-height);
+				border: var(--flow-input-border, 2px) solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border-radius:var(--flow-input-border-radius, 8px);
+    			margin:0px;
+    			padding:16px 30px 10px 10px;
+				background-color:var(--flow-input-bg, inherit);
+				color:var(--flow-input-color, inherit);
+				font-size:var(--flow-input-font-size, 1rem);
+				font-weight:var(--flow-input-font-weight, 400);
+				line-height:var(--flow-input-line-height, 1.2);
+				box-shadow:var(--flow-input-box-shadow);
+			}
+
+			:host([apply-btn]) .input{
+			    border-right-width:0px;
+				border-top-right-radius: 0px;
+				border-bottom-right-radius: 0px;
+			}
+
+
+			.input:focus{outline:none}
+			.input::-webkit-input-placeholder { color: var(--flow-input-placeholder, #888 ); }
+			:host([disabled]) .value{
+				padding-right:10px;
+			}
+			.clear-btn{
+				font-style: normal;
+			    font-size: 25px;
+			    padding: 0px 10px 0px 10px;
+			    cursor: pointer;
+			    display:none;
+			    position: absolute;
+			    right: 0px;
+			    z-index: 1;
+			}
+			:host(:not([disabled])) [has-value] .clear-btn{display:block;}
+			:host(.invalid) .input{color:var(--flow-input-invalid-color, red)}
+
+			.dz-preview{
+				position:relative;display:block;
+			}
+			.dz-preview .dz-progress{display:block;height:2px;}
+			.dz-preview .dz-progress .dz-upload{
+				display:block;height:100%;width:0;background:green
+			}
+			.dz-preview .dz-details{line-height:1.2;margin:2px;}
+			.dz-preview .dz-error-message{color:red;display:none}
+			.dz-preview.dz-error .dz-error-message,
+			.dz-preview.dz-error .dz-error-mark{display:block}
+			.dz-preview.dz-success .dz-success-mark{display:block}
+			.dz-preview .dz-error-mark,
+			.dz-preview .dz-success-mark{
+				position:absolute;display:none;left:30px;top:30px;width:54px;height:58px;
+				left:50%;margin-left:-27px
+			}
+			.dz-preview .dz-remove{
+				position: absolute;
+			    right:-15px;
+			    top:-15px;
+			    font-size:27px;
+			    cursor: pointer;
+			    color:var(--flow-dz-field-remove-icon-color, var(--flow-color,#000));
+			    background:var(--flow-dz-field-remove-icon-bg, #FFF);
+			    z-index:1;
+			    box-shadow:var(--flow-dz-field-remove-icon-box-shadow, 0px 0px 4px #ccc);
+			    padding: 5px;
+			    border-radius:50%;
+			    width: 20px;
+			    height: 20px;
+			    line-height:20px;
+			}
+			.dz-image-holder{
+				position:relative;
+				height:100px;
+				background:var(--flow-dz-field-mage-holder-bg, rgba(0,0,0,0.1));
+			}
+			.dz-image-holder img{
+				max-width:100%;
+				max-height:100%;
+			}
+		`;
+    }
+    constructor() {
+        super();
+        this.type = 'text';
+        this.value = '';
+        this.postData = {};
+    }
+	render() {
+		return html`<label ?hidden=${!this.label}>${this.label||""}</label>
+		<div class="wrapper" @click=${this.onClick} ?has-value=${!!this.value}>
+			<slot name="prefix"></slot>
+			<div class="input"
+				?disabled=${this.disabled} 
+				@change=${this.onChange}>
+			</div>
+			<div class="btn">
+				<div class="text"><flow-i18n text="${this.btnText || 'Select'}"></flow-i18n></div>
+			</div>
+			<slot name="sufix"></slot>
+		</div>
+		`;
+	}
+
+	firstUpdated(){
+		super.firstUpdated();
+		this.inputEl = this.renderRoot.querySelector(".input");
+		let url = this.uploadUrl || "upload-file";
+		this.dropzone = new Dropzone(this.inputEl, {
+			url,
+			acceptedFiles: this.acceptedFiles,
+			withCredentials:true,
+			paramName:this.paramName || "file",
+			autoProcessQueue:this.autoProcessQueue || false,
+			maxFiles:this.maxFiles || 1,
+			uploadMultiple: false,
+			maxFilesize : 500,
+			//addRemoveLinks: true,
+			previewTemplate:`<div class="dz-preview dz-file-preview">
+			  <div class="dz-details">
+			    <div class="dz-filename"><span data-dz-name></span></div>
+			    <div class="dz-size" data-dz-size></div>
+			    <div class="dz-image-holder">
+			    	<img data-dz-thumbnail /> <div class="dz-remove" data-dz-remove>&times;</div>
+			    </div>
+			  </div>
+			  <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
+			  <!--div class="dz-success-mark"><span>✔</span></div>
+			  <div class="dz-error-mark"><span>✘</span></div-->
+			  <div class="dz-error-message"><span data-dz-errormessage></span></div>
+			</div>`,
+			maxfilesexceeded:(file)=>{
+				this.dropzone.removeFile(file);
+			}
+		});
+		this.dropzone.on("addedfile", (file)=>{
+			if (this._oldFile) {
+				this.dropzone.removeFile(this._oldFile);
+			};
+			this._oldFile = file;
+			//this.set('hasOfflinePreview', true);
+			this.classList.toggle('offline-preview', true);
+			this.msg = 'Offline preview';
+		});
+		this.dropzone.on("reset", (file)=>{
+			this.classList.toggle('offline-preview', false);
+			//this.set('hasOfflinePreview', false);
+			//this.srcChanged();
+			this._oldFile = false;
+		});
+
+		this.dropzone.on("sending", (file, xhr, formData)=>{
+			Object.keys(this.postData).forEach(k=>{
+				formData.append(k, this.postData[k]);
+			})
+		});
+		this.dropzone.on("success", (file, xhr)=>{
+			this.cancelFiles();
+			this.fire('upload-success')
+			//this.msg = "Online preview";
+		});
+		this.dropzone.on("error", (file, xhr)=>{
+			this.cancelFiles();
+			this.fire('upload-error')
+			//this.msg = "Online preview";
+		});
+		
+	}
+
+	uploadFile(){
+		this.dropzone?.processQueue();
+	}
+	cancelFiles(){
+		this.dropzone?.removeAllFiles(true);
+	}
+
+	setClear(){
+		this.setValue("");
+	}
+
+	onClick() {
+		this.fire("flow-dz-click", {el:this})
+	}
+
+	validate(value){
+		let {pattern} = this;
+		if(pattern){
+			try{
+				pattern = new RegExp(pattern)
+			}catch(e){
+				this.log("pattern error:", e)
+				return false;
+			}
+			if(!pattern.test(value))
+				return false;
+		}
+		if(typeof this.validator == 'function'){
+			return this.validator(value, this);
+		}
+		return true;
+	}
+
+	onChange(e) {
+		let value = this.shadowRoot.querySelector("input").value;
+		if(!this.validate(value)){
+			this.classList.add("invalid")
+			return
+		}
+		this.classList.remove("invalid")
+		//this.log("value", value)
+
+		this.value = value;
+		this.fire("changed", {el:this, value})
+	}
+
+	setValue(value){
+		this.value = value;
+		this.shadowRoot.querySelector("input").value = "";
+		this.fire("changed", {el:this, value:this.value})
+	}
+}
+
+FlowDropzoneField.define('flow-dz-field');
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_MARKDOWN_383 : &'static str = r###"
+
+
+
+const escapeHtml = (unsafe) => {
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;")
+         .replace(/&amp;lt;/g, "&lt;")
+         .replace(/&amp;gt;/g, "&gt;")
+ }
+
+export const markerdRenderer = {
+    buildAnchorHref(text){
+        return text.toLowerCase().replace(/[^\w]+/g, '-')
+            .replace(/\-code\-/g, "").replace(/^[\-]+|[\-]+$/g, '')
+    },
+	heading(text, level) {
+		const href = this.buildAnchorHref(text);
+
+		return `
+			<h${level} class="h-anchor">
+			<a name="${href}" class="anchor" href="#${href}">
+				<span class="anchor-icon" part="anchor-icon"></span>
+			</a>
+			${text}
+			</h${level}>`;
+    },
+    
+    code(text, info, escaped) {
+        //console.log('code:',text);
+        return `<flow-code lang="${info}"><textarea>${text.replace(/\t/g,'    ')}</textarea></flow-code>`;
+    },
+
+    html(text) {
+        //console.log('html:',text);
+        return escapeHtml(text);
+    },
+
+    codespan(text) {
+        //console.log('codespan:',text);
+        text = text.replace(/&amp;lt;/g, "&lt;").replace(/&amp;gt;/g, "&gt;");
+        return `<code>${text}</code>`;
+    },
+
+    link(href, title, text) {
+        return`<flow-link href="${href}" ${title?`title="${title}"`:''}>${text}</flow-link>`;
+    }
+}
+
+/**
+* @class FlowMarkdown
+* @extends BaseElement
+* @property {Boolean} [skipTrimming]
+* @property {Boolean} [achorScroll]
+* @property {Boolean} [sanitize]
+* @property {Boolean} [toc]
+* @property {Boolean} [full_height_toc]
+* @cssvar {font-size} [--flow-markdown-anchor-icon-font-size=1rem]
+* @cssvar {display} [--flow-markdown-anchor-icon-display=inline-block]
+* @cssvar {width} [--flow-markdown-anchor-icon-width=15px]
+* @cssvar {height} [--flow-markdown-anchor-icon-height=15px]
+* @cssvar {margin} [--flow-markdown-anchor-icon-margin=0px 2px]
+* @cssvar {opacity} [--flow-markdown-anchor-icon-opacity=0]
+* @cssvar {opacity} [--flow-markdown-anchor-icon-opacity-hover=1]
+* @cssvar {background-image} [--flow-markdown-icon]
+* @cssvar {font-family} [--flow-markdown-code-font-family=monospace]
+* @cssvar {font-size} [--flow-markdown-code-font-size=1rem]
+* @cssvar {background-color} [--flow-markdown-code-background-color=#f3f3f3]
+* @cssvar {padding} [--flow-markdown-code-padding=1px 3px]
+* @cssvar {margin} [--flow-markdown-code-margin=1px 1px]
+* @cssvar {border} [--flow-markdown-code-border=1px solid #ddd]
+* @cssvar {min-width} [--flow-markdown-toc-width=200px]
+* @cssvar {width} [--flow-markdown-toc-width=200px]
+* @cssvar {top} [--flow-markdown-toc-top=0]
+* @cssvar {padding} [--flow-markdown-toc-padding=10px]
+* @cssvar {background-color} [--flow-markdown-toc-li-hover-bg=var(--flow-menu-item-hover-bg, #DDD)]
+* @cssvar {color} [--flow-markdown-toc-li-hover-color=var(--flow-menu-item-hover-color, #000)]
+* @cssvar {padding-left} [--flow-markdown-toc-level0-padding=4px]
+* @cssvar {font-size} [--flow-markdown-toc-level0-font-size=0.96rem]
+* @cssvar {font-weight} [--flow-markdown-toc-level0-font-weight=bold]
+* @cssvar {padding-left} [--flow-markdown-toc-level1-padding=4px]
+* @cssvar {font-size} [--flow-markdown-toc-level1-font-size=0.92rem]
+* @cssvar {padding-left} [--flow-markdown-toc-level2-padding=18px]
+* @cssvar {font-size} [--flow-markdown-toc-level2-font-size=0.86rem]
+* @cssvar {padding-left} [--flow-markdown-toc-level3-padding=30px]
+* @cssvar {font-size} [--flow-markdown-toc-level3-font-size=0.82rem]
+* @cssvar {padding-left} [--flow-markdown-toc-level4-padding=45px]
+* @cssvar {font-size} [--flow-markdown-toc-level4-font-size=0.76rem]
+* @cssvar {padding-left} [--flow-markdown-toc-level5-padding=60px]
+* @cssvar {font-size} [--flow-markdown-toc-level5-font-size=0.72rem]
+* @cssvar {padding-left} [--flow-markdown-toc-level6-padding=75px]
+* @cssvar {font-size} [--flow-markdown-toc-level6-font-size=0.66rem]
+* @cssvar {padding-left} [--flow-markdown-toc-level7-padding=90px]
+* @cssvar {font-size} [--flow-markdown-toc-level7-font-size=0.625rem]
+* @example
+*   <flow-markdown>fn()</flow-markdown>
+*
+*
+*/
+
+/*
+... @ cssvar {--flow-code-font-family} [--flow-markdown-code-font-family]
+... @ cssvar {--flow-code-font-size} [--flow-markdown-code-font-size]
+... @ cssvar {--flow-code-border} [--flow-markdown-code-border=1px solid #ddd]
+*/
+
+export class FlowMarkdown extends BaseElement {
+	static get properties() {
+		return {
+			skipTrimming:{type:Boolean},
+            anchorScroll:{type:Boolean},
+            sanitize : {type:Boolean},
+            toc : {type:Boolean},
+            'full-height-toc':{type:Boolean, reflect:true}
+		}
+	}
+
+	static get styles() {
+		return css`
+			:host{display:block;}
+			.md{display:none;}
+			.anchor{font-size:0px;}
+			.anchor-icon{
+				font-size:var(--flow-markdown-anchor-icon-font-size, 1rem);
+				display:var(--flow-markdown-anchor-icon-display, inline-block);
+				width:var(--flow-markdown-anchor-icon-width, 15px);
+				height:var(--flow-markdown-anchor-icon-height, 15px);
+				margin:var(--flow-markdown-anchor-icon-margin, 0px 2px);
+				opacity:var(--flow-markdown-anchor-icon-opacity, 0);
+				border:0px solid #F00;cursor:pointer;
+				background: center / contain;
+				background-image:var(--flow-markdown-icon);
+			}
+			.h-anchor:hover>a.anchor .anchor-icon{
+				opacity:var(--flow-markdown-anchor-icon-opacity-hover, 1);
+            }
+            
+            #output > * {margin-left: 19px;}
+            #output > h1, #output > h2, #output > h3, #output > h4, #output > h5 {
+                margin-left: 0px;
+            }
+
+            td { vertical-align: top; }
+
+            code, table tbody tr td code {
+                display: inline-block;
+                font-family: var(--flow-markdown-code-font-family, monospace);
+                font-size: var(--flow-markdown-code-font-size, 1rem);
+                background-color: var(--flow-markdown-code-background-color, #f3f3f3);
+                padding: var(--flow-markdown-code-padding, 1px 3px);
+                margin: var(--flow-markdown-code-margin, 1px 1px);
+                border:var(--flow-markdown-code-border, 1px solid #ddd);
+            }
+
+            flow-code {
+                --flow-code-white-space: pre;
+                --flow-code-font-family: var(--flow-markdown-code-font-family);
+                --flow-code-font-size: var(--flow-markdown-code-font-size);
+                --flow-code-border: var(--flow-markdown-code-border,1px solid #ddd);
+                /*color: var(--flow-markdown-code-color, --flow-code-color, --flow-background-inverse);*/
+                /*background-color: var(--flow-markdown-code-background-color, #f3f3f3);
+                color: var(--flow-markdown-code-color, #000);*/
+                padding: 16px;
+            }
+
+            a, a:visited { 
+                text-decoration: none; 
+                color: var(--flow-link-color, #202169);
+            }
+
+            a:hover { 
+                text-decoration: underline; 
+                color: var(--flow-link-hover-color, #161649);
+            }
+            #wrapper {
+                position:relative;
+                display: flex;
+                flex-direction:row;
+            }
+            :host([full-height-toc]) #wrapper{
+                height:100%;
+            }
+            :host([full-height-toc]) .toc-outer,
+            :host([full-height-toc]) #output{
+                height:100%;
+                overflow-y:auto;
+                overflow-x:hidden;
+            }
+            :host([full-height-toc]) .toc-outer{
+                min-width:var(--flow-markdown-toc-width, 200px);
+            }
+            #toc {
+                border:0px solid red;
+                width:var(--flow-markdown-toc-width, 200px);
+                position: -webkit-sticky;
+                position: sticky;
+                top:var(--flow-markdown-toc-top, 0);
+                list-style:none;
+                padding:var(--flow-markdown-toc-padding, 10px);
+                margin:0px;
+            }
+            :host([full-height-toc]) #toc{
+                position:relative;
+            }
+
+            #toc li{
+                cursor:pointer;
+                padding: 1px;
+            }
+            #toc li:hover{
+                background-color:var(--flow-markdown-toc-li-hover-bg, var(--flow-menu-item-hover-bg, #DDD));
+                color:var(--flow-markdown-toc-li-hover-color, var(--flow-menu-item-hover-color, #000));
+            }
+            #toc [level="0"]{
+                padding-left:var(--flow-markdown-toc-level0-padding, 4px);
+                font-size:var(--flow-markdown-toc-level0-font-size, 0.96rem);
+                font-weight:var(--flow-markdown-toc-level0-font-weight, bold);
+            }
+            #toc [level="1"]{
+                padding-left:var(--flow-markdown-toc-level1-padding, 4px);
+                font-size:var(--flow-markdown-toc-level1-font-size, 0.92rem);
+            }
+            #toc [level="2"]{
+                padding-left:var(--flow-markdown-toc-level2-padding, 18px);
+                font-size:var(--flow-markdown-toc-level2-font-size, 0.86rem);
+            }
+            #toc [level="3"]{
+                padding-left:var(--flow-markdown-toc-level3-padding, 30px);
+                font-size:var(--flow-markdown-toc-level3-font-size, 0.82rem);
+            }
+            #toc [level="4"]{
+                padding-left:var(--flow-markdown-toc-level4-padding, 45px);
+                font-size:var(--flow-markdown-toc-level4-font-size, 0.76rem);
+            }
+            #toc [level="5"]{
+                padding-left:var(--flow-markdown-toc-level5-padding, 60px);
+                font-size:var(--flow-markdown-toc-level5-font-size, 0.72rem);
+            }
+            #toc [level="6"]{
+                padding-left:var(--flow-markdown-toc-level6-padding, 75px);
+                font-size:var(--flow-markdown-toc-level6-font-size, 0.66rem);
+            }
+            #toc [level="7"]{
+                padding-left:var(--flow-markdown-toc-level7-padding, 90px);
+                font-size:var(--flow-markdown-toc-level7-font-size, 0.625rem);
+            }
+		`;
+	}
+	render() {
+        let i = 1;
+        let {level:firstLevel=0} = (this.toc_||[])[0]||{};
+        let length = 10, num;
+        (this.toc_||[]).forEach(o=>{
+            if(length<o.level)
+                length = o.level;
+        })
+        length = (length+"").length;
+
+		return html`<div id="wrapper">
+        ${
+            this.toc ? 
+            html`<div class="toc-outer"><ul id='toc' @click="${this.onTOCClick}">${
+                this.toc_.map(t=> {
+                    /*if(firstLevel == t.level){
+                        num = (i++)+").";
+                    }else{
+                        num = "";
+                    }*/
+                    /*<span>${num.padStart(length, " ")}</span>*/
+                    return html`<li level="${t.level}" 
+                        data-scroll-to="${t.href}">${t.caption}</li>`;
+                })
+            }</ul></div>`:''
+        }
+        <div class="md"><slot></slot></div>
+        <div id="output" @click="${this.onOutputClick}"></div>
+        </div>`;
+	}
+
+	constructor() {
+        super();
+        this.sanitize = false;
+        this.toc = false;
+        this.toc_ = [];
+    }
+    
+    firstUpdated() {
+    	// TODO https://github.com/markedjs/marked
+        const slot = this.renderRoot.querySelector('slot');
+        this.outputEl = this.renderRoot.querySelector('#output');
+       	this.slotEl = slot;
+       	this.updateHtml();
+		slot.addEventListener('slotchange', e=>{
+			this.updateHtml();
+		});
+    }
+
+    updateHtml(text=""){
+    	if(!text.length){
+	    	let nodes = this.slotEl.assignedNodes();
+	    	let texts = [];
+	    	nodes.forEach(el=>{
+	    		if(el.nodeType==3){
+	    			texts.push(el.textContent)
+	    			return;
+	    		}
+	    		texts.push(el.innerHTML);
+	    		//texts.push(el.innerText);
+	    	})
+            text = texts.join("\n\n");
+            /*
+	    	let line2 = text.trim().split("\n")[1];
+	    	this.log("line2line2", line2)
+	    	if(!this.skipTrimming && line2){
+	    		let num = 0;
+	    		let i = 0;
+	    		let c = line2[i];
+	    		let regExp = null;
+	    		this.log("cccc:"+c, c=="\t")
+	    		if(c == "\t"){
+	    			while(c == "\t"){
+	    				num++;
+	    				c = line2[i++];
+	    			}
+	    			regExp = `^[\t]{1,${num}}`;
+    			}else if(c == " "){
+    				while(c == " "){
+	    				num++;
+	    				c = line2[i++];
+	    			}
+	    			regExp = `^[ ]{1,${num}}`;
+    			}
+
+    			if(regExp){
+    				//this.log("regExp:"+regExp)
+	    			regExp = new RegExp(regExp, "g");
+	    			
+	    			text = text.split("\n").map(line=>{
+	    				//this.log("first:"+line[0]+"::::", line)
+	    				return line.replace(regExp, "")
+	    			}).join("\n");
+
+	    			//this.log("tabs", regExp, tabs, text)
+    			}
+	    	}
+	    	*/
+        }
+
+        text = text.replace(/<!---->/g, '');
+
+        const tokens = window.marked.lexer(text);
+        this.log("tokens", tokens);
+
+        if(this.toc) {
+            /*
+            text.split('\n').forEach((line) => {
+                if(/^#+/.test(line)) {
+                    let level = -1;
+                    while(line.charAt(0) == '#') {
+                        level++;
+                        line = line.substring(1);
+                    }
+                    let caption = line.trim().replace("")
+                    this.toc_.push({
+                        caption, level, 
+                        href: markerdRenderer.buildAnchorHref(caption)
+                    });
+                }
+            })
+            */
+        
+            let tocList = tokens.filter(t=>t.type=="heading").map(t=>{
+                let caption = t.tokens[0].text;
+                return {
+                    caption,
+                    level:t.depth-1,
+                    href: markerdRenderer.buildAnchorHref(caption)
+                }
+            });
+
+            this.toc_ = tocList;
+
+            this.log("tocList", tocList);
+
+            this.requestUpdate();
+        }
+
+        const html = window.marked.parser(tokens);
+        this.log("html", html);
+
+    	//let html = window.marked(text);
+        //this.log("this.toc_", this.toc, this.toc_, html)
+    	//let html = window.marked(text);
+    	this.outputEl.innerHTML =  this.sanitize ? DOMPurify.sanitize(html) : html;
+    	if(this.anchorScroll){
+    		dpc(100, ()=>{
+    			this.scrollToLocationHash();
+    		})
+    	}
+
+    }
+    scrollToLocationHash(){
+    	let hash = window.location.hash.replace("#", "");
+    	this.scrollToElement(hash)
+    }
+    scrollToElement(id){
+    	let ele = id.scrollIntoView?id:this.outputEl.querySelector(`a[name="${id}"]`);
+    	if(ele){
+            let eleP = ele.parentNode?.matches(".h-anchor")?ele.parentNode:ele;
+            //this.log("eleP", eleP)
+    		eleP.scrollIntoView(Object.assign(this.scrollIntoViewConfig || {}, {
+    			behavior: "smooth",
+    			block: "start",
+    			inline: "nearest"
+    		}));
+        }
+
+    }
+
+    onTOCClick(e){
+        let el = e.target.closest("li[data-scroll-to]");
+        if(!el)
+            return
+
+        let id = el.getAttribute("data-scroll-to");
+        this.scrollToElement(id);
+    }
+
+    onOutputClick(e){
+    	let anchor = e.target.closest("a.anchor,a.scroll-to");
+    	if(!anchor)
+    		return
+    	let href = (anchor.getAttribute("href")+"")
+    	if(href.startsWith("#"))
+    		anchor = href.replace("#", "")
+
+    	this.scrollToElement(anchor);
+    }
+}
+
+
+let defined = false;
+let registerComponent =()=>{
+	if(defined)
+		return
+	defined = true;
+
+	marked.use({renderer: markerdRenderer})
+
+	FlowMarkdown.define('flow-markdown');
+}
+
+let check = ()=>{
+	loaded++;
+	if(loaded == 2)
+		registerComponent();
+}
+
+let loaded = 0;
+
+[
+	'extern/marked/marked.min.js',
+	'extern/dom-purify/purify.min.js'
+].forEach(file=>{
+	if(file.indexOf("marked/") > -1 && window.marked)
+		return check();
+
+	let s = document.createElement("script");
+	s.src = `${baseUrl}resources/${file}`;
+	document.head.appendChild(s);
+	s.onload = ()=>{
+		check();
+	}
+});
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_TOOLBAR_426 : &'static str = r###"
+
+import './fa-icon.js';
+
+
+/**
+* @class FlowToolbar
+* @extends BaseElement
+* @example
+*   <flow-toolbar></flow-toolbar>
+*
+*/
+
+export class FlowToolbar extends BaseElement {
+	static get properties() {
+		return {
+			items:{type:Array, value:[]}
+		}
+	}
+
+	static get styles() {
+		return css`
+			:host{
+				padding:var(--flow-toolbar-padding, 0px 5px);
+				align-items:center;
+			}
+			:host,
+			.tools{
+				display:flex;
+			}
+			.tools{
+				padding:var(--flow-toolbar-tools-padding, 5px 0px);
+				min-height:var(--flow-toolbar-tools-min-height, 76px);
+				box-sizing:border-box;
+			}
+			/*.tool{
+				position:relative;
+				text-align:var(--flow-toolbar-item-text-align, center);
+				padding:var(--flow-toolbar-item-padding, 5px);
+			}
+			.tool:before{
+				position: absolute;
+			    left: 0px;
+			    top: -2px;
+			    bottom: -2px;
+			    right: 0px;
+			    background:var(--flow-toolbar-item-shadow-bg, rgba(100,100,100, 0.2));
+			    border-radius: 100px;
+			    transform-origin: center center;
+			    transform: scale(0,0);
+			    transition: all 0.2s ease;
+			    content:"";z-index:-1;
+			}
+			.tool:not(.disabled){
+				cursor:pointer;
+			}
+			.tool:not(.disabled):hover:before{
+			    border-radius: 3px;
+			    transform: scale(1,1);
+			}
+			.icon{
+				display:block;
+				width:var(--flow-toolbar-item-icon-width, 28px);
+			    height:var(--flow-toolbar-item-icon-height, 28px);
+			    margin:var(--flow-toolbar-item-icon-margin, 0px auto);
+			    --fa-icon-size:var(--flow-toolbar-item-icon-width, 28px);
+			}
+			.text{
+				font-size:var(--flow-toolbar-item-text-font-size, 0.6rem);
+			}
+			.sub-text{
+				font-size:var(--flow-toolbar-item-sub-text-font-size, 0.5rem);
+			}
+			*/
+		`;
+	}
+
+
+
+	render() {
+		let items = this.items
+		return html`
+		<div class="tools">
+		<slot name="prefix"></slot>
+		${
+			items.map(o=>{
+				return html`<flow-toolbar-item 
+					data-code="${o.code||o.text}"
+					class="${o.cls||''}"
+					text="${o.text||''}"
+					subText="${o.subText||''}"
+					icon="${o.icon||''}"
+
+					pressedText="${o.pressedText||''}"
+					pressedSubText="${o.pressedSubText||''}"
+					pressedIcon="${o.pressedIcon||''}"
+					?togglable=${o.togglable||false}
+					?pressed=${o.pressed||false}>
+				</flow-toolbar-item>`
+			})
+		}
+		<slot></slot>
+		</div>`;
+	}
+	constructor(){
+		super();
+		this.initPropertiesDefaultValues();
+	}
+
+	firstUpdated(){
+		this.renderRoot.addEventListener("click", this.onToolClick.bind(this));
+
+		/////////////////////////////////////////////////////////////////
+		this.renderRoot.addEventListener("flow-toolbar-item-state", e=>{
+			this.fire("flow-toolbar-item-state", e.detail, {bubbles:true})
+		})
+		/// what the hell it is ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+		// bubbles event issue
+		/////////////////////////////////////////////////////////////////
+
+	}
+
+	onToolClick(e){
+		let tool = e.target.closest(".flow-toolbar-item, flow-toolbar-item");
+		if(!tool)
+			return
+		this.fire("tool-click", {tool:tool.dataset.code, btn:tool});
+	}
+}
+
+FlowToolbar.define('flow-toolbar');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_GRIDSTACK_370 : &'static str = r###"
+
+
+//
+
+
+export class FlowGridStackTest extends BaseElement{
+	render(){
+		return html`
+			<h1 slot="title">GridStack in SHADOW DOM</h1>
+			<flow-gridstack class="gs"></flow-gridstack>`;
+	}
+}
+
+FlowGridStackTest.define("flow-gridstack-test");
+
+
+export const FlowGridStackMixin = (base)=>{
+class FlowGridStackKlass extends base{
+	static get properties() {
+		return {
+			gridMargin:{type:Number, value:1},
+			column:{type:Number, value:30},
+			disableResize:{type:Boolean},
+			resizableHandles:{type:String, value:'e, s, w'},
+			cellHeight:{type:Number, value:100},
+			dragMode:{type:String, value:'header', reflect:true},
+			items:{type:Array, value:[]},
+			hidetools:{type:Boolean},
+			dragInOptions:{type:Object},
+			dragIn:{type:String},
+			minWidth:{type:Number, value:400},
+			removeTimeout:{type:Number, value:1000}
+		}
+	}
+
+	static define(name, deps){
+		if(deps){
+			BaseElement.define.call(this, name, deps)
+		}else{
+			this.defineElement(name);
+		}
+	}
+
+	static defineElement(name){
+		this.addGridStackHelpers();
+		BaseElement.defineElement.call(this, name);
+	}
+
+	static addGridStackHelpers(){
+
+		$.ui.draggable.prototype._getHandle = function( event ) {
+			let {handle, handleFn} = this.options;
+			let gridEl = this.element.closest('.grid-stack')[0];
+			if(gridEl && gridEl.gridstack){
+				handleFn = gridEl.gridstack.opts.draggable.handleFn;
+			}
+			if(typeof handleFn == 'function')
+				return handleFn(event, this);
+
+			return handle?!!$(event.target)
+				.closest(this.element.find(handle)).length:true;
+		}
+	}
+
+	constructor() {
+		var intersect = $.ui.intersect;
+		/*
+		let test = (droppable, draggable)=>{
+			 var x1 = ( draggable.positionAbs ||
+		        draggable.position.absolute ).left + draggable.margins.left,
+		      y1 = ( draggable.positionAbs ||
+		        draggable.position.absolute ).top + draggable.margins.top,
+		      x2 = x1 + draggable.helperProportions.width,
+		      y2 = y1 + draggable.helperProportions.height,
+		      l = droppable.offset.left,
+		      t = droppable.offset.top,
+		      r = l + droppable.proportions().width,
+		      b = t + droppable.proportions().height;
+
+	       console.log("sssssss", droppable.eventNamespace, [ 
+		       	l < x1 + ( draggable.helperProportions.width / 2 ) , // Right Half
+		        x2 - ( draggable.helperProportions.width / 2 ) < r , // Left Half
+		        t < y1 + ( draggable.helperProportions.height / 2 ) , // Bottom Half
+		        y2 - ( draggable.helperProportions.height / 2 ) < b
+	        ]); // Top Half
+		}
+		*/
+
+		$.ui.ddmanager.dragStart = function( draggable, event ) {
+
+		    // Listen for scrolling so that if the dragging causes scrolling the position of the
+		    // droppables can be recalculated (see #5003)
+		    draggable.element.parentsUntil( "body" ).on( "scroll.droppable", function() {
+		      if ( !draggable.options.refreshPositions ) {
+		        $.ui.ddmanager.prepareOffsets( draggable, event );
+		      }
+		    } );
+		    const {gridstack} = draggable.element.parent()[0];
+		    gridstack?._onResizeHandler();
+
+		    
+		    $.each( $.ui.ddmanager.droppables[ draggable.options.scope ] || [], function() {
+		    	//if(this.eventNamespace==".droppable1"){
+		    		this.isover = false;
+		    		this.isout = true;
+		    		this._out.call(this, event);
+		    	//}
+		    })
+		}
+		$.ui.ddmanager.drag = function( draggable, event ) {
+
+			//console.log("CCCCCC",  $.ui.ddmanager.droppables[ draggable.options.scope ])
+
+		    // If you have a highly dynamic page, you might try this option. It renders positions
+		    // every time you move the mouse.
+		    if ( draggable.options.refreshPositions ) {
+		      $.ui.ddmanager.prepareOffsets( draggable, event );
+		    }
+
+		    // Run through all droppables and check their positions based on specific tolerance options
+		    $.each( $.ui.ddmanager.droppables[ draggable.options.scope ] || [], function() {
+	    		if ( this.options.disabled || this.greedyChild || !this.visible || !this.element.width() ) {
+		        	return;
+		       	}
+
+		      var parentInstance, scope, parent;
+		      var intersects = intersect( draggable, this, this.options.tolerance, event );
+		      //if(!intersects && this.isover && this.options.tolerance=="intersect")
+		      //	intersects = intersect( draggable, this, "fit", event );
+		      //console.log("draggable.helperProportions", draggable.helperProportions)
+		      //test(this, draggable);
+
+		      var c = !intersects && this.isover ?
+		          "isout" :
+		          ( intersects && !this.isover ? "isover" : null );
+
+		     //console.log("CCCCCC", this.element.width(), this.eventNamespace, this.element[0], c, intersects)
+		      
+		      if ( !c ) {
+		        return;
+		      }
+
+		      if ( this.options.greedy ) {
+
+		        // find droppable parents with same scope
+		        scope = this.options.scope;
+		        parent = this.element.parents( ":data(ui-droppable)" ).filter( function() {
+		          return $( this ).droppable( "instance" ).options.scope === scope;
+		        } );
+
+		        if ( parent.length ) {
+		          parentInstance = $( parent[ 0 ] ).droppable( "instance" );
+		          parentInstance.greedyChild = ( c === "isover" );
+		        }
+		      }
+
+		      // We just moved into a greedy child
+		      if ( parentInstance && c === "isover" ) {
+		        parentInstance.isover = false;
+		        parentInstance.isout = true;
+		        parentInstance._out.call( parentInstance, event );
+		      }
+
+		      this[ c ] = true;
+		      this[ c === "isout" ? "isover" : "isout" ] = false;
+		      this[ c === "isover" ? "_over" : "_out" ].call( this, event );
+
+		      // We just moved out of a greedy child
+		      if ( parentInstance && c === "isout" ) {
+		        parentInstance.isout = false;
+		        parentInstance.isover = true;
+		        parentInstance._over.call( parentInstance, event );
+		      }
+		    });
+
+		};
+		super();
+		this.initPropertiesDefaultValues();
+		this.uid = 'flow-gs-'+(Math.random()*1000000).toFixed(0);
+		this.style.display = 'block';
+		//this.style.height = '1000px';
+	}
+
+	createRenderRoot(){
+		return this;
+	}
+
+	render() {
+		let {uid} = this;
+		return html`
+		<link rel="stylesheet" href="${baseUrl}resources/extern/gridstack/gridstack.min.css">
+		<link rel="stylesheet" href="${baseUrl}resources/extern/gridstack/gridstack-extra.css">
+		<style data-uid="${uid}"></style>
+		${this.renderGSTools(uid)}
+		<div class="grid-stack grid-stack-${this.column} ${uid} hide-w-opacity"
+			@remove-gridstack-panel-request=${this.onRemovePanelRequest}
+		></div>
+		<slot></slot>`;
+	}
+	renderGSTools(uid){
+		return html`
+		<textarea class="gridstack-json" data-uid="${uid}" ?hidden=${this.hidetools}></textarea>
+		<div class="buttons" ?hidden=${this.hidetools}>
+			<flow-btn @click="${this.saveGrid}">Save</flow-btn>
+			<flow-btn @click="${this.loadGrid}">Load</flow-btn>
+			<flow-btn @click="${this.saveGridLS}">Save to LStorage</flow-btn>
+			<flow-btn @click="${this.loadGridLS}">Load from LStorage</flow-btn>
+			<flow-btn @click="${this.toggleDragMode}">ToggleDragMode : ${this.dragMode}</flow-btn>
+		</div>`
+	}
+	firstUpdated(){
+		let {uid} = this;
+		this.gridEl = this.renderRoot.querySelector('.grid-stack');
+		this.styleEl = this.renderRoot.querySelector(`style[data-uid="${uid}"]`);
+		this.debugEl = this.renderRoot.querySelector(`textarea[data-uid="${uid}"]`);
+		this.styleEl.textContent = `
+			/*.${uid} .grid-stack-item-content{display:block}*/
+			.${uid}.grid-stack .grid-stack-placeholder{
+				background:var(--flow-gridstack-placeholder-bg, #1b202f);
+			}
+			.${uid}.grid-stack .grid-stack-placeholder .placeholder-content{
+				border:var(--flow-gridstack-placeholder-content-border, 0px);
+			}
+			.${uid}.grid-stack.hide-w-opacity{opacity:0}
+			.${uid} .grid-stack-item.ui-resizable-resizing:after{
+				content:"";position:absolute;top:0px;left:0px;right:0px;bottom:0px;
+				/*background:#F00;*/
+				z-index:89;
+			}
+			${this.customCss(uid)}
+		`
+		//console.log("this.resizableHandles", this.resizableHandles)
+		let options = {
+			alwaysShowResizeHandle:false,// /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+			//ddPlugin:GridStackDDJQueryUI,
+			resizable:{
+			    handles: this.resizableHandles
+			},
+			minRow:1,
+			margin:this.gridMargin,
+			cellHeight:this.cellHeight,
+			column:this.column,
+			minWidth:this.minWidth,
+			removeTimeout:this.removeTimeout,
+			dragIn: this.dragIn ||'.sidebar .grid-stack-item',
+			acceptWidgets:this.acceptWidgets||function(el) {/*console.log("acceptWidgets", this, el);*/return true; },
+			dragInOptions:this.dragInOptions|| {
+				revert: 'invalid',
+				scroll: false,
+				appendTo: this,
+				helper: ()=>{
+					//console.log("ssssshelper:")
+					///let el = document.createElement("div");
+					//el.style.backgroundColor = "#F0F";
+					//return;// el;
+				}
+			}, // clone
+			draggable:{
+				handle:'.grid-stack-item-content .heading',
+				//refreshPositions:true,
+				helper___: ()=>{
+					let el = document.createElement("div");
+					el.style.backgroundColor = "#F0F";
+					return el;
+				},
+				handleFn:(event, uiDraggable)=>{
+					let {handle} = uiDraggable.options.handle;
+					if(this.dragMode=="panel"){
+						handle = '.grid-stack-item-content';
+					}else if(this.dragMode=='header'){
+						//console.log("event.target", event.originalEvent, handle, this.element.find( handle ))
+						let cmp = uiDraggable.element.find('.grid-stack-item-content')[0];
+						let handleEl;
+						if(cmp && cmp.getGridstackDragHandle){
+							handleEl = cmp.getGridstackDragHandle();
+						}
+
+						if(!handleEl)
+							return false;
+						return event.originalEvent.path?.includes(handleEl);
+					}
+
+					return handle?!!$(event.target)
+						.closest(uiDraggable.element.find(handle)).length:true;
+				}
+			}
+		};
+		dpc(()=>{
+			this.grid = GridStack.init(options, this.gridEl);
+			this.gridEl.classList.remove("hide-w-opacity");
+			this.grid.on('added removed change', (e, items)=>{
+				let str = '';
+				items.forEach(o=>{
+					str += `${o.id} => x: ${o.x}, y: ${o.y}, w: ${o.width}, h: ${o.height}\n`;
+				});
+				this.log(`${e.type} ${items.length} items\n${str}` );
+			});
+			//if(this.acceptWidgets != false){
+				//$(this.gridEl).droppable("option", "tolerance", "fit")
+				//let dropOptions = $(this.gridEl).droppable("option")
+				//dropOptions.tolerance = "fit";
+				//console.log("optionsoptions", dropOptions)
+			//}
+			//console.log("GridStack.prototype.getElement", GridStack.prototype.getElement)
+			this.initItems();
+		}, 100)
+	}
+	customCss(uid){
+		return '';
+	}
+
+	setLocalSetting(name, value){
+		if(typeof value != 'string')
+			value = JSON.stringify(value);
+		setLocalSetting('gridstack-${this.id || this.uid)}-${name}', value);
+	}
+
+	getLocalSetting(name, defaults){
+		let value = getLocalSetting('gridstack-${this.id || this.uid)}-${name}');
+		if(typeof value == 'undefined')
+			return defaults;
+
+		return value;
+	}
+
+	saveGridLS(){
+		this.setLocalSetting('grid', this.saveGrid())
+	}
+	loadGridLS(){
+		let grid = this.getLocalSetting('grid', '[]');
+		this.debugEl.value = grid;
+		try{
+			grid = JSON.parse(grid);
+			if(grid)
+				this.debugEl.value = JSON.stringify(grid, null, '  ');
+		}catch(e){
+			grid = [];
+		}
+		this.setGridItemsConfig(grid);
+	}
+
+	saveGrid(){
+		let data = this.getGridItemsConfig();
+		this.debugEl.value = JSON.stringify(data, null, '  ');
+		return data;
+	}
+	loadGrid(){
+		let data = [];
+		try{
+			data = JSON.parse(this.debugEl.value);
+		}catch(e){
+			//data;
+			this.log("JSON.parse:error", e)
+		}
+
+		//console.log("loadGrid", this.debugEl.value, data)
+
+		this.setGridItemsConfig(data);
+	}
+
+	updated(changes){
+		if(changes.has('items'))
+			this.setGridItemsConfig(this.items||[]);
+	}
+	initItems(){
+		let {items} = this;
+		if(items && items.length)
+			this.setGridItemsConfig(items);
+		this.fire("gridstack-ready", {grid:this})
+	}
+    getGridItemsConfig(){
+    	let data = [];
+		this.grid.engine.nodes.forEach(node=>{
+			let serializedData = null, nodeName = 'div';
+			let el = node.el.querySelector(".grid-stack-item-content");
+			if(el){
+				nodeName = el.nodeName;
+				if(typeof el.serialize == 'function')
+					serializedData = el.serialize();
+			}
+
+			data.push({
+				x: node.x,
+				y: node.y,
+				width: node.width,
+				height: node.height,
+				id: node.id||el.parentNode?.dataset.gsId||'node-'+(Math.random()*10000).toFixed(),
+				nodeName,
+				serializedData
+			});
+		});
+
+		return data;
+    }
+    setGridItemsConfig(config){
+		this.lastConfig = config
+		this.onResize();
+	}
+	activateGridItemsConfig(itemsConfig){
+		let items = GridStack.Utils.sort(itemsConfig);
+		let {grid} = this;
+		if(!grid)
+			return
+
+		grid.batchUpdate();
+		if (grid.engine.nodes.length === 0) {
+			// load from empty
+			items.forEach(item=>{
+				this.addWidget(item)
+			});
+		} else {
+			//console.log("items", items)
+			// else update existing nodes (instead of calling grid.removeAll())
+			let itemsIdMap = new Map();
+			items.forEach(item=>{
+				itemsIdMap.set(item.id, item);
+				let node = grid.engine.nodes.find(n=>n.id == item.id);
+				//console.log("node", node, item)
+				if(node){
+					//console.log("sending serializedData00", node.el, item.serializedData)
+					grid.update(node.el, item.x, item.y, item.width, item.height);
+					//console.log("sending serializedData11", node.el, item.serializedData)
+					this.sendSerializeDataToPanel(node.el, item.serializedData);
+				}else{
+					this.addWidget(item)
+				}
+			});
+			let nodes = [...grid.engine.nodes];
+			nodes.forEach(node=>{
+				if(!itemsIdMap.get(node.id))
+					this.grid.removeWidget(node.el, true, true)
+			})
+		}
+		grid.commit();
+	}
+	addWidget(item){
+		let nodeName = item.nodeName || 'div';
+		let el = this.grid.addWidget(`<div class="grid-stack-item" data-gs-id="${item.id}">
+			<${nodeName} class="grid-stack-item-content"></${nodeName}></div>`, item);
+		this.sendSerializeDataToPanel(el, item.serializedData);
+	}
+	sendSerializeDataToPanel(el, serializedData){
+		if(!serializedData)
+			return
+		el = el.querySelector(".grid-stack-item-content")
+		if(!el || typeof el.deserialize!='function')
+			return console.log("el.deserialize is missing", el&&el.deserialize)
+
+		//console.log("sending serializedData", el, serializedData)
+		el.deserialize(serializedData);
+	}
+	clearGrid(){
+		this.grid.removeAll();
+    }
+    onResize(){
+    	//console.log("onResize")
+    	let {grid} = this;
+    	if(!grid)
+    		return
+    	dpc(10, e=>{
+    		//console.log("onResize1")
+    		//grid._updateContainerHeight();
+    		//if(this.offsetHeight)
+    			grid._onResizeHandler();
+    			this.afterResize();
+    		//grid.commit();
+    		//grid.compact();
+    	})
+    }
+	afterResize(e){
+		//console.log("this.offsetWidth", this.offsetWidth, this.lastConfig)
+		if(this.offsetWidth && this.lastConfig){
+			let config = this.lastConfig;
+			this.lastConfig = null;
+			this.activateGridItemsConfig(config);
+		}
+	}
+    removePanel(panel, removeDOM=true, fireEvent=true){
+    	if(!panel.matches(".grid-stack-item"))
+    		panel = panel.closest(".grid-stack-item");
+    	if(!panel)
+    		return
+    	this.grid.removeWidget(panel, removeDOM, fireEvent)
+    }
+    toggleDragMode(){
+    	if(this.dragMode == 'panel'){
+			this.setDragMode('header');
+		}else{
+			this.setDragMode('panel');
+		}
+		return this.dragMode;
+    }
+    setDragMode(mode){
+    	let {uid} = this;
+    	//this.addCSSRule(`.${uid}.grid-stack`, 'background:#F00');
+    	if(['header', 'panel'].includes(mode)){
+    		this.dragMode = mode;
+    		return this.dragMode;
+    	}
+
+    	return false
+    }
+
+    onRemovePanelRequest(e){
+    	let {panel} = e.detail;
+    	if(!panel)
+    		return
+    	//console.log("onRemovePanelRequest:", panel)
+    	/*
+    	setTimeout(()=>{
+    		e.preventDefault();
+    	}, 100)
+    	*/
+
+    	this.removePanel(panel);
+    }
+
+    serialize(){
+    	let config = super.serialize()
+		config.items = this.getGridItemsConfig();
+		return config;
+	}
+
+	deserialize(config){
+		super.deserialize(config)
+		let {items} = config;
+		this.setGridItemsConfig(items);
+	}
+
+    connectedCallback(){
+		super.connectedCallback();
+		if(!this.resizeObserver){
+			this.resizeObserver = new ResizeObserver(()=>{
+				this.onResize();
+			});
+		}
+
+		this.resizeObserver.observe(this);
+	}
+	disconnectedCallback(){
+		super.disconnectedCallback();
+		this.resizeObserver.disconnect();
+	}
+}
+return FlowGridStackKlass;
+}
+
+/**
+* @class FlowGridStack
+* @extends BaseElement
+* @example
+*   <flow-gridstack></flow-gridstack>
+*
+*/
+
+export const FlowGridStackImp = FlowGridStackMixin(BaseElement);
+export class FlowGridStack extends FlowGridStackImp{}
+
+FlowGridStack.define('flow-gridstack',[baseUrl+'resources/extern/gridstack/gridstack.all.js']);
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_DOWNLOAD_BADGE_355 : &'static str = r###"
+
+
+/**
+* @class FlowDownloadBadge
+* @extends BaseElement
+* @property {String} [file]
+* @property {String} [icon]
+* @property {String} [title]
+* @property {String} [descr]
+* @property {String} [sha1]
+* @example
+*   <flow-download-badge icon="" title=""></flow-download-badge>
+*
+*
+*/
+export class FlowDownloadBadge extends BaseElement {
+	static get properties() {
+		return {
+			file:{type:String},
+			icon:{type:String},
+			title:{type:String},
+			descr:{type:String},
+			sha1:{type:String}
+		}
+	}
+
+	static get styles() {
+		return css`
+			:host{display:flex;flex-direction:row;align-items:center;}
+			.title{min-width:var(--flow-download-badge-title-min-width, 230px);}
+			.icon{
+			    min-width:var(--flow-download-badge-icon-size, 24px);
+			    min-height:var(--flow-download-badge-icon-size, 24px);
+			    background-position:center;
+			    background-repeat:no-repeat;background-size:contain;margin-bottom:-10px;
+			    margin:var(--flow-download-badge-icon-margin, 0px 14px 0px 0px);
+			}
+			.file-link{
+				display:flex;flex-direction:row;
+				align-items:var(--flow-download-badge-file-link-align-items, center);
+				padding:var(--flow-download-badge-file-link-padding, 6px);
+				font-size:var(--flow-download-badge-file-link-font-size, 16px);
+			}
+			[disable]{pointer-event:none}
+			a{color: var(--flow-link-color, #017b68);}
+			a:not([disable]):hover{
+				color: var(--flow-link-hover-color, #017b68);
+			}
+			[hide]{display:none}
+			[row]{display:flex;flex-direction:row;}
+			[col]{display:flex;flex-direction:column;}
+		`;
+	}
+
+	render() {
+		return html`
+			<div class="file-link" href="${this.file}">
+				<div class="icon" style="background-image:url(${this.icon})"></div>
+				<div col>
+					<div class="title">${this.title}</div>
+					<div class="descr">${this.descr}</div>
+				</div>
+            	<slot></slot>
+        	</div>
+        	<div class="sha-link" href="${this.sha1}" ?hide="${!this.sha1}">
+        		<div class="sha">SHA1</div>
+        	</div>
+    	</div>`;
+	}
+}
+
+FlowDownloadBadge.define('flow-download-badge');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_COLOR_PICKER_385 : &'static str = r###"
+
+
+/**
+* @class FlowColorPicker
+* @extends BaseElement
+* @property {String} [color]
+* @example
+*   <flow-color-picker color="#F00"></flow-color-picker>
+*
+*
+*/
+export class FlowColorPicker extends BaseElement {
+	static get properties() {
+		return {
+			color:{type:String}
+		}
+	}
+
+	static get styles() {
+		return css`
+			:host{
+				display:inline-block;width:20px;height:20px;
+				position:relative;box-sizing:border-box;
+				border:var(--flow-color-picker-border, 1px solid var(--flow-border-color, var(--flow-primary-color, #FFF)));
+			}
+			.box{width:100%;height:100%}
+			:host(:not([disabled])) input{
+				cursor:pointer;
+			}
+			:host([disabled]) input{display:none}
+			input.color{
+				opacity:0;
+				position:absolute;left:0px;top:0px;width:100%;height:100%;
+				right:0px;buttom:0px;
+			}
+		`;
+	}
+
+	render() {
+		return html`<div class="box" style="background-color:${this.color}"></div><input 
+		class="color" type="color" .value="${this.color||""}"
+		@change="${this.onInputChange}" 
+		@input="${this.onInputChange}" />`;
+	}
+
+	onInputChange(e){
+		this.color = e.target.value;
+		this.fire("changed", {color:this.color}, {bubbles:true})
+	}
+}
+
+FlowColorPicker.define('flow-color-picker');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_RSS_415 : &'static str = r###"
+
+
+
+/**
+* @class FlowRSS
+* @extends BaseElement
+
+* @property {String} [href]
+*
+* @cssvar {font-family} [--flow-font-family="Julius Sans One"]
+
+* @example
+*   <flow-rss href=""></flow-app-drawer>
+*
+*/
+export class FlowRSS extends BaseElement {
+	static get properties() {
+		return {
+			href:{type:String},
+			enablePictures:{type:Boolean}
+		}
+	}
+
+	static get styles(){
+		return css`
+			:host{display:block;}
+			img{max-width:100%;height:auto;}
+			a{
+				color: var(--flow-link-color, #017b68);
+			}
+
+			a:hover {
+				color: var(--flow-link-hover-color, #017b68);
+			}
+
+			.article-link{
+				margin: 5px 0px;
+			}
+
+			.article-content{
+				font-family: var(--flow-font-family, 'Sans Serif');
+				font-size: 14px;
+			}
+		`;
+    }
+	render() {
+		return html`${this.href} ${this.body}`;
+	}
+	updated(changes){
+		if((changes.has("href") || changes.has("enablePictures")) && this.href)
+			this.fetch(this.href);
+	}
+	fetch(href){
+		let opts = {method:"GET", mode:"cors", referrerPolicy: 'no-referrer'};
+		return fetch(href, Object.assign(opts, this.feedOpt||{}))
+	}
+	
+	setFeedData(data){
+		//this.feedData = data;
+		data = new window.DOMParser().parseFromString(data, "text/xml")
+		this.buildBody(data);
+		this.requestUpdate("body", null);
+	}
+	buildBody(xmlEl){
+		let items = [...xmlEl.querySelectorAll("item")]
+		this.body = html`
+		${items.map(el=>{
+			let link = el.querySelector("link");
+			let dsc = el.querySelector("description")||"";
+			if(dsc){
+				if(dsc.childNodes[0]?.nodeName=="#cdata-section"){
+					//console.log("dsc", dsc, dsc.childNodes[0].nodeValue)
+					dsc = dsc.childNodes[0].nodeValue;
+				}
+				else
+					dsc = dsc.innerHTML
+			}
+			return html`
+			<article>
+	          <img src="${link.innerHTML}/image/large.png" alt="">
+	          <div class="article-link">
+	            <flow-link href="${link.innerHTML}" target="_blank" rel="noopener">
+	              ${el.querySelector("title").innerHTML}
+	            </flow-link>
+	          </div>
+	          ${this.buildNode(dsc)}
+	        </article>`
+        })}
+		`
+	}
+	buildNode(htmlContent){
+		this._tpl = this._tpl || document.createElement("template");
+		this._tpl.innerHTML = `<div class="article-content">${htmlContent}</div>`;
+		let node = this._tpl.content.firstChild;
+		//console.log("htmlContent", htmlContent, this._tpl.innerHTML, node)
+		node.querySelectorAll("script"+(this.enablePictures?"":",img")).forEach(el=>{
+			//console.log("fetchFeed:script,img:el", el)
+			el.remove();
+		})
+		return node;
+	}
+}
+
+FlowRSS.define('flow-rss');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_SUNBURST_GRAPH_430 : &'static str = r###"
+
+
+
+
+
+if(window.d3?.selection){
+	d3.selection.prototype.selectAppend = function(name) {
+	    let t = this.select(name);
+	    return t.size()?t:this.append(name);
+	}
+}
+
+let data = 
+{"name":"flare","children":[
+	{"name":"analytics", "children":[
+		{"name":"cluster","children":[
+			{"name":"AgglomerativeCluster","value":3938},
+			{"name":"CommunityStructure","value":3812},
+			{"name":"HierarchicalCluster","value":6714},
+			{"name":"MergeEdge","value":743}
+		]},
+		{"name":"graph","children":[
+			{"name":"BetweennessCentrality","value":3534},
+			{"name":"LinkDistance","value":5731},
+			{"name":"MaxFlowMinCut","value":7840}
+		]},
+		{"name":"optimization","children":[
+			{"name":"AspectRatioBanker","value":7074}
+		]}
+	]},
+	{"name":"animate","children":[
+		{"name":"Easing","value":17010},
+		{"name":"FunctionSequence","value":5842},
+		{"name":"interpolate","children":[
+			{"name":"ArrayInterpolator","value":1983},
+			{"name":"ColorInterpolator","value":2047},
+			{"name":"DateInterpolator","value":1375},
+			{"name":"Interpolator","value":8746},
+		]},
+		{"name":"ISchedulable","value":1041},
+		{"name":"Parallel","value":5176},
+		{"name":"Pause","value":449},
+	]},
+	{"name":"data","children":[
+		{"name":"converters","children":[
+			{"name":"Converters","value":721},
+			{"name":"DelimitedTextConverter","value":4294},
+			{"name":"GraphMLConverter","value":9800}
+		]},
+		{"name":"DataField","value":1759},
+		{"name":"DataSchema","value":2165},
+		{"name":"DataSet","value":586}
+	]},
+	{"name":"display","children":[
+		{"name":"DirtySprite","value":8833},
+		{"name":"LineSprite","value":1732}
+	]},
+	{"name":"flex","children":[
+		{"name":"FlareVis","value":4116}
+	]},
+	{"name":"physics","children":[
+		{"name":"DragForce","value":1082},
+		{"name":"GravityForce","value":1336},
+		{"name":"IForce","value":1319}
+	]},
+	{"name":"query","children":[
+		{"name":"AggregateExpression","value":1616},
+		{"name":"And","value":3027}
+	]}
+]}
+
+/**
+* @class FlowSunburstGraph
+* @extends Flowd3Element
+* @prop {Boolean} noZoom
+* @cssvar {color} [--flow-sunburst-graph-text-color="var(--flow-color, #000)"]
+* @example
+*   <flow-sunburst-graph></flow-sunburst-graph>
+*
+*/
+export class FlowSunburstGraph extends Flowd3Element {
+	static get properties() {
+		return {
+			noZoom:{type:Boolean},
+			data:{type:Object},
+			updatenum:{type:Number},
+			d3margin:{type:Number}
+		}
+	}
+
+	static get sampleData(){
+		return data;
+	}
+
+	static get styles(){
+		return [Flowd3Element.styles, ScrollbarStyle, css`
+			:host{
+				display:inline-flex;
+				font-weight:bold;
+				font-size:10px;
+				text-transform:uppercase;
+				font-family:var(--flow-data-field-font-family, "Julius Sans One");
+				font-weight:var(--flow-data-field-font-weight, bold);
+				border-radius: 10px;
+				overflow: hidden;
+				position:relative;
+				width:100%;
+				height:100%;
+			}
+			:host([disabled]){opacity:0.5;cursor:default;pointer-events:none;}
+			.container{white-space:nowrap;padding:2px 6px 6px 6px;height:100%;}
+			.container>div{padding:2px;}
+			.suffix{opacity:0.9;margin-left:3px;margin-top:3px; font-size: 10px;}
+			.col{display: flex; flex-direction: column; align-items: left;}
+			.row{display: flex; flex-direction: row; flex:0;}
+
+			.wrapper {
+				position:relative;flex:1;
+				margin:6px;overflow:hidden;
+				display: flex;
+			    align-items: stretch;
+			    justify-content: center;
+			}
+			
+			:host([border]) .wrapper {
+				border: 2px solid var(--flow-primary-color,#333);
+				box-shadow: 2px 2px 1px rgba(1, 123, 104, 0.1);
+				border-radius: 10px;
+
+			}
+
+			.wrapper > div:not(.tip,.legends) {
+				width:100%;height:100%;
+				position:relative;left:0px;top:0px;bottom:0px;right:0px;
+			}
+
+			.d3-holder{
+				min-height:10px;
+				min-width:10px;
+				opacity:1;
+				display:flex;
+				/*background-color:#F00;*/
+				align-items:center;
+			}
+			[flex] {
+				flex: 1;
+			}
+			/*#d3{background-color:#f0f}*/
+			text{fill:var(--flow-sunburst-graph-text-color, var(--flow-color, #000))}
+			path{cursor:default}
+			.tip{
+				position:absolute;border:1px solid var(--flow-primary-color,#333);
+				box-sizing:border-box;display:none;
+				width:var(--flow-sunburst-graph-tip-width, unset);
+				max-width:var(--flow-sunburst-graph-tip-width, 95%);
+				padding:var(--flow-sunburst-graph-tip-padding, 10px);
+				min-width:var(--flow-sunburst-graph-tip-min-width, 100px);
+				min-height:var(--flow-sunburst-graph-tip-min-height, unset);
+				border-radius:var(--flow-sunburst-graph-tip-border-radius, 4px);
+				background-color:var(--flow-sunburst-graph-tip-bg, var(--flow-background-color));
+				color:var(--flow-sunburst-graph-tip-color, var(--flow-color));
+			}
+			.legends{
+				margin:var(--flow-sunburst-graph-legends-margin, 0px 0px 0px 5px);
+				width:var(--flow-sunburst-graph-legends-width, 30%);
+				height:var(--flow-sunburst-graph-legends-height, initial);
+				background-color:var(--flow-sunburst-graph-legends-bg, initial);
+				max-width:var(--flow-sunburst-graph-legends-max-width, 300px);
+				max-height:var(--flow-sunburst-graph-legends-max-height, 100%);
+				overflow:var(--flow-sunburst-graph-legends-overflow, auto);
+				display:flex;align-items:center;
+				flex-direction:column;
+			}
+			.legends .items>div{
+				display:flex;align-items:center;
+			}
+			.color-box{
+				display:inline-block;
+				margin:var(--flow-sunburst-graph-color-box-margin, 2px 10px 2px 0px);
+				width:var(--flow-sunburst-graph-color-box-width, 20px);
+				min-width:var(--flow-sunburst-graph-color-box-width, 20px);
+				height:var(--flow-sunburst-graph-color-box-height, 20px);
+				opacity:var(--flow-sunburst-graph-color-box-opacity, 1);
+			}
+			.tip{opacity:0;zIndex:-1;transition:opacity 0.5s ease;display:inline-block}
+		`];
+	}
+
+	render() {
+
+		dpc(()=>{
+			this.draw();
+		})
+
+		return html`
+			<div class='wrapper'>
+				<div class="d3-holder">${super.render()}</div>
+				<div class="legends"></div>
+				<div class="tip"></div>
+			</div>
+			`;
+	}
+
+	constructor() {
+		super();
+		this.sampler = '';
+		this.svgPreserveAspectRatio = 'xMaxYMax meet';
+		this.d3margin = 10;
+	}
+
+	firstUpdated(){
+		super.firstUpdated();
+		this.el_wrapper = this.renderRoot.querySelector(".wrapper");
+		//this.el_d3Holder = this.renderRoot.querySelector(".d3-holder");
+		this.el_legends = this.el_legends||this.renderRoot.querySelector(".legends");
+		this.outerBox = this.el_wrapper.getBoundingClientRect();
+		this.updateD3Holder()
+	}
+
+	updateD3Holder(){
+		let {width, height} = this.el_wrapper.getBoundingClientRect();
+		let {width:lWidth} = this.el_legends.getBoundingClientRect();
+		width -= lWidth;
+		let size = width>height? height:width;
+		this.el_d3.style.width = (size-this.d3margin)+"px";
+		this.el_d3.style.height = (size-this.d3margin)+"px";
+		this.el_d3Rect = this.getBoundingClientRect.call(this.el_d3);
+	}
+
+	onElementResize(){
+		super.onElementResize();
+		this.outerBox = this.el_wrapper.getBoundingClientRect();
+		dpc(()=>{
+			this.outerBox = this.el_wrapper.getBoundingClientRect();
+			this.updateD3Holder();
+			this.requestUpdate("outerBox", null);
+		})
+	}
+
+	connectedCallback() {
+		super.connectedCallback();
+		if(this.sampler)
+			this.interval = setInterval(this.requestUpdate.bind(this), this.refresh);
+	}
+
+	disconnectedCallback() {
+		super.disconnectedCallback();
+
+		if(this.interval)
+			clearInterval(this.interval);
+	}
+
+	getMargin(){
+		if(this.axes){
+			return {
+				bottom:40,
+				top:30,
+				left:20,
+				right:20
+			}
+		}
+		return {
+			bottom:0,
+			top:0,
+			left:0,
+			right:0
+		}
+	}
+	draw(){
+		let margin = this.getMargin();
+		let data = this.data;
+		if(!data || !data.children)
+			return
+
+		const self = this;
+		const box = this.el_d3.getBoundingClientRect();
+
+		let {height:fullHeight, width:fullWidth} = box;
+		let width = fullWidth - margin.left - margin.right;
+    	let height = fullHeight - margin.top - margin.bottom;
+
+		const root = this.partition(data);
+  		root.each(d => d.current = d);
+
+
+		const { el } = this;
+		let t = `translate(${(width/2)+margin.left},${(height/2)+margin.top})`;
+		if(el.__t != t){
+			el.__t = t
+			el.attr("transform", t)
+		}
+
+		if(this.svg.__w != fullWidth){
+			this.svg.__w = fullWidth;
+			this.svg
+				.attr("width", fullWidth)
+		}
+		if(this.svg.__h != fullHeight){
+			this.svg.__h = fullHeight;
+			this.svg
+				.attr("height", fullHeight)
+		}
+
+		let length = this.getDataItemsCount(data);
+
+
+		let color = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, length + 1));
+		let format = d3.format(",d");
+		let radiusRef = width<height?width:height;
+		let radius = radiusRef / 10;
+		let offsetR = radius*2;
+		let arc = d3.arc()
+			.startAngle(d => d.x0)
+			.endAngle(d => d.x1)
+			.padAngle(d => Math.min((d.x1 - d.x0) / 2, 0.005))
+			.padRadius(radius * 5)
+			.innerRadius(d => d.y0 * radius + offsetR)
+			.outerRadius(d => Math.max(d.y0 * radius +offsetR, d.y1 * radius - 1 + offsetR))
+
+		
+		if(!this.rootPaths){
+			this.rootPaths = el.append("g")
+				.attr("class", "paths")
+
+			this.labels = el.append("g")
+				.attr("pointer-events", "none")
+				.attr("text-anchor", "middle")
+				.style("user-select", "none")
+
+			this.centerLabelHolder = el.append("g")
+				.attr("class", "center-label")
+			this.centerLabel1 = this.centerLabelHolder
+				.append("text")
+				.attr("dy", -10)
+				.attr("class", "center-label-top")
+				.attr("text-anchor", "middle")
+			this.centerLabel2 = this.centerLabelHolder
+				.append("text")
+				.attr("dy", 10)
+				.attr("class", "center-label-bottom")
+				.attr("text-anchor", "middle")
+			this.el_tip = this.renderRoot.querySelector("div.tip");
+			this.el_legends = this.el_legends||this.renderRoot.querySelector(".legends");
+		}
+		const {el_tip} = this;
+		const path = this.rootPaths
+		    .selectAll("path")
+		    .data(root.descendants().slice(1))
+		    .join("path")
+				.attr("fill", d => {
+					//c = d.data.color;
+					//while (d.depth > 1)
+					//	d = d.parent;
+					//console.log("d.datad.data", d.data)
+					return d.data.color || color(d.data.name);
+				})
+				//.attr("fill-opacity", d => self.arcVisible(d.current) ? (d.children ? 1 : 0.4) : 0)
+				.attr("d", d => arc(d.current));
+		
+		path.filter(d => d.children)
+			.style("cursor", "pointer")
+			.on("click", clicked)
+		path
+			.on("mouseenter", mouseenter)
+			.on("mousemove", mousemove)
+			.on("mouseleave", mouseleave);
+
+
+		//const title = path.selectAppend("title")
+      	//	.text(d => `${d.ancestors().map(d => d.data.name).reverse().join("/")}\n${this.format(d.value, d)}`);
+
+
+		let label;
+		if(this.useLabels)
+			label = this.labels
+			.selectAll("text")
+			.data(root.descendants().slice(1))
+			.join("text")
+				.attr("dy", "0.35em")
+				.attr("fill-opacity", d => +labelVisible(d.current))
+				.attr("transform", d => labelTransform(d.current))
+				.text(d => d.data.name);
+
+		this.centerLabel1.text(root.data.title||root.data.name)
+		if(root.data.subtitle)
+			this.centerLabel2.text(root.data.subtitle)
+
+		//console.log("root.descendants().slice(1)", root.descendants().slice(0))
+		this.buildLegends(root, color);
+
+		if(!this.circleEl)
+			this.circleEl = el.append("circle")
+
+	    const parent = this.circleEl
+			.datum(root)
+			.attr("r", radius+offsetR)
+			.attr("fill", "none")
+			.attr("pointer-events", "all")
+			.on("click", clicked);
+
+	    
+		const noZoom = this.noZoom;
+		function clicked(p, ...args) {
+			if(noZoom)
+				return
+			parent.datum(p.parent || root);
+			//console.log("p.depth", args, p, p.x0, p.x1, p.depth);
+			//return
+			el_tip.style.top = p.y0+"px";
+			el_tip.style.left = p.x0+"px";
+
+
+			root.each(d => d.target = {
+				x0: Math.max(0, Math.min(1, (d.x0 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI,
+				x1: Math.max(0, Math.min(1, (d.x1 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI,
+				y0: Math.max(0, d.y0 - p.depth),
+				y1: Math.max(0, d.y1 - p.depth)
+			});
+
+			const t = el.transition().duration(750);
+
+			// Transition the data on all arcs, even the ones that aren’t visible,
+			// so that if this transition is interrupted, entering arcs will start
+			// the next transition from the desired position.
+			let transition =  path.transition(t)
+				.tween("data", d => {
+					const i = d3.interpolate(d.current, d.target);
+					return t => d.current = i(t);
+				})
+				.filter(function(d) {
+					return +this.getAttribute("fill-opacity") || self.arcVisible(d.target);
+				})
+				.attr("fill-opacity", d => self.arcVisible(d.target) ? (d.children ? 0.6 : 0.4) : 0)
+				.attrTween("d", d => () => arc(d.current))
+			let size = transition.size();
+				transition
+				.on("end", (d)=>{
+					//console.log("endendendendend", d, --size)
+					if(!size)
+						self.buildLegends(p.parent || root, color)
+				})
+			
+
+			if(!label)
+				return
+			label.filter(function(d) {
+				return +this.getAttribute("fill-opacity") || labelVisible(d.target);
+			})
+			.transition(t)
+			.attr("fill-opacity", d => +labelVisible(d.target))
+			.attrTween("transform", d => () => labelTransform(d.current));
+		}
+
+		function hideTip(){
+			el_tip.style.opacity = "0";
+			el_tip.style.zIndex = "-1";
+		}
+		function mouseenter(...args) {
+			self.buildTip(...args);
+			self.showTip(...args);
+		}
+		function mouseleave(...args) {
+			hideTip(...args)
+		}
+		function mousemove(...args){
+			self.showTip(...args);
+		}
+
+		function labelVisible(d) {
+			return d.y1 <= 3 && d.y0 >= 1 && (d.y1 - d.y0) * (d.x1 - d.x0) > 0.03;
+		}
+
+		function labelTransform(d) {
+			//console.log("d.x0 + d.x1", d.x0 , d.x1)
+			const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
+			const y = ((d.y0 + d.y1) / 2 * radius)+offsetR;
+			return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
+		}
+	}
+
+	arcVisible(d) {
+		return d.y1 <= 3 && d.y0 >= 1 && d.x1 > d.x0;
+	}
+
+	buildLegends(root, color){
+		let shown = new Map();
+		let legendHtml = html`<div class="items">${
+			root.descendants().slice(1).map(d=>{
+				if(!this.arcVisible(d.current))
+					return false;
+				if(d.data.legendOnce){
+					if(shown.has(d.data.legendOnce))
+						return false;
+					shown.set(d.data.legendOnce, 1);
+				}
+				return html`
+				<div class="item">
+					<div class="color-box" style="background-color:${d.data.color||color(d.data.name)}"></div>
+					<div class="name">${d.data.name}</div>
+				</div>`
+			}).filter(a=>a)
+		}</div>`;
+		render(legendHtml, this.el_legends);
+	}
+
+	showTip(box, ...args){
+		let {pageX, pageY} = d3.event;
+		//if(!this.outerBox)
+			this.outerBox = this.el_wrapper.getBoundingClientRect();
+		let {left, top, right, width, height} = this.outerBox;
+		let x = pageX-left+15, y = pageY-top+15;
+		const {el_tip} = this;
+		
+		el_tip.style.opacity = "0";
+		el_tip.style.zIndex = "-1";
+		let r = x+el_tip.offsetWidth;
+		let b = y+el_tip.offsetHeight;
+		let tipLeft, tipTop;
+		//console.log("showTip",  {x, y}, el_tip.offsetWidth, right, width, r)
+		if(r>width){
+			tipLeft = width-el_tip.offsetWidth;
+		}else{
+			tipLeft = x;
+		}
+
+		if(b>height){
+			tipTop = height-el_tip.offsetHeight;
+		}else{
+			tipTop = y;
+		}
+
+		if(tipLeft<x && tipTop<y){
+			if(y > height/2){
+				tipTop = y - el_tip.offsetHeight - 20;
+			}
+		}
+
+		//console.log("this.outerBox", this.outerBox, tipLeft, tipTop)
+		el_tip.style.left = `${tipLeft}px`;
+		el_tip.style.top = `${tipTop}px`;
+		el_tip.style.opacity = "1";
+		el_tip.style.zIndex = "1";
+	}
+	buildTip(d, ...args){
+		//console.log("buildTip",  d, ...args)
+		let tpl = html`
+			<div class="name">${d.ancestors().slice(0, -1).map(d => d.data.name).reverse().join(" / ")}</div>
+			<div class="value">${this.format(d.value, d)}</div>`;
+		render(tpl, this.el_tip);
+	}
+	format(value, d){
+		if(!this.formatFn)
+			this.formatFn = d3.format(",d");
+		return this.formatFn(value);
+	}
+
+	getDataItemsCount(data){
+		let count = data.children?.length||0;
+		data.children?.forEach(child=>{
+			count+=this.getDataItemsCount(child)
+		});
+		return count;
+	}
+
+	partition(data){
+		const root = d3.hierarchy(data)
+			.sum(d => d.value)
+			.sort((a, b) => b.value - a.value);
+		return d3.partition()
+			.size([2 * Math.PI, root.height + 1])(root);
+	}
+}
+
+FlowSunburstGraph.define('flow-sunburst-graph');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_SWIPEABLE_382 : &'static str = r###"
+
+
+export const swipeableStyle = css`
+.flow-swipeable-container { overflow: hidden }
+.flow-swipeable-row{
+	--swipeable-n: 1;
+	--swipeable-f: 1;
+	display: flex;
+	align-items: stretch;
+	overflow:hidden;
+	overflow-y: hidden;
+	width: 100%; /* fallback */
+	width: calc(var(--swipeable-n) * 100%);
+	/*max-height: 100vh;*/
+	--swipeable-transform-x: calc(var(--swipeable-tx, 0px) + var(--swipeable-i, 0) / var(--swipeable-n) * -100%);
+	transform: translateX(var(--swipeable-transform-x));
+}
+.flow-swipeable-row .flow-swipeable{
+	width: 100%; /* fallback */
+	height: 100%;
+	_width: calc(100% / var(--swipeable-n));
+	/*user-select: none;
+	pointer-events: none;
+	background: no-repeat;
+	background-size: cover;*/
+	
+}
+
+.flow-swipeable-smooth{ transition: transform  calc(var(--swipeable-f, 1) * .5s) ease }
+`
+
+export class FlowSwipeable{
+
+	constructor(container, options={}){
+		this.container = container;
+		let element = container.querySelector('.flow-swipeable-row');
+		this.element = element;
+		let defaultOptions = {
+			drag:true,
+			validateEvent(e){
+				return !e.target.closest('flow-dropdown,flow-select,flow-selector,flow-input,flow-checkbox,select,textarea, input,.not-swipeable')
+			}
+		};
+		this.options = {...defaultOptions, ...options}
+		this.count = element.children.length;
+		this.x = null;
+		this.locked = false;
+		this.i = 0;
+		this.onResize();
+		this.updateCount();
+		this.init();
+	}
+	updateCount(){
+		let el = this.element;
+		this.count = el.children.length;
+		el.style.setProperty("--swipeable-n", this.count);
+		this.updateFixedPositionsOffset();
+	}
+
+	init(){
+		let el = this.element;
+		//let onResize = this.onResize.bind(this);
+		let onTouchStart = this.onTouchStart.bind(this);
+		let onDrag = this.onDrag.bind(this);
+		let onTouchEnd = this.onTouchEnd.bind(this);
+
+		//el.addEventListener("resize", onResize, false);
+
+		el.addEventListener("mousedown", onTouchStart, false);
+		el.addEventListener("touchstart", onTouchStart, false);
+
+		el.addEventListener("mousemove", onDrag, false);
+		el.addEventListener("touchmove", onDrag, false);
+
+		el.addEventListener("mouseup", onTouchEnd, false);
+		el.addEventListener("touchend", onTouchEnd, false);
+
+		if (typeof MutationObserver != 'undefined'){
+			const observer = new MutationObserver(()=>{
+				this.updateCount();
+			});
+			observer.observe(el, {childList:true});
+		}
+
+		
+
+		this.startResizeListener();
+	}
+	updateFixedPositionsOffset(){
+		let {width, top} = this.container.getBoundingClientRect();
+		[...this.element.children].map((c, index)=>{
+			c.style.setProperty('--flow-transform-translate-x', `${index * width}px`);
+			c.style.setProperty('--flow-transform-translate-y', `${-top}px`)
+		})
+	}
+	setActive(index){
+		this.element.style.setProperty("--swipeable-i", index);
+		this.i = index;
+	}
+	startResizeListener(){
+		if(!this.resizeObserver){
+    		this.resizeObserver = new ResizeObserver(()=>{
+	    		this.onResize();
+			});
+			this.resizeObserver.observe(this.container);
+	    }
+	}
+	stopResizeListener(){
+		if(this.resizeObserver){
+			this.resizeObserver.unobserve(this.container);
+			this.resizeObserver.disconnect();
+			delete this.resizeObserver;
+		}
+	}
+
+	unifyEvent(e) {
+		return e.changedTouches ? e.changedTouches[0] : e;
+	}
+
+	isValidEvent(e){
+		return this.options.validateEvent(e);
+	}
+
+	onResize() {
+		this.width = this.container.getBoundingClientRect().width;
+		this.updateFixedPositionsOffset();
+	}
+
+	onTouchStart(e) {
+		if(!this.isValidEvent(e))
+			return
+		this.x = this.unifyEvent(e).clientX;
+		this.element.classList.toggle("flow-swipeable-smooth", !(this.locked = true));
+	}
+
+	onDrag(e) {
+		if (!this.locked)
+			return
+		if(this.options.drag){
+			e.preventDefault();
+			this.element.style.setProperty("--swipeable-tx", 
+				`${Math.round(this.unifyEvent(e).clientX - this.x)}px`);
+		}
+	}
+
+	onTouchEnd(e) {
+		//console.log("locked:"+this.locked)
+		if (!this.locked)
+			return
+
+		let el = this.element;
+		let {i, count, width, x} = this;
+		let lastIndex = i;
+		//console.log("i, count, width, x", {i, count, width, x})
+
+		let dx = this.unifyEvent(e).clientX - x,
+			s = Math.sign(dx),
+			f = +((s * dx) / width).toFixed(2);
+
+
+		//console.log("i, count, width, x", {dx, i, f, s})
+		if ((i > 0 || s < 0) && (i < count - 1 || s > 0) && f > 0.1) {
+			el.style.setProperty("--swipeable-i", (i -= s));
+			f = 1 - f;
+		}
+		this.i = i;
+		el.style.setProperty("--swipeable-tx", "0px");
+		el.style.setProperty("--swipeable-f", f);
+		el.classList.toggle("flow-swipeable-smooth", !(this.locked = false));
+		this.x = null;
+		if(lastIndex != i){
+			this.options.onSwipe?.({index:i, element:this.element.children[i]})
+		}
+	}
+}
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_T9_427 : &'static str = r###"
+
+
+
+/**
+* @class FlowT9
+* @extends BaseElement
+
+* @property {Boolean} [disabled]
+* @property {String} [value]
+*
+* @cssvar {font-family} [--flow-font-family="Julius Sans One"]
+* @cssvar {font-weight} [--flow-font-weight=bold]
+* @example
+*   <flow-t9 value="123.4"></flow-t9>
+*
+*/
+export class FlowT9 extends BaseElement {
+	static get properties() {
+		return {
+			value:{type:String},
+			disabled:{type:Boolean}
+		}
+	}
+
+	static get styles(){
+		return css`
+			:host{
+				display:inline-block;
+				font-family:var(--flow-font-family, "Julius Sans One");
+				font-weight:var(--flow-font-weight, bold);
+				width:var(--flow-t9-width, 100%);
+			}
+			.row{
+				display:flex;
+				align-items:stretch;
+				min-width:60px;
+				text-align:center;
+				justify-content:space-evenly;
+				margin-bottom:5px;
+			}
+			flow-btn{
+				margin:var(--flow-t9-btn-margin, 5px);
+				padding:var(--flow-t9-btn-padding, 0px);
+				box-size:border-box;
+				border-radius:var(--flow-t9-btn-border-radius, 50%);
+				--flow-btn-wrapper-min-width:10px;
+				width:var(--flow-t9-btn-width, 50px);
+				height:var(--flow-t9-btn-height, 50px);
+    			font-size:var(--flow-t9-btn-font-size, 1.5rem);
+			}
+		`;
+	}
+	render() {
+		let {value=""} = this;
+		return html`
+		<div class="wrapper" @click=${this.onClick}>
+			<div class="row">
+				<flow-btn full-height-wrapper data-v="1">1</flow-btn>
+				<flow-btn full-height-wrapper data-v="2">2</flow-btn>
+				<flow-btn full-height-wrapper data-v="3">3</flow-btn>
+			</div>
+			<div class="row">
+				<flow-btn full-height-wrapper data-v="4">4</flow-btn>
+				<flow-btn full-height-wrapper data-v="5">5</flow-btn>
+				<flow-btn full-height-wrapper data-v="6">6</flow-btn>
+			</div>
+			<div class="row">
+				<flow-btn full-height-wrapper data-v="7">7</flow-btn>
+				<flow-btn full-height-wrapper data-v="8">8</flow-btn>
+				<flow-btn full-height-wrapper data-v="9">9</flow-btn>
+			</div>
+			<div class="row">
+				<flow-btn full-height-wrapper data-v="." 
+					?disabled="${value.includes('.')}">.</flow-btn>
+				<flow-btn full-height-wrapper data-v="0">0</flow-btn>
+				<flow-btn full-height-wrapper data-v="backspace"
+					?disabled="${!value}">&lt;</flow-btn>
+			</div>
+		</div>
+		`;
+	}
+
+	setClear(){
+		this.setValue("");
+	}
+
+	onClick(e) {
+		let btnEl = e.target.closest("flow-btn")
+		if(!btnEl)
+			return
+		let btn = btnEl.dataset.v;
+		let {value=""} = this;
+		if(btn=="." && value.includes("."))
+			return
+
+		let result = this.fire("btn-click", {el:this, btn, btnEl}, {cancelable:true}, null, true)
+		if(result.defaultPrevented)
+			return
+		
+		if(btn=="backspace"){
+			value = value.substring(0, value.length-1);
+		}else{
+			if(btn=="." && value===""){
+				value = "0"
+			}
+			value += btn;
+		}
+
+		this.setValue(value);
+	}
+
+	setValue(value){
+		this.value = value;
+		this.fire("changed", {el:this, value:this.value})
+	}
+}
+
+FlowT9.define('flow-t9');
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_PROGRESSBAR_388 : &'static str = r###"
+
+
+//
+/*
+window.colorMixer = (q=0.5)=>{
+	let color = colorMixer("#E0101B", "#28F003", q)
+	console.log("color####", color)
+	document.body.style.backgroundColor = color
+}
+*/
+
+
+
+/**
+* @class FlowProgressbar
+* @extends BaseElement
+* @property {String} [color]
+* @property {String} [easing]
+* @example
+*   <flow-progressbar color="#red" value="0.3"></flow-progressbar>
+*
+*
+*/
+export class FlowProgressbar extends BaseElement {
+	static get properties() {
+		return {
+			value:{type: Number},
+			strokeWidth:{type: Number},
+			trailWidth:{type: Number},
+			trailColor:{type: String},
+			color:{type: String},
+			easing:{type: String},
+			svgStyle:{type: String},
+			shape:{type:String},
+			opt:{type: Object},
+			text:{type:String}
+		}
+	}
+
+	static get styles() {
+		return css`
+			:host {
+				display:inline-block;
+				width:var(--flow-progressbar-width, 30px);
+				height:var(--flow-progressbar-height, 30px);
+				/*
+				--flow-progressbar-color:red;
+				--flow-progressbar-trail-color:green;
+				*/
+			}
+			.container{width:100%;height:100%;}
+			.progressbar-text{
+				font-size:var(--flow-progressbar-font-size, 0.9rem);
+				font-weight:var(--flow-progressbar-font-weight, normal);
+				font-family:var(--flow-progressbar-font-family, inhert);
+			}
+		`;
+	}
+
+	render() {
+		return html`<div class="container"></div>`;
+	}
+	updated(){
+		super.updated();
+		let {
+			value=0, opt={},
+			text='',
+			strokeWidth, color, easing,
+			duration, trailColor, trailWidth, svgStyle,
+			shape="Circle"
+		} = this;
+
+		let defaultOpt = {
+			strokeWidth: 6,
+			easing: 'easeInOut',
+			duration: 1400,
+			color: 'var(--flow-progressbar-color, #FF0000)',
+			trailColor: 'var(--flow-progressbar-trail-color, #efefef)',
+			trailWidth: 6,
+			svgStyle: null
+		}
+		let definedOpts = {color, easing, duration}
+		let entries = Object.entries(definedOpts).filter(([k, v])=>v!==undefined)
+		definedOpts = Object.fromEntries(entries)
+		//console.log("definedOpts", definedOpts)
+
+		let options = {...defaultOpt, ...opt, definedOpts};
+		this.el = this.el || this.renderRoot.querySelector(".container")
+		this.progress = this.progress || new ProgressBar[shape](this.el, options);
+		this.progress.stop();
+		this.progress.animate(value, {/*
+			from: { color: options.color },
+    		to: { color: options.color }
+		*/}, ()=>{
+			//this.progress.path.setAttribute('stroke', options.color);
+		});
+
+		this.progress.setText(text);
+	}
+}
+
+FlowProgressbar.define('flow-progressbar');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_ADD_TO_HOME_371 : &'static str = r###"
+
+
+
+/**
+* @class FlowAddToHome
+* @extends BaseElement
+* @example
+*   <flow-add-to-home icon="logo.png"
+		message="Add App to Home screen"></flow-add-to-home>
+* @property {Boolean} [disabled] 
+* @cssvar {font-family} [--flow-add2home-font-family=var(--flow-font-family, initial)]
+*/
+export class FlowAddToHome extends BaseElement {
+	static get properties() {
+		return {
+			disabled:{type:Boolean, reflect: true},
+			icon:{type:String},
+			closeIcon:{type:String},
+			message:{type:String},
+			once:{type:Boolean}
+		}
+	}
+
+	static get styles(){
+		return css`
+			:host{
+				display:var(--flow-add2home-display, block);
+				margin: var(--flow-add2home-margin);
+				padding:var(--flow-add2home-padding, 10px);
+				border: var(--flow-add2home-border, 2px solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1))));
+				border-radius:var(--flow-add2home-radius, 2px);
+				border-width:var(--flow-add2home-border-width, 2px);
+				font-family:var(--flow-add2home-font-family, var(--flow-font-family, initial));
+				font-weight:var(--flow-add2home-font-weight, var(--flow-font-weight, bold));
+				font-size:var(--flow-add2home-font-size, initial);
+				line-height:var(--flow-add2home-line-height, inherit);
+				text-transform:var(--flow-add2home-text-transform, inherit);
+				user-select: none;
+				background-color:var(--flow-add2home-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				border-color:var(--flow-add2home-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				color:var(--flow-add2home-invert-color, var(--flow-primary-invert-color, #FFF));
+				--fa-icon-color:var(--flow-add2home-invert-color, var(--flow-primary-invert-color, #FFF));
+				--fa-icon-size-temp:var(--fa-icon-size);
+				cursor:pointer;
+			}
+			.icon{
+				--fa-icon-size:var(--flow-add2home-icon-size, var(--fa-icon-size-temp, 20px));
+				--fa-icon-padding:var(--flow-add2home-icon-padding, var(--fa-icon-padding));
+				background-color:var(--flow-add2home-icon-bg);
+				margin:0px 10px;
+			}
+			:host(:hover){
+				background-color:var(--flow-add2home-hover-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
+				color: var(--flow-add2home-hover-color);
+			}
+			.message{flex:1;word-wrap:break-word;}
+			.close-icon{background-color:none}
+			.wrapper{
+				display:flex;
+				align-items:center;
+				margin:var(--flow-add2home-wrapper-margin, 0px);
+				min-width:var(--flow-add2home-wrapper-min-width, 50px);
+				text-align:center;
+				justify-content:center;
+				height:100%;
+				box-sizing:border-box;
+			}
+			:host(:not(.active)){
+				display:none;
+			}
+		`;
+	}
+	constructor(){
+		super()
+		
+		if(getLocalSetting('add-to-home-disabled')==1){
+			this.disabled = true;
+		}else{
+			//this.classList.add("active")
+		}
+		this.setAttribute('role', 'button');
+	}
+	render() {
+		let {icon='', closeIcon='times'} = this;
+		return html`
+		<div class="wrapper">
+			${icon?html`<fa-icon class="icon"
+				icon=${icon} @click="${this.onAddClick}"></fa-icon>`:''}
+			<div class="message" @click="${this.onAddClick}">
+				${this.message||''}
+				<slot></slot>
+			</div>
+			<fa-icon class="close-icon" icon=${closeIcon}
+				@click="${this.onCloseClick}"></fa-icon>
+		</div>`;
+	}
+	connectedCallback(){
+		super.connectedCallback();
+		if(!this.disabled)
+			this.init();
+	}
+	init(){
+		window.addEventListener('beforeinstallprompt', (e) => {
+			//alert("beforeinstallprompt:"+e)
+			// Prevent Chrome 67 and earlier from automatically showing the prompt
+			e.preventDefault();
+			// Stash the event so it can be triggered later.
+			this.deferredPrompt = e;
+			this.classList.add("active");
+		})
+	}
+
+	onAddClick() {
+		if(this.disabled || !this.deferredPrompt)
+			return
+		this.fire("add", {el:this})
+		this.deferredPrompt.prompt();
+		this.deferredPrompt.userChoice.then((choiceResult) => {
+			if (choiceResult.outcome === 'accepted') {
+				console.log('User accepted the A2HS prompt');
+			} else {
+				console.log('User dismissed the A2HS prompt');
+			}
+			this.deferredPrompt = null;
+			this.close(choiceResult.outcome);
+		});
+	}
+	onCloseClick(){
+		this.close('closed');
+	}
+	close(reason='closed'){
+		if(this.once){
+			setLocalSetting('add-to-home-disabled', 1)
+		}
+		this.classList.remove("active");
+		this.fire("closed", {el:this, reason})
+	}
+}
+
+FlowAddToHome.define('flow-add-to-home');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_COLORS_402 : &'static str = r###"
+
+
+export const buildColors = ({h, s, l}, opt={})=>{
+	let {
+		bg='hsl(var(--h), calc(var(--s) * 1%), calc(var(--l) * 1%))',
+		color='hsl(var(--h), calc(var(--s) * 1%), calc(calc((-2500 * (20 / 100 + 1)) / (var(--l) - 49.999) + var(--l)) * 1%))',
+	} = opt;
+
+	const n = `color${(Math.random()*100000).toFixed(0)}`;
+
+	bg = bg
+		.replace(/var\(--h\)/g, `var(--${n}-h)`)
+		.replace(/var\(--s\)/g, `var(--${n}-s)`)
+		.replace(/var\(--l\)/g, `var(--${n}-l)`);
+	color = color
+		.replace(/var\(--h\)/g, `var(--${n}-h)`)
+		.replace(/var\(--s\)/g, `var(--${n}-s)`)
+		.replace(/var\(--l\)/g, `var(--${n}-l)`);
+
+	let el = document.createElement("div");
+	el.style.setProperty(`--${n}-h`, h);
+	el.style.setProperty(`--${n}-s`, s)
+	el.style.setProperty(`--${n}-l`, l)
+	el.style.backgroundColor = bg
+	el.style.color = color;
+	el.style.display = 'none';
+	el.style.position = 'fixed';
+	document.body.appendChild(el);
+	let p = new Promise((resolve)=>{
+		dpc(200, e=>{
+			let style = getComputedStyle(el);
+			let backgroundColor = style.backgroundColor;
+			let color = style.color;
+			resolve({backgroundColor, color});
+			dpc(e=>{
+				el.remove();
+			})
+		})
+	});
+	p.element = el;
+	return p;
+}
+
+export const hexToRgb = (hex)=>{
+	if(hex[0]!="#")
+		hex = '#'+hex
+	let a;
+	if(hex.length < 7)
+		a = hex
+			.split('')
+			.reduce((rgb, val, idx) => `${rgb}${val}0,`, '')
+	else
+		a = hex
+			.split('')
+			.reduce((rgb, val, idx) => rgb + (idx % 2 ? val : val + ','), '')
+
+	let [r,g,b] = a.split(',').splice(1, 3).map(val => parseInt(val, 16))
+	return {r,g,b};
+}
+
+export const rgbToHsl = ({r, g, b})=>{
+	r /= 255, g /= 255, b /= 255
+	const max = Math.max(r, g, b), min = Math.min(r, g, b)
+	let h, s, l = (max + min) / 2
+
+	if(max == min){
+		h = s = 0;
+	} else {
+		let d = max - min
+		s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+		h = ({
+			[r]: (g - b) / d,
+			[g]: 2 + ( (b - r) / d),
+			[b]: 4 + ( (r - g) / d),
+		})[max] * 60
+		if (h < 0) h +=360
+	}
+	s *= 100
+	l *= 100
+	return { h, s, l }
+}
+
+//colorChannelA and colorChannelB are ints ranging from 0 to 255
+export function colorChannelMixer(colorChannelA, colorChannelB, amountToMix){
+    var channelA = colorChannelA*amountToMix;
+    var channelB = colorChannelB*(1-amountToMix);
+    return parseInt(channelA+channelB);
+}
+//rgbA and rgbB are arrays, amountToMix ranges from 0.0 to 1.0
+//example (red): rgbA = [255,0,0]
+export function colorMixer(rgbA, rgbB, amountToMix=1){
+	rgbA = hexToRgb(rgbA)
+	rgbB = hexToRgb(rgbB)
+    var r = colorChannelMixer(rgbA.r,rgbB.r, amountToMix);
+    var g = colorChannelMixer(rgbA.g,rgbB.g, amountToMix);
+    var b = colorChannelMixer(rgbA.b,rgbB.b, amountToMix);
+    return "rgb("+r+","+g+","+b+")";
+}
+
+function mixCMYKS(...cmyks) {
+	let c = cmyks.map(cmyk => cmyk[0]).reduce((a, b) => a + b, 0) / cmyks.length;
+	let m = cmyks.map(cmyk => cmyk[1]).reduce((a, b) => a + b, 0) / cmyks.length;
+	let y = cmyks.map(cmyk => cmyk[2]).reduce((a, b) => a + b, 0) / cmyks.length;
+	let k = cmyks.map(cmyk => cmyk[3]).reduce((a, b) => a + b, 0) / cmyks.length;
+	return [c, m, y, k];
+}
+
+function mixHexs(...hexes) {
+	let rgbs = hexes.map(hex => hex2dec(hex)); 
+	let cmyks = rgbs.map(rgb => rgb2cmyk(...rgb));
+	let mixture_cmyk = mix_cmyks(...cmyks);
+	let mixture_rgb = cmyk2rgb(...mixture_cmyk);
+	let mixture_hex = rgb2hex(...mixture_rgb);
+	return mixture_hex;
+}
+
+export const rgb2cmyk = (r, g, b)=>{
+	let c = 1 - (r / 255);
+	let m = 1 - (g / 255);
+	let y = 1 - (b / 255);
+	let k = Math.min(c, m, y);
+	c = (c - k) / (1 - k);
+	m = (m - k) / (1 - k);
+	y = (y - k) / (1 - k);
+	return [c, m, y, k];
+}
+
+export const cmyk2rgb = (c, m, y, k)=>{
+	let r = c * (1 - k) + k;
+	let g = m * (1 - k) + k;
+	let b = y * (1 - k) + k;
+	r = (1 - r) * 255 + .5;
+	g = (1 - g) * 255 + .5;
+	b = (1 - b) * 255 + .5;
+	return [r, g, b];
+}
+
+export const parseRGBA = color=>{
+	let [r,g,b,a=100] = color.split("(")[1].split(")")[0].split(",");
+	return {r,g,b,a};
+}
+
+export const color2hsl = (color)=>{
+	if(color.h)
+		return color;
+	if(color.r)
+		return rgbToHsl(color);
+	if(color[0]=="#")
+		return rgbToHsl(hexToRgb(color));
+	color = color.toLowerCase();
+	if(color[0]=="r")
+		return rgbToHsl(parseRGBA(color));
+}
+
+export const hex2Colors = (color="#FF0000", opt={})=>{
+	const hsl = color2hsl(rgb);
+	return buildColors(hsl, opt);
+}
+export const rbg2Colors = (rgb={r:255, g:0, b:0}, opt={})=>{
+	const hsl = color2hsl(rgb);
+	return buildColors(hsl, opt);
+}
+export const hsl2Colors = (hsl={h:0, s:100, l:50}, opt={})=>{
+	return buildColors(hsl, opt);
+}
+
+export const testColor = async(color="#FF0000")=>{
+	const rgb = hexToRgb(color);
+	const hsl = rgbToHsl(rgb);
+	console.log("testColor::hexToRgb", rgb)
+	console.log("testColor::rgbToHsl", hsl)
+	let {backgroundColor, color:c} = await buildColors(hsl);
+	console.log("testColor::backgroundColor, color", backgroundColor, c)
+}
+
+//testColor();
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_STATSD_407 : &'static str = r###"
+
+
+
+
+// /**
+// * @class FlowQRCode
+// * @extends BaseElement
+// * @property {String} [for]
+// * @property {String} [type]
+// * @example
+// *   <flow-qrcode></flow-qrcode>
+// *
+// */
+
+export class FlowStatsD extends BaseElement {
+	static get properties(){
+        return {
+        
+            url:{type:String},
+            target:{type:String},
+            from:{type:String},
+            prefix:{type:String}
+        }
+            
+    }
+	static get styles() {
+		return css`
+			:host {
+				display : block;
+                width:100%;
+                height:100%;
+
+			}
+			
+			:host(.left-img) img{
+				object-position:left;
+			}
+            img {
+                width:100%;
+                height: 100%
+            }
+		`;
+	}
+
+	constructor() {
+		super();
+
+		this.url = "https://metrics.aspectron.com";
+	}
+
+    onElementResize(){
+    	this.rect = this.getBoundingClientRect();
+        //console.log("RECT:", this.rect);
+        this.requestUpdate();
+    }
+
+    connectedCallback(){
+    	super.connectedCallback();
+    	//this._onWindowResize = this._onWindowResize || this.onWindowResize.bind(this);
+		//window.addEventListener("resize", this._onWindowResize)
+		if(!this.__resizeObserver){
+    		this.__resizeObserver = new ResizeObserver(()=>{
+	    		this.onElementResize();
+			});
+			this.__resizeObserver.observe(this);
+	    }
+        this.interval = setInterval(this.requestUpdate.bind(this),1000);
+    }
+
+    disconnectedCallback(){
+        super.disconnectedCallback();
+        clearInterval(this.interval);
+    }
+
+	render() {
+        const time = Date.now();
+        this.prefix = "stats.gauges."
+        const rect = this.rect || {width:64,height:64};
+        const {width, height} = rect;
+
+        const searchParams = new URLSearchParams();
+        searchParams.set("width", width || 64);
+        searchParams.set("height", height || 64);
+        searchParams.set("areaMode", "all");
+        searchParams.set("from", "-30minutes");
+        searchParams.set("areaAlpha", "0.5");
+        let targets = this.target.split("|");
+        targets.forEach(target=>{
+            target = this.prefix+target;
+            searchParams.append("target",target);
+
+        })
+        //searchParams.set("target", this.target);
+        searchParams.set("hideLegend", false);
+        searchParams.set("salt", time);
+        const url = `${this.url}/render/?`+searchParams.toString();
+
+
+
+        // const queryString = "http://192.168.1.168/render/?
+        // showTarget=stats.gauges.market.ETHBTC.orders_per_sec&
+        // showTarget=stats.gauges.a.b.c&
+        // showTarget=stats.gauges.statsd.timestamp_lag
+        // &width=586&
+        // height=308&
+        // from=-1minutes&
+        // areaMode=all&
+        // target=stats.gauges.generic.market.sys_mem_used&
+        // _salt=1620078647.885";
+		return html`<img style="width:${width}px;height:${height}px" src="${url}">`
+	}
+
+	
+
+}
+
+FlowStatsD.define('flow-statsd');
+
+//http://192.168.1.168/render/?showTarget=stats.gauges.market.ETHBTC.orders_per_sec&showTarget=stats.gauges.a.b.c&showTarget=stats.gauges.statsd.timestamp_lag&width=586&height=308&from=-1minutes&areaMode=all&target=stats.gauges.generic.market.sys_mem_used&_salt=1620078647.885
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_HELPERS_409 : &'static str = r###"
+/*
+* Flow-UX: src/helper.js
+* version: 1.0.0
+*/
+const toString = Object.prototype.toString;
+const is = (obj, type) =>toString.call(obj)=='[object '+type+']'
+
+export const utils = {};
+utils.toString = toString;
+utils.is = is;
+utils.isArray = obj=>Array.isArray(obj);
+utils.isObject = obj=>is(obj, 'Object');
+utils.isString = obj=>is(obj, 'String');
+utils.isNumber = obj=>is(obj, 'Number');
+utils.isBoolean = obj=>is(obj, 'Boolean');
+utils.isFunction = obj=>is(obj, 'Function');
+utils.isUndefined = obj=>is(obj, 'Undefined');
+utils.valueToDataType = (value)=>{
+	return window[toString.call(value).split("object")[1]?.replace("]", "").trim()||""]
+}
+
+const storage = () => {
+	if(typeof global != 'undefined')
+		return global
+	if(typeof globalThis != 'undefined')
+		return globalThis
+	return  window;
+}
+
+let uid_vec = new Uint32Array(6);
+const UID = (len = 26)=>{
+	window.crypto.getRandomValues(uid_vec);
+	return [...uid_vec].map(v=>bs58e(v)).join('').substring(0,len);
+}
+
+window.UID = UID;
+
+if(!window.OnReCaptchaLoad){
+	window.OnReCaptchaLoad = ()=>{
+		//console.log("OnReCaptchaLoad OnReCaptchaLoad OnReCaptchaLoad")
+		trigger("g-recaptcha-ready")
+		buildReCaptcha();
+	}
+}
+
+const universe = storage();
+const default_flow_global = { }
+const flow = universe.flow = (universe.flow || default_flow_global);
+
+let {debug, baseUrl, theme} = window.flowConfig || flow;
+let {iconPath, icons, resolveIcon, iconMap, iconFile} = theme || {};
+
+if(!baseUrl){
+	baseUrl = (new URL("../", import.meta.url)).href;
+	debug && console.log("FlowUX: baseUrl", baseUrl)
+}
+const isSmallScreen = navigator.userAgent.toLowerCase().includes("mobi");
+
+const IconMap = Object.assign({
+	fal:'light',
+	far:'regular',
+	fab:'brands',
+	fa: 'solid',
+	fas:'solid'
+}, iconMap || {});
+
+iconFile = iconFile||'icons';
+const NativeIcons = baseUrl+'resources/icons/sprites/';
+const FlowIconPath = iconPath || '/resources/fonts/sprites/';//NativeIcons;
+const FlowIcons = icons || {};
+const FlowStates = Object.freeze({ONLINE:'online', AUTH:'auth'});
+
+if(!resolveIcon){
+	resolveIcon = (cname, name, i)=>{
+		if(!name)
+			return `${cname}:invalid icon`;
+		if(/\.(.{3,4}|.{3,4}#.*)$/.test(name))
+			return name
+		
+		let icon = FlowIcons[`${cname}:${name}${i?'-'+i:''}`]
+			||FlowIcons[name]
+			||(name.indexOf(":")>-1?name:iconFile+':'+name);
+
+		if(/\.(.{3,4}|.{3,4}#.*)$/.test(icon))
+			return icon
+
+		let [file, hash] = icon.split(":");
+		if(file == "icons")
+			return `${NativeIcons}icons.svg#${hash}`;
+		return `${FlowIconPath}${IconMap[file]||file}.svg#${hash}`;
+	}
+}
+
+// console.log("FlowIcons", FlowIcons) 
+
+const dpc = (delay, fn)=>{
+	if(typeof delay == 'function')
+		return setTimeout(delay, fn||0);
+	return setTimeout(fn, delay||0);
+}
+
+const clearDPC = (dpc_)=>{
+	clearTimeout(dpc_);
+}
+
+const deferred = () => {
+    let methods = {};
+    const p = new Promise((resolve, reject) => {
+        methods = { resolve, reject };
+    });
+    return Object.assign(p, methods);
+}
+
+export { dpc, clearDPC, deferred };
+
+export const setTheme = theme=>{
+	const body = document.body; 
+	[...body.classList]
+	.filter(cls=>cls.startsWith('flow-theme'))
+	.forEach(cls=>body.classList.remove(cls));
+
+	body.classList.add(`flow-theme-${theme}`);
+	localStorage.flowtheme = theme;
+	//let ce = new CustomEvent("flow-theme-changed", {detail:{theme}});
+	//body.dispatchEvent(ce);
+	trigger("flow-theme-changed", {theme}, {bubbles:true}, body);
+	//trigger("flow-theme-changed", {theme}, {bubbles:true}, window);
+}
+
+//window.setTheme = setTheme;
+export const DefaultTheme = theme?.default||"light";
+export const getTheme = (defaultTheme=DefaultTheme)=>{
+	if(localStorage.flowtheme)
+		return localStorage.flowtheme;
+	const body = document.body;
+	let theme = [...body.classList]
+	.find(cls=>cls.startsWith('flow-theme'))
+	if(!theme)
+		return defaultTheme;
+
+	return theme.replace("flow-theme-", "");
+}
+export {IconMap, FlowIcons, NativeIcons, isSmallScreen, FlowStates};
+export {baseUrl, debug, FlowIconPath, flow, UID, storage, resolveIcon};
+
+
+export const styleAppendTo = (style, defaultSelector="head")=>selector=>{
+	let p = document.querySelector(selector||defaultSelector);
+	if(!p)
+		p = document.head;
+	if(p.matches("style")){
+		p.innerHTML = style.cssText;
+	}else{
+		let sBar = document.createElement('style');
+		sBar.innerHTML = style.cssText;
+		p.appendChild(sBar);
+	}
+}
+
+const bs58e = (function() {
+    var alphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ',
+        base = alphabet.length;
+    return function(enc) {
+		var encoded = '';
+		while(enc) {
+			var remainder = enc % base;
+			enc = Math.floor(enc / base);
+			encoded = alphabet[remainder].toString() + encoded;        
+		}
+		return encoded;
+	}
+})();
+
+const resolveConditions = (src) => {
+	src = Object.entries(src).map(([k,v]) => {
+		return eval(k) ? undefined : v;
+	}).filter(v=>v!==undefined);
+	if(!src.length)
+		return null;
+	return src;
+}
+
+export const DeferComponent = (ctor, name, deps) => {
+
+	if(deps && typeof deps == 'object' && !Array.isArray(deps))
+		deps = resolveConditions(deps);
+
+    if(deps && Array.isArray(deps)) {
+		let count = 0;
+		deps = deps.slice();		
+		while(deps.length) {
+			let src = deps.shift();
+
+			switch(typeof src) {
+				case 'function': {
+					src = src();
+					if(!src)
+						continue;
+					if(Array.isArray(src)) {
+						deps = deps.concat(src);
+						continue;
+					}
+				} break;
+				case 'object': {
+					src = resolveConditions(src);
+					if(!src)
+						continue;
+					else
+					if(src.length == 1)
+						src = src.shift();
+					else {
+						deps = deps.concat(src);
+						continue;
+					}
+				} break;
+			}
+
+			console.log('Flow - loading dep:', src);
+            count++;
+            let el
+            if(/\.css$/.test(src)){
+            	el = document.createElement("link");
+            	el.setAttribute("rel", "stylesheet");
+            	el.setAttribute("type", "text/css")
+            	el.href = src;
+            }else{
+            	el = document.createElement("script");
+            	el.src = src;
+            }
+            document.head.appendChild(el);
+            el.onload = ()=>{
+                count--;
+                if(!count)
+                    ctor.defineElement(name);
+            }        
+        }
+	}
+	else
+		ctor.defineElement(name);
+}
+
+export const sizeClsMap = new Map();
+sizeClsMap.set("TINY", 400);
+sizeClsMap.set("XXS", 550);
+sizeClsMap.set("XS", 768);
+sizeClsMap.set("SM", 992);
+sizeClsMap.set("MD", 1200);
+
+export const isArray = o=>Array.isArray(o);
+export const isObject = o=>Object.prototype.toString.call(o)=='[object Object]';
+
+export const camelCase = str=>{
+  // Lower cases the string
+  return (str+"").toLowerCase()
+    // Replaces any - or _ characters with a space 
+    .replace( /[-_\.]+/g, ' ')
+    // Removes any non alphanumeric characters 
+    .replace( /[^\w\s]/g, '')
+    // Uppercases the first character in each group immediately following a space 
+    // (delimited by spaces) 
+    .replace( / (.)/g, function($1) { return $1.toUpperCase(); })
+    // Removes spaces 
+    .replace( / /g, '' );
+}
+
+export const humanize = str=>{
+	// Lower cases the string
+  	str = (str+"").toLowerCase()
+    // Replaces any - or _ characters with a space 
+    .replace( /[-_\.]+/g, ' ')
+    // Removes any non alphanumeric characters 
+    .replace( /[^\w\s]/g, '')
+    // Uppercases the first character in each group immediately following a space 
+    // (delimited by spaces) 
+    .replace( / (.)/g, function($1) { return $1.toUpperCase(); })
+    return str[0].toUpperCase()+str.substring(1);
+    // Removes spaces 
+    //.replace( / /g, '' );
+}
+
+export const deepClone = (obj, debug)=>{
+	if(debug)
+		console.log("deepClone:", obj, obj instanceof HTMLElement)
+	if((typeof jQuery !='undefined' && obj instanceof jQuery) || (obj?.constructor?.prototype.jquery))
+		return obj.clone();//$("___xxxxxx____");
+	if(obj instanceof HTMLElement)
+		return obj.cloneNode(true);
+	if(isArray(obj))
+		return obj.map(e=>deepClone(e, debug))
+	if(isObject(obj)){
+		let r = {};
+		Object.entries(obj).forEach(([key, value])=>{
+			r[key] = deepClone(value, debug);
+		})
+		return r;
+	}
+	return obj;
+}
+
+export class ExtendedMap extends Map{
+	constructor(...args){
+		super(...args)
+		this.handlers = new Map();
+	}
+	setListener(type, handler){
+		if(!["set", "clear", "delete"].includes(type)){
+			return false
+		}
+		let handlers = this.handlers.get(type)
+		if(!handlers)
+			handlers = []
+		if(!handlers.includes(handler))
+			handlers.push(handler);
+		this.handlers.set(type, handlers);
+	}
+	callHandlers(type, ...args){
+		let handlers = this.handlers.get(type);
+		if(!handlers)
+			return
+		handlers.forEach(fn=>{
+			fn(...args);
+		})
+	}
+	set(key, value){
+		super.set(key, value);
+		this.callHandlers("set", key, value);
+	}
+}
+
+export const trigger = (eventName, detail={}, options={}, el=null, returnEvent=false)=>{
+	let ev = new CustomEvent(eventName, Object.assign({}, options, {detail}));
+	let result = (el || window).dispatchEvent(ev);
+	return returnEvent?ev:result
+}
+
+export const buildReCaptcha = root=>{
+	if(!window.grecaptcha)
+		return
+	grecaptcha.ready(()=>{
+		root = root||document;
+		root.querySelectorAll('.g-recaptcha').forEach((el)=>{
+			let id = el.dataset.grecaptchaId;
+			if(id !== undefined){
+				grecaptcha.reset(id)
+				return
+			}
+
+			id = grecaptcha.render(el, {
+				'sitekey' : el.dataset.sitekey || document.body.dataset.recaptchaKey,
+				callback(data){
+					trigger("g-recaptcha", {code:"success", data}, {bubbles:true}, el)
+				},
+				'expired-callback':()=>{
+					trigger("g-recaptcha", {code:"expired"}, {bubbles:true}, el)
+				},
+				'error-callback':()=>{
+					trigger("g-recaptcha", {code:"error"}, {bubbles:true}, el)
+				}
+			});
+			el.dataset.grecaptchaId = id;
+		});
+	})
+}
+
+export const chunks = (arr, size) =>{
+	return arr.length ? [arr.slice(0, size), ...chunks(arr.slice(size), size)] : []
+}
+export const getRandomInt = (min, max)=>{
+	min = Math.ceil(min);
+	max = Math.floor(max);
+	return Math.floor(Math.random() * (max + 1 - min) + min); //The maximum and minimum are inclusive
+}
+
+export const abbreviateNumber = (num, fixed)=>{
+	if (num === null) { return null; } // terminate early
+	if (num === 0 || !num) { return '0'; } // terminate early
+	fixed = (!fixed || fixed < 0) ? 2 : fixed; // number of decimal places to show
+	var b = (num).toPrecision(2).split("e"), // get power
+		k = b.length === 1 ? 0 : Math.floor(Math.min(b[1].slice(1), 14) / 3), // floor at decimals, ceiling at trillions
+		c = k < 1 ? num.toFixed(0 + fixed) : (num / Math.pow(10, k * 3) ).toFixed(1 + fixed), // divide by power
+		d = c < 0 ? c : Math.abs(c), // enforce -0 is 0
+		e = d + ['', 'K', 'M', 'B', 'T'][k]; // append power
+	return e;
+}
+
+export const shuffle = (array)=>{
+	let currentIndex = array.length, temporaryValue, randomIndex;
+
+	// While there remain elements to shuffle...
+	while (0 !== currentIndex) {
+		// Pick a remaining element...
+		randomIndex = Math.floor(Math.random() * currentIndex);
+		currentIndex -= 1;
+
+		// And swap it with the current element.
+		temporaryValue = array[currentIndex];
+		array[currentIndex] = array[randomIndex];
+		array[randomIndex] = temporaryValue;
+	}
+
+	return array;
+}
+
+const fit = (contains)=>{
+	return (parentWidth, parentHeight, childWidth, childHeight, scale = 1, offsetX = 0.5, offsetY = 0.5) => {
+		const childRatio = childWidth / childHeight
+		const parentRatio = parentWidth / parentHeight
+		let width = parentWidth * scale
+		let height = parentHeight * scale
+
+		if (contains ? (childRatio > parentRatio) : (childRatio < parentRatio)) {
+			height = width / childRatio
+		} else {
+			width = height * childRatio
+		}
+
+		return {
+			width,
+			height,
+			offsetX: (parentWidth - width) * offsetX,
+			offsetY: (parentHeight - height) * offsetY
+		}
+	}
+}
+
+export const contain = fit(true)
+export const cover = fit(false)
+
+"###;
+
+const LIT_HTML_DIRECTIVES_REPEAT_505 : &'static str = r###"
+
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+const u=(e,s,t)=>{const r=new Map;for(let l=s;l<=t;l++)r.set(e[l],l);return r},c=s(class extends t{constructor(e){if(super(e),e.type!==r.CHILD)throw Error("repeat() can only be used in text expressions")}ht(e,s,t){let r;void 0===t?t=s:void 0!==s&&(r=s);const l=[],o=[];let i=0;for(const s of e)l[i]=r?r(s,i):i,o[i]=t(s,i),i++;return{values:o,keys:l}}render(e,s,t){return this.ht(e,s,t).values}update(s,[t,r,c]){var d;const a=l(s),{values:p,keys:v}=this.ht(t,r,c);if(!Array.isArray(a))return this.ut=v,p;const h=null!==(d=this.ut)&&void 0!==d?d:this.ut=[],m=[];let y,x,j=0,k=a.length-1,w=0,A=p.length-1;for(;j<=k&&w<=A;)if(null===a[j])j++;else if(null===a[k])k--;else if(h[j]===v[w])m[w]=o(a[j],p[w]),j++,w++;else if(h[k]===v[A])m[A]=o(a[k],p[A]),k--,A--;else if(h[j]===v[A])m[A]=o(a[j],p[A]),i(s,m[A+1],a[j]),j++,A--;else if(h[k]===v[w])m[w]=o(a[k],p[w]),i(s,a[j],a[k]),k--,w++;else if(void 0===y&&(y=u(v,w,A),x=u(h,j,k)),y.has(h[j]))if(y.has(h[k])){const e=x.get(v[w]),t=void 0!==e?a[e]:null;if(null===t){const e=i(s,a[j]);o(e,p[w]),m[w]=e}else m[w]=o(t,p[w]),i(s,a[j],t),a[e]=null;w++}else n(a[k]),k--;else n(a[j]),j++;for(;w<=A;){const e=i(s,m[A+1]);o(e,p[w]),m[w++]=e}for(;j<=k;){const e=a[j++];null!==e&&n(e)}return this.ut=v,f(s,m),e}});export{c as repeat};
+//# sourceMappingURL=repeat.js.map
+
+"###;
+
+const LIT_HTML_LIT_HTML_613 : &'static str = r###"
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+var t;const i=window,s=i.trustedTypes,e=s?s.createPolicy("lit-html",{createHTML:t=>t}):void 0,o=`lit$${(Math.random()+"").slice(9)}$`,n="?"+o,l=`<${n}>`,h=document,r=(t="")=>h.createComment(t),d=t=>null===t||"object"!=typeof t&&"function"!=typeof t,u=Array.isArray,c=t=>u(t)||"function"==typeof(null==t?void 0:t[Symbol.iterator]),v=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,a=/-->/g,f=/>/g,_=RegExp(">|[ \t\n\f\r](?:([^\\s\"'>=/]+)([ \t\n\f\r]*=[ \t\n\f\r]*(?:[^ \t\n\f\r\"'`<>=]|(\"|')|))|$)","g"),m=/'/g,p=/"/g,$=/^(?:script|style|textarea|title)$/i,g=t=>(i,...s)=>({_$litType$:t,strings:i,values:s}),y=g(1),w=g(2),x=Symbol.for("lit-noChange"),b=Symbol.for("lit-nothing"),T=new WeakMap,A=h.createTreeWalker(h,129,null,!1),E=(t,i)=>{const s=t.length-1,n=[];let h,r=2===i?"<svg>":"",d=v;for(let i=0;i<s;i++){const s=t[i];let e,u,c=-1,g=0;for(;g<s.length&&(d.lastIndex=g,u=d.exec(s),null!==u);)g=d.lastIndex,d===v?"!--"===u[1]?d=a:void 0!==u[1]?d=f:void 0!==u[2]?($.test(u[2])&&(h=RegExp("</"+u[2],"g")),d=_):void 0!==u[3]&&(d=_):d===_?">"===u[0]?(d=null!=h?h:v,c=-1):void 0===u[1]?c=-2:(c=d.lastIndex-u[2].length,e=u[1],d=void 0===u[3]?_:'"'===u[3]?p:m):d===p||d===m?d=_:d===a||d===f?d=v:(d=_,h=void 0);const y=d===_&&t[i+1].startsWith("/>")?" ":"";r+=d===v?s+l:c>=0?(n.push(e),s.slice(0,c)+"$lit$"+s.slice(c)+o+y):s+o+(-2===c?(n.push(void 0),i):y)}const u=r+(t[s]||"<?>")+(2===i?"</svg>":"");if(!Array.isArray(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return[void 0!==e?e.createHTML(u):u,n]};class C{constructor({strings:t,_$litType$:i},e){let l;this.parts=[];let h=0,d=0;const u=t.length-1,c=this.parts,[v,a]=E(t,i);if(this.el=C.createElement(v,e),A.currentNode=this.el.content,2===i){const t=this.el.content,i=t.firstChild;i.remove(),t.append(...i.childNodes)}for(;null!==(l=A.nextNode())&&c.length<u;){if(1===l.nodeType){if(l.hasAttributes()){const t=[];for(const i of l.getAttributeNames())if(i.endsWith("$lit$")||i.startsWith(o)){const s=a[d++];if(t.push(i),void 0!==s){const t=l.getAttribute(s.toLowerCase()+"$lit$").split(o),i=/([.?@])?(.*)/.exec(s);c.push({type:1,index:h,name:i[2],strings:t,ctor:"."===i[1]?M:"?"===i[1]?k:"@"===i[1]?H:S})}else c.push({type:6,index:h})}for(const i of t)l.removeAttribute(i)}if($.test(l.tagName)){const t=l.textContent.split(o),i=t.length-1;if(i>0){l.textContent=s?s.emptyScript:"";for(let s=0;s<i;s++)l.append(t[s],r()),A.nextNode(),c.push({type:2,index:++h});l.append(t[i],r())}}}else if(8===l.nodeType)if(l.data===n)c.push({type:2,index:h});else{let t=-1;for(;-1!==(t=l.data.indexOf(o,t+1));)c.push({type:7,index:h}),t+=o.length-1}h++}}static createElement(t,i){const s=h.createElement("template");return s.innerHTML=t,s}}function P(t,i,s=t,e){var o,n,l,h;if(i===x)return i;let r=void 0!==e?null===(o=s._$Co)||void 0===o?void 0:o[e]:s._$Cl;const u=d(i)?void 0:i._$litDirective$;return(null==r?void 0:r.constructor)!==u&&(null===(n=null==r?void 0:r._$AO)||void 0===n||n.call(r,!1),void 0===u?r=void 0:(r=new u(t),r._$AT(t,s,e)),void 0!==e?(null!==(l=(h=s)._$Co)&&void 0!==l?l:h._$Co=[])[e]=r:s._$Cl=r),void 0!==r&&(i=P(t,r._$AS(t,i.values),r,e)),i}class V{constructor(t,i){this.u=[],this._$AN=void 0,this._$AD=t,this._$AM=i}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}v(t){var i;const{el:{content:s},parts:e}=this._$AD,o=(null!==(i=null==t?void 0:t.creationScope)&&void 0!==i?i:h).importNode(s,!0);A.currentNode=o;let n=A.nextNode(),l=0,r=0,d=e[0];for(;void 0!==d;){if(l===d.index){let i;2===d.type?i=new N(n,n.nextSibling,this,t):1===d.type?i=new d.ctor(n,d.name,d.strings,this,t):6===d.type&&(i=new I(n,this,t)),this.u.push(i),d=e[++r]}l!==(null==d?void 0:d.index)&&(n=A.nextNode(),l++)}return o}p(t){let i=0;for(const s of this.u)void 0!==s&&(void 0!==s.strings?(s._$AI(t,s,i),i+=s.strings.length-2):s._$AI(t[i])),i++}}class N{constructor(t,i,s,e){var o;this.type=2,this._$AH=b,this._$AN=void 0,this._$AA=t,this._$AB=i,this._$AM=s,this.options=e,this._$Cm=null===(o=null==e?void 0:e.isConnected)||void 0===o||o}get _$AU(){var t,i;return null!==(i=null===(t=this._$AM)||void 0===t?void 0:t._$AU)&&void 0!==i?i:this._$Cm}get parentNode(){let t=this._$AA.parentNode;const i=this._$AM;return void 0!==i&&11===t.nodeType&&(t=i.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,i=this){t=P(this,t,i),d(t)?t===b||null==t||""===t?(this._$AH!==b&&this._$AR(),this._$AH=b):t!==this._$AH&&t!==x&&this.g(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):c(t)?this.k(t):this.g(t)}O(t,i=this._$AB){return this._$AA.parentNode.insertBefore(t,i)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}g(t){this._$AH!==b&&d(this._$AH)?this._$AA.nextSibling.data=t:this.T(h.createTextNode(t)),this._$AH=t}$(t){var i;const{values:s,_$litType$:e}=t,o="number"==typeof e?this._$AC(t):(void 0===e.el&&(e.el=C.createElement(e.h,this.options)),e);if((null===(i=this._$AH)||void 0===i?void 0:i._$AD)===o)this._$AH.p(s);else{const t=new V(o,this),i=t.v(this.options);t.p(s),this.T(i),this._$AH=t}}_$AC(t){let i=T.get(t.strings);return void 0===i&&T.set(t.strings,i=new C(t)),i}k(t){u(this._$AH)||(this._$AH=[],this._$AR());const i=this._$AH;let s,e=0;for(const o of t)e===i.length?i.push(s=new N(this.O(r()),this.O(r()),this,this.options)):s=i[e],s._$AI(o),e++;e<i.length&&(this._$AR(s&&s._$AB.nextSibling,e),i.length=e)}_$AR(t=this._$AA.nextSibling,i){var s;for(null===(s=this._$AP)||void 0===s||s.call(this,!1,!0,i);t&&t!==this._$AB;){const i=t.nextSibling;t.remove(),t=i}}setConnected(t){var i;void 0===this._$AM&&(this._$Cm=t,null===(i=this._$AP)||void 0===i||i.call(this,t))}}class S{constructor(t,i,s,e,o){this.type=1,this._$AH=b,this._$AN=void 0,this.element=t,this.name=i,this._$AM=e,this.options=o,s.length>2||""!==s[0]||""!==s[1]?(this._$AH=Array(s.length-1).fill(new String),this.strings=s):this._$AH=b}get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}_$AI(t,i=this,s,e){const o=this.strings;let n=!1;if(void 0===o)t=P(this,t,i,0),n=!d(t)||t!==this._$AH&&t!==x,n&&(this._$AH=t);else{const e=t;let l,h;for(t=o[0],l=0;l<o.length-1;l++)h=P(this,e[s+l],i,l),h===x&&(h=this._$AH[l]),n||(n=!d(h)||h!==this._$AH[l]),h===b?t=b:t!==b&&(t+=(null!=h?h:"")+o[l+1]),this._$AH[l]=h}n&&!e&&this.j(t)}j(t){t===b?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,null!=t?t:"")}}class M extends S{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===b?void 0:t}}const R=s?s.emptyScript:"";class k extends S{constructor(){super(...arguments),this.type=4}j(t){t&&t!==b?this.element.setAttribute(this.name,R):this.element.removeAttribute(this.name)}}class H extends S{constructor(t,i,s,e,o){super(t,i,s,e,o),this.type=5}_$AI(t,i=this){var s;if((t=null!==(s=P(this,t,i,0))&&void 0!==s?s:b)===x)return;const e=this._$AH,o=t===b&&e!==b||t.capture!==e.capture||t.once!==e.once||t.passive!==e.passive,n=t!==b&&(e===b||o);o&&this.element.removeEventListener(this.name,this,e),n&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){var i,s;"function"==typeof this._$AH?this._$AH.call(null!==(s=null===(i=this.options)||void 0===i?void 0:i.host)&&void 0!==s?s:this.element,t):this._$AH.handleEvent(t)}}class I{constructor(t,i,s){this.element=t,this.type=6,this._$AN=void 0,this._$AM=i,this.options=s}get _$AU(){return this._$AM._$AU}_$AI(t){P(this,t)}}const L={P:"$lit$",A:o,M:n,C:1,L:E,R:V,D:c,V:P,I:N,H:S,N:k,U:H,B:M,F:I},z=i.litHtmlPolyfillSupport;null==z||z(C,N),(null!==(t=i.litHtmlVersions)&&void 0!==t?t:i.litHtmlVersions=[]).push("2.5.0");const Z=(t,i,s)=>{var e,o;const n=null!==(e=null==s?void 0:s.renderBefore)&&void 0!==e?e:i;let l=n._$litPart$;if(void 0===l){const t=null!==(o=null==s?void 0:s.renderBefore)&&void 0!==o?o:null;n._$litPart$=l=new N(i.insertBefore(r(),t),t,void 0,null!=s?s:{})}return l._$AI(t),l};export{L as _$LH,y as html,x as noChange,b as nothing,Z as render,w as svg};
+//# sourceMappingURL=lit-html.js.map
+
+"###;
+
+const LIT_HTML_DIRECTIVE_611 : &'static str = r###"
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+const t={ATTRIBUTE:1,CHILD:2,PROPERTY:3,BOOLEAN_ATTRIBUTE:4,EVENT:5,ELEMENT:6},e=t=>(...e)=>({_$litDirective$:t,values:e});class i{constructor(t){}get _$AU(){return this._$AM._$AU}_$AT(t,e,i){this._$Ct=t,this._$AM=e,this._$Ci=i}_$AS(t,e){return this.update(t,e)}update(t,e){return this.render(...e)}}export{i as Directive,t as PartType,e as directive};
+//# sourceMappingURL=directive.js.map
+
+"###;
+
+const LIT_HTML_DIRECTIVE_HELPERS_546 : &'static str = r###"
+
+/**
+ * @license
+ * Copyright 2020 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */const{I:l}=o,t=o=>null===o||"object"!=typeof o&&"function"!=typeof o,i={HTML:1,SVG:2},n=(o,l)=>void 0===l?void 0!==(null==o?void 0:o._$litType$):(null==o?void 0:o._$litType$)===l,d=o=>void 0!==(null==o?void 0:o._$litDirective$),v=o=>null==o?void 0:o._$litDirective$,e=o=>void 0===o.strings,c=()=>document.createComment(""),r=(o,t,i)=>{var n;const d=o._$AA.parentNode,v=void 0===t?o._$AB:t._$AA;if(void 0===i){const t=d.insertBefore(c(),v),n=d.insertBefore(c(),v);i=new l(t,n,o,o.options)}else{const l=i._$AB.nextSibling,t=i._$AM,e=t!==o;if(e){let l;null===(n=i._$AQ)||void 0===n||n.call(i,o),i._$AM=o,void 0!==i._$AP&&(l=o._$AU)!==t._$AU&&i._$AP(l)}if(l!==v||e){let o=i._$AA;for(;o!==l;){const l=o.nextSibling;d.insertBefore(o,v),o=l}}}return i},u=(o,l,t=o)=>(o._$AI(l,t),o),f={},s=(o,l=f)=>o._$AH=l,m=o=>o._$AH,p=o=>{var l;null===(l=o._$AP)||void 0===l||l.call(o,!1,!0);let t=o._$AA;const i=o._$AB.nextSibling;for(;t!==i;){const o=t.nextSibling;t.remove(),t=o}},a=o=>{o._$AR()};export{i as TemplateResultType,a as clearPart,m as getCommittedValue,v as getDirectiveClass,r as insertPart,d as isDirectiveResult,t as isPrimitive,e as isSingleExpression,n as isTemplateResult,p as removePart,u as setChildPartValue,s as setCommittedValue};
+//# sourceMappingURL=directive-helpers.js.map
+
+"###;
+
+const LIT_HTML_DIRECTIVES_IF_DEFINED_501 : &'static str = r###"
+
+/**
+ * @license
+ * Copyright 2018 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */const l=l=>null!=l?l:t;export{l as ifDefined};
+//# sourceMappingURL=if-defined.js.map
+
 "###;
 
 const ASPECTRON_FLOW_UX_RESOURCES_EXTERNQRQR_265 : &'static str = r###"
@@ -16420,3875 +26234,349 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 export const {jsQR} = root;
 "###;
 
-const ASPECTRON_FLOW_UX_SRC_FLOW_QRCODE_SCANNER_420 : &'static str = r###"
+const LIT_ELEMENT_LIT_ELEMENT_673 : &'static str = r###"
+
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */var l,o;const r=t;class s extends t{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){var t,e;const i=super.createRenderRoot();return null!==(t=(e=this.renderOptions).renderBefore)&&void 0!==t||(e.renderBefore=i.firstChild),i}update(t){const i=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=e(i,this.renderRoot,this.renderOptions)}connectedCallback(){var t;super.connectedCallback(),null===(t=this._$Do)||void 0===t||t.setConnected(!0)}disconnectedCallback(){var t;super.disconnectedCallback(),null===(t=this._$Do)||void 0===t||t.setConnected(!1)}render(){return i}}s.finalized=!0,s._$litElement$=!0,null===(l=globalThis.litElementHydrateSupport)||void 0===l||l.call(globalThis,{LitElement:s});const n=globalThis.litElementPolyfillSupport;null==n||n({LitElement:s});const h={_$AK:(t,e,i)=>{t._$AK(e,i)},_$AL:t=>t._$AL};(null!==(o=globalThis.litElementVersions)&&void 0!==o?o:globalThis.litElementVersions=[]).push("3.2.2");export{s as LitElement,r as UpdatingElement,h as _$LE};
+//# sourceMappingURL=lit-element.js.map
+
+"###;
+
+const LIT_HTML_ASYNC_DIRECTIVE_550 : &'static str = r###"
+
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */const s=(i,t)=>{var e,o;const r=i._$AN;if(void 0===r)return!1;for(const i of r)null===(o=(e=i)._$AO)||void 0===o||o.call(e,t,!1),s(i,t);return!0},o=i=>{let t,e;do{if(void 0===(t=i._$AM))break;e=t._$AN,e.delete(i),i=t}while(0===(null==e?void 0:e.size))},r=i=>{for(let t;t=i._$AM;i=t){let e=t._$AN;if(void 0===e)t._$AN=e=new Set;else if(e.has(i))break;e.add(i),l(t)}};function n(i){void 0!==this._$AN?(o(this),this._$AM=i,r(this)):this._$AM=i}function h(i,t=!1,e=0){const r=this._$AH,n=this._$AN;if(void 0!==n&&0!==n.size)if(t)if(Array.isArray(r))for(let i=e;i<r.length;i++)s(r[i],!1),o(r[i]);else null!=r&&(s(r,!1),o(r));else s(this,i)}const l=i=>{var t,s,o,r;i.type==e.CHILD&&(null!==(t=(o=i)._$AP)&&void 0!==t||(o._$AP=h),null!==(s=(r=i)._$AQ)&&void 0!==s||(r._$AQ=n))};class c extends t{constructor(){super(...arguments),this._$AN=void 0}_$AT(i,t,e){super._$AT(i,t,e),r(this),this.isConnected=i._$AU}_$AO(i,t=!0){var e,r;i!==this.isConnected&&(this.isConnected=i,i?null===(e=this.reconnected)||void 0===e||e.call(this):null===(r=this.disconnected)||void 0===r||r.call(this)),t&&(s(this,i),o(this))}setValue(t){if(i(this._$Ct))this._$Ct._$AI(t,this);else{const i=[...this._$Ct._$AH];i[this._$Ci]=t,this._$Ct._$AI(i,this,0)}}disconnected(){}reconnected(){}}export{c as AsyncDirective};
+//# sourceMappingURL=async-directive.js.map
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_HTML_389 : &'static str = r###"
 
 
-
-
-//console.log("jsQR", jsQR)
-
-export class FlowQRCodeScanner extends BaseElement {
-	static get properties() {
-		return {
-			cameras:{type:Array},
-			selectedCamera:{type:Object},
-			qrCode:{type:String},
-			errorMessage:{type:String},
-			hideCode:{type:Boolean, reflect:true},
-			boxColor:{type:String},
-			renderAfter:{type:Number}
-		}
-	}
-
-	static get styles() {
-		return css`
-			:host {
-				display : block;
-				min-width: 100px;
-				min-height: 100px;
-				/*max-width: 400px;*/
-				/*overflow:auto;*/
-				margin:auto;
-				position:relative;
-				/*max-height:80vh;*/
-			}
-			.error{
-				font-size:var(--flow-qrcode-scanner-error-font-size, 0.8rem);
-				color:var(--flow-qrcode-scanner-error-color, #F00);
-				padding:var(--flow-qrcode-scanner-error-padding, 10px);
-			}
-			.wait-msg, .select-msg{
-				font-size:var(--flow-qrcode-scanner-msg-font-size, 1rem);
-				text-align:center;padding:10px;
-			}
-			.video{border:0px solid #000000;display:none;}
-			.view{
-				border:1px solid #000000;display:block;margin:5px auto;
-				width:var(--flow-qrcode-scanner-canvas-width, 280px);
-				height:var(--flow-qrcode-scanner-canvas-height, 280px);
-				object-fit:contain;
-			}
-			.render-canvas{
-				position:absolute;border:0px solid #000;display:none
-			}
-			.code-box{
-				display:flex;
-				flex-direction:var(--flow-qrcode-scanner-code-box-flex-direction, column);
-				align-items:var(--flow-qrcode-scanner-code-box-align-items, center);
-			}
-			.code{
-				border:0px;-webkit-appearance:none;outline:none;
-				margin:var(--flow-qrcode-scanner-code-margin, 10px);
-				overflow:hidden;text-overflow:ellipsis;
-				font-size:var(--flow-qrcode-scanner-code-font-size, 1rem);
-				background-color:transparent;color:var(--flow-primary-color);
-				font-family:var(--flow-qrcode-scanner-code-font-family, "Exo 2");
-				word-wrap:break-word;
-				max-width:100%;
-				width:var(--flow-qrcode-scanner-code-width, 300px);
-				height:var(--flow-qrcode-scanner-code-height, auto);
-				/*max-height:var(--flow-qrcode-scanner-code-max-height, 100px);*/
-				resize:none;
-				display:block;
-			}
-			:host([hidecode]) .code-box{display:none}
-			.logs{width:90%;height:100px;}
-			:host(:not([logs])) .logs{display:none}
-			.camera-selection{
-				display:flex;
-			}
-			:host([debug]) .render-canvas,
-			:host([debug]) .video{
-				display:block;position:relative;margin:auto;
-			}
-			/*
-			.camera-selection flow-select{
-				max-width:var(--flow-qrcode-scanner-s-max-width, 400px);
-				--flow-dropdown-display:var(--flow-qrcode-scanner-s-display, block);
-				--flow-select-width:var(--flow-qrcode-scanner-sw, var(--flow-select-width, 100%));
-				--flow-select-margin:var(--flow-qrcode-scanner-sm, var(--flow-select-margin, 10px auto));
-			}
-			*/
-		`;
-	}
-
-	constructor() {
-		super();
-		this.stopped = true;
-		this.renderAfter = 10;
-	}
-
-	render() {
-		let {cameras=[], selectedCamera='', qrCode='', errorMessage=''} = this;
-		return html`
-			<textarea class="logs"></textarea>
-			<div class="error">${errorMessage}</div>
-			${this.renderScanning()}
-			${this.renderCameraSelection()}
-			${this.renderCode()}
-		`;
-	}
-
-	renderCameraSelection(){
-		const {cameras, selectedCamera, cameraDiscovery, stopped} = this;
-		if(cameraDiscovery === false || stopped)
-			return '';
-		if(!cameras)
-			return html`<div class="wait-msg" is="i18n-div">Please wait. Getting cameras.</div>`;
-		//if(selectedCamera)
-		//	return html`<div>Selected cameras: ${selectedCamera.label}</div>`
-
-		let selected = selectedCamera?.id||'';
-		return html`
-		<div class="camera-selection">
-			<!--div class="select-msg">Select cameras</div-->
-			<flow-select label="${T('Select cameras')}"
-				@select="${this.onCameraSelect}" selected="${selected}">
-				${cameras.map(c=>{
-					return html`<flow-menu-item
-						value="${c.id}">${c.label}</flow-menu-item>`
-				})}
-			</flow-select>
-		</div>
-		`
-	}
-	renderScanning(){
-		//let {selectedCamera} = this;
-		//if(!selectedCamera)
-		//	return ''
-
-		return html`
-			<video class="video" width="320" height="240" autoplay></video>
-			<canvas class="render-canvas"></canvas>
-			<img class="view">
-		`
-	}
-
-	renderCode(){
-		let {qrCode} = this;
-		if(!qrCode)
-			return '';
-		return html`
-			<div class="code-box">
-				<!--div class="label">QR code:</div-->
-				<div class="code">QR code: ${qrCode}</div>
-				<flow-btn @click="${this.clearCode}">Clear</flow-btn>
-			</div>
-		`;
-	}
-	clearCode(){
-		this.setQRCode("");
-	}
-	setQRCode(qrCode){
-		this.qrCode = qrCode;
-		this.fire("changed", {code: qrCode})
-	}
-
-	firstUpdated(){
-		super.firstUpdated();
-		this.viewImg = this.renderRoot.querySelector(".view");
-		this.init();
-	}
-	updated(){
-		super.updated();
-		this.initScanning();
-	}
-	_log(title, data){
-		let input = this.renderRoot.querySelector(".logs");
-		input.value += `\n--------------\n${title}\n`+JSON.stringify(data)
-	}
-	stop(){
-		this.stopped = true;
-		let {video} = this;
-		this.closeActiveStreams(video?.srcObject)
-	}
-	start(){
-		this.stopped = false;
-		this.scanning = false;
-		this.init();
-	}
-	getVideoElement(){
-		if(this._video)
-			return this._video;
-		this._video = document.createElement("video");
-		return this._video;
-	}
-	getCanvasElement(){
-		if(this._canvas)
-			return this._canvas;
-		this._canvas = document.createElement("canvas");
-		return this._canvas;
-	}
-	initScanning(){
-		this.__render = 0;
-		if(this.qrCode || this.stopped)
-			return
-		let canvas = this.getCanvasElement();//this.renderRoot.querySelector(".render-canvas");
-		let video = this.getVideoElement()//this.renderRoot.querySelector(".video")
-		let {selectedCamera} = this;
-		this._log("initScanning", {canvas:!!canvas, video:!!video, selectedCamera, scanning:this.scanning})
-		if(!canvas || !video || !selectedCamera)
-			return
-
-		if(this.scanning == selectedCamera.id)
-			return
-		this.closeActiveStreams(video.srcObject)
-		this.scanning = selectedCamera.id;
-		this.video = video;
-
-		const canvasCtx = canvas.getContext('2d', {alpha: false});
-		//const desiredWidth = 1280;
-		//const desiredHeight = 720;
-
-		const constraints = {
-			audio: false,
-			video:{deviceId: { exact: selectedCamera.id }}
-			/*,
-			video: {
-				// the browser will try to honor this resolution,
-				// but it may end up being lower.
-				width: desiredWidth,
-				height: desiredHeight
-			}*/
-		};
-
-		// open the webcam stream
-		navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
-			video.srcObject = stream;
-			const track = stream.getVideoTracks()[0];
-			const trackInfo = track.getSettings();
-			//let {width, height} = trackInfo;
-			// required to tell iOS safari we don't want fullscreen
-			video.setAttribute("playsinline", true);
-			video.play();
-
-			let box = this.getBoundingClientRect();
-
-			//console.log(actualSettings.width, actualSettings.height)
-			canvas.width = trackInfo.width;//200;//actualSettings.width;
-			canvas.height = trackInfo.height;//200;//actualSettings.height;
-
-			canvasCtx.lineWidth = 4;
-			canvasCtx.strokeStyle = this.boxColor || "#FF3B58";
-
-			let { 
-				offsetX, offsetY, width, height
-			} = contain(canvas.width, canvas.height, trackInfo.width, trackInfo.height);
-
-			offsetX = Math.floor(offsetX)
-			offsetY = Math.floor(offsetY)
-			width = Math.floor(width)
-			height = Math.floor(height)
-
-			requestAnimationFrame(()=>{
-				this.videoTick({
-					video, box:{offsetX, offsetY, width, height}, canvas, canvasCtx,
-					cameraId : selectedCamera.id
-				})
-			});
-
-		}).catch((e) => {
-			throw e
+export const flowHtml = (strings, tags, ...values)=>{
+	strings = strings.slice(1).map(str=>{
+		tags.forEach((value, key)=>{
+			str = str.replace(new RegExp(`\{${key}\}`, 'g'), value);
 		});
-	}
-
-	setError(error){
-		this.errorMessage = error;
-	}
-
-	async init(){
-		if(this.stopped)
-			return
-		try{
-			let cameras = await this.getCameras();
-			this.cameras = cameras;
-			let backCameras =  cameras.filter(c=>!c.label.toLowerCase().includes("front"))
-			if(backCameras.length){
-				this.selectedCamera = backCameras[0];
-			}else if(cameras.length){
-				this.selectedCamera = cameras[0];
-			}
-			this.log("cameras", cameras)
-		}catch(e){
-			console.log("getCameras:error", e)
-			this.setError(html`Camera discovery process failed.
-				<br />Make sure you have given Camera permission.`)
-			this.cameraDiscovery = false;
-		}
-	}
-	closeActiveStreams(stream){
-		if(!stream)
-			return
-
-		// 	alert('stopping');
-		// return;
-		const tracks = stream.getVideoTracks();
-		for (var i = 0; i < tracks.length; i++) {
-			const track = tracks[i];
-			track.enabled = false;
-			track.stop();
-			stream.removeTrack(track);
-		}
-	}
-
-	getCameras() {
-		return new Promise((resolve, reject) => {
-			if (navigator.mediaDevices
-				&& navigator.mediaDevices.enumerateDevices
-				&& navigator.mediaDevices.getUserMedia) {
-				this.log("navigator.mediaDevices used");
-				navigator.mediaDevices.getUserMedia({ audio: false, video: true })
-				.then(stream => {
-					// hacky approach to close any active stream if they are
-					// active.
-					stream.oninactive
-						= _ => this.log("All streams closed");
-
-					navigator.mediaDevices.enumerateDevices()
-						.then(devices => {
-							const results = [];
-							//alert("devices:"+JSON.stringify(devices))
-							for (var i = 0; i < devices.length; i++) {
-								const device = devices[i];
-								if (device.kind == "videoinput") {
-									if(!/front/i.test(device.label) || devices.length == 1) {
-										results.push({
-											id: device.deviceId,
-											label: device.label
-										});
-									}
-								}
-							}
-							this.log(`${results.length} results found`);
-							this.closeActiveStreams(stream);
-							resolve(results);
-						})
-						.catch(err => {
-							reject(`${err.name} : ${err.message}`);
-						});
-				})
-				.catch(err => {
-					reject(`${err.name} : ${err.message}`);
-				})
-			} else if (MediaStreamTrack && MediaStreamTrack.getSources) {
-				this.log("MediaStreamTrack.getSources used");
-				const callback = sourceInfos => {
-					const results = [];
-					for (var i = 0; i !== sourceInfos.length; ++i) {
-						const sourceInfo = sourceInfos[i];
-						if (sourceInfo.kind === 'video') {
-							results.push({
-								id: sourceInfo.id,
-								label: sourceInfo.label
-							});
-						}
-					}
-					this.log(`${results.length} results found`);
-					resolve(results);
-				}
-				MediaStreamTrack.getSources(callback);
-			} else {
-				this.log("unable to query supported devices.");
-				reject("unable to query supported devices.");
-			}
-		});
-	}
-
-	stopScanning(){
-		let {video} = this;
-		this._log("stopScanning", 'video_srcObject:'+(!!video?.srcObject))
-		if(video?.srcObject){
-			this.closeActiveStreams(video.srcObject)
-			video.srcObject = null;
-		}
-		this.scanning = false;
-	}
-
-	videoTick({video, box, canvasCtx, canvas, cameraId}) {
-		if(cameraId != this.selectedCamera?.id)
-			return
-
-		let next = ()=>{
-			if(this.qrCode){
-				this.stopScanning()
-				return
-			}
-			if(this.stopped)
-				return;
-				
-			requestAnimationFrame(()=>{
-				this.videoTick({video, box, canvas, canvasCtx, cameraId})
-			});
-		}
-
-		this.__render++;
-		if(this.__render != 1){
-			if(this.__render<this.renderAfter)
-				return next();
-
-			this.__render = 0;
-		}
-
-
-		if (video.readyState !== video.HAVE_ENOUGH_DATA)
-			return next();
-
-		canvasCtx.fillRect(0, 0, box.width, box.height);
-		canvasCtx.drawImage(video, box.offsetX, box.offsetY, box.width, box.height);
-		let imageData = canvasCtx.getImageData(0, 0, box.width, box.height);
-
-		let code = jsQR(imageData.data, imageData.width, imageData.height, {
-			inversionAttempts: "dontInvert",
-		});
-
-		if (code) {
-			let loc = code.location;
-			this.drawLine(canvasCtx, loc.topLeftCorner, loc.topRightCorner);
-			this.drawLine(canvasCtx, loc.topRightCorner, loc.bottomRightCorner);
-			this.drawLine(canvasCtx, loc.bottomRightCorner, loc.bottomLeftCorner);
-			this.drawLine(canvasCtx, loc.bottomLeftCorner, loc.topLeftCorner);
-			this.setQRCode(code.data);
-		}
-
-		this.viewImg.src = canvas.toDataURL("image/jpeg");
-
-		next();
-		
-	}
-
-	drawLine(ctx, begin, end){
-		ctx.beginPath();
-		ctx.moveTo(begin.x, begin.y);
-		ctx.lineTo(end.x, end.y);
-		ctx.stroke();
-	}
-
-	onCameraSelect(e){
-		let {selected} = e.detail;
-		console.log("selected", selected)
-		this.selectedCamera = this.cameras.find(c=>c.id == selected);
-	}
-
+		return str;
+	})
+	//console.log("flowHtml:strings", strings)
+	//console.log("flowHtml:values", values)
+	return html(strings, ...values);
 }
-
-FlowQRCodeScanner.define('flow-qrcode-scanner');
 
 "###;
 
-const ASPECTRON_FLOW_UX_SRC_FLOW_GROUP_BTNS_403 : &'static str = r###"
+const ASPECTRON_FLOW_UX_SRC_PAGINATION_398 : &'static str = r###"
 
 
 
-/**
-* @class FlowGroupBtns
-* @extends BaseElement
-* @property {Boolean} [disabled]
-* @property {Boolean} [toggleable] 
-* @property {String} [selected=""] 
-* @property {String} [valueAttr="data-value"] 
-* @cssvar {font-family} [--flow-font-family="Julius Sans One"]
-* @cssvar {font-weight} [--flow-font-weight=bold]
-* @cssvar {border-radius} [--flow-btn-radius=8px]
-* @cssvar {margin} [--flow-group-btns-margin]
-* @cssvar {border-color} [--flow-group-btns-border-color=var(--flow-primary-color, rgba(0,151,115,1))]
-* @cssvar {border-width} [--flow-group-btns-border-width=1px]
-* @cssvar {font-size} [--flow-group-btns-font-size=initial]
-* @cssvar {line-height} [--flow-group-btns-line-height=inherit]
-* @cssvar {align-items} [--flow-group-btns-align-items=stretch]
-* @cssvar {min-width} [--flow-group-btns-wrapper-min-width=50px]
-* @cssvar {justify-content} [--flow-group-btns-wrapper-justify=initial]
-* @example
-*   <flow-group-btns selected="1">
-*		<flow-btn data-value="1">Button 1</flow-btn>
-*		<flow-btn data-value="2">Button 2</flow-btn>
-*	</flow-group-btns>
-*/
 
-/*
-... @ cssvar {--flow-btn-bg-color} [--flow-group-btns-active-bg-color=var(--flow-primary-color)]
-... @ cssvar {--flow-btn-color} [--flow-group-btns-active-color=var(--flow-primary-invert-color)]
-... @ cssvar {--flow-btn-hover-color} [--flow-group-btns-active-color=var(--flow-primary-invert-color)]
-*/
-
-export class FlowGroupBtns extends BaseElement {
-	static get properties() {
-		return {
-			disabled:{type:Boolean, reflect: true},
-			selected:{type:String},
-			valueAttr:{type:String},
-			toggleable:{type:Boolean}
+export const paginationStyle = css`
+	.pagination-box{text-align:center;padding:10px 5px;}
+	.pagination{display: inline-block;}
+    .pagination-box[disabled]{display:none}
+	.pagination a{
+		color: var(--k-pagination-color);
+		float: left;
+		padding: 8px 16px;
+		text-decoration: none;
+		transition: background-color .3s;
+		border: 1px solid #555;
+		border-color:var(--k-pagination-border-color, var(--k-btn-border-color, #555));
+		margin:var(--flow-pagination-margin, 2px 4px);
+        cursor:pointer;
+        user-select:none;
+	}
+	@media (max-width:768px){
+		.pagination a{
+			padding:8px 6px;
+			margin: 0px 2px;
+			font-size:0.8rem;
 		}
 	}
-
-	static get styles(){
-		return css`
-			:host{
-				display:inline-block;
-				margin: var(--flow-group-btns-margin);
-				padding:0px;
-				border:1px solid var(--flow-group-btns-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border-radius:var(--flow-group-btns-radius, 8px);
-				border-width:var(--flow-group-btns-border-width, 1px);
-				font-family:var(--flow-group-btns-font-family, var(--flow-font-family, initial));
-				font-weight:var(--flow-group-btns-font-weight, var(--flow-font-weight, bold));
-				font-size:var(--flow-group-btns-font-size, initial);
-				line-height:var(--flow-group-btns-line-height, inherit);
-				user-select: none;
-				overflow:hidden;
-				background-color: var(--flow-group-btns-bg, var(--flow-input-bg, inherit));
-			}
-			:host([disabled]){
-				opacity:0.5;
-				cursor:default;
-				pointer-events:none;
-			}
-
-			:host ::slotted(flow-btn){
-				--flow-btn-margin:0px;
-				--flow-btn-border-width:0px;
-				--flow-btn-radius:0px;
-				--flow-btn-wrapper-margin:5px;
-				--flow-btn-hover-color:var(--flow-group-btns-active-color-hover, var(--flow-primary-invert-color));
-				border-right:var(--flow-group-btns-border-width, 1px) solid var(--flow-group-btns-border-color, var(--flow-primary-color, rgba(0,151,115,1)))
-			}
-
-			:host ::slotted(flow-btn.active){
-				--flow-btn-bg-color:var(--flow-group-btns-active-bg-color, var(--flow-primary-color));
-				--flow-btn-color:var(--flow-group-btns-active-color, var(--flow-primary-invert-color));
-				--flow-btn-hover-color:var(--flow-group-btns-active-color-hover, var(--flow-primary-invert-color));
-			}
-
-			:host ::slotted(flow-btn:last-child){
-				border-right:0px;
-			}
-
-			.wrapper{
-				display:flex;flex-direction:row;
-				align-items:var(--flow-group-btns-align-items, stretch);
-				min-width: var(--flow-group-btns-wrapper-min-width, 50px);
-				text-align:center;
-				justify-content:var(--flow-group-btns-wrapper-justify, initial);
-			}
-		`;
+	.pagination a.disabled{
+		opacity:0.5;
 	}
-	constructor(){
-		super()
-		this.valueAttr = "data-value";
-		this.setAttribute('role', 'buttons');
+	.pagination a.hidden{display:none}
+	.pagination a.active{
+		background:var(--k-pagination-active-bg, #2489da);
+		color:var(--k-pagination-active-color, #FFF);
+		border:1px solid #2489da;
+		border-color:var(--k-pagination-active-border-color, #2489da);
 	}
-	render() {
-		return html`
-		<div class="wrapper" @click=${this.click}>
-			<slot></slot>
-		</div>
-		`;
+	.pagination a.active,
+	.pagination a.disabled{
+		cursor:default;
 	}
-	firstUpdated(){
-		this.listSlot = this.renderRoot.querySelector('slot');
-		this.updateList();
+	.pagination a:hover:not(.active):not(.disabled){
+        border-color:var(--k-pagination-hover-border-color, var(--k-btn-hover-border-color, #777 ));
+		background-color:var(--k-pagination-hover-bg-color, var(--k-btn-hover-bg-color, rgba(255,255,255, 0.2) ));
+		color:var(--k-pagination-hover-color, var(--k-btn-hover-color, inherit));
 	}
-	updated(...args){
-		super.updated(...args);
-		this.updateList();
-	}
-
-	click(e) {
-		if(this.disabled)
-			return
-		let target = e.target;
-		let selected = target.getAttribute(this.valueAttr);
-		if(this.toggleable && this.selected == selected){
-			selected = "";
-		}
-
-		this.log("selected", selected)
-
-		this.selected = selected;
-		this.fire("group-btn-select", {el:this, selected})
-		this.updateList();
-	}
-	updateList(){
-		if(!this.listSlot)
-			return
-		this.listSlot.assignedElements()
-			.map(btn=>{
-				let selected = this.selected == btn.getAttribute(this.valueAttr);
-				btn.classList.toggle("active", selected);
-			})
-	}
-}
-
-FlowGroupBtns.define('flow-group-btns');
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_SHELL_LINK_405 : &'static str = r###"
-
-
-
-
-
-/**
-* @class FlowShellLink
-* @extends BaseElement
-*
-* @property {Boolean} [disabled] 
-* @property {Boolean} [icon]
-* @property {String} [href]
-*
-* @cssvar {font-family} [--flow-font-family="Julius Sans One"]
-* @cssvar {font-weight} [--flow-font-weight=bold]
-* @cssvar {color} [--flow-link-color=#017b68]
-* @cssvar {color} [--flow-link-hover-color=#017b68]
-* @cssvar {fill} [--flow-primary-color=017b68]
-*
-* @example
-*   <flow-shell-link url="url">text</flow-shell-link>
-*
-*/
-export class FlowShellLink extends BaseElement {
-	static get properties() {
-		return {
-			disabled:{type:Boolean, reflect: true},
-			icon:{type:Boolean, reflect: true},
-			href : { type : String }
-		}
-	}
-
-	static get styles(){
-		return css`
-			:host{
-				display:inline-block;
-				font-family:var(--flow-font-family, "Julius Sans One");
-				font-weight:var(--flow-font-weight, bold);
-			}
-			:host([disabled]){
-				opacity:0.5;
-				cursor:default;
-				pointer-events:none;
-			}
-			:host(:not([disabled])){
-				cursor:pointer;
-			}
-
-			.link-wrapper {
-				color: var(--flow-link-color, #017b68);
-				display: flex;
-			}
-
-			.link-wrapper:hover {
-				color: var(--flow-link-hover-color, #017b68);
-			}
-
-			.icon-box {
-				display: block;
-				width: 16px;
-				height: 16px;
-				margin-bottom: -4px;
-				opacity: 0.65;
-			}
-
-			.icon-box svg {
-				fill: var(--flow-primary-color, #017b68);
-				width: 100%;
-				height: 100%;
-			}
-
-			.content {
-				display: block;
-			}
-		`;
-	}
-
-	constructor(){
-		super()
-	}
-
-	render() {
-		let iconSrc = this.iconPath(`external-link-square-alt`);
-		return html`
-		<div class="link-wrapper" @click=${this.click}>
-			<div class="content"><slot></slot></div>
-			${ this.icon ? html`<div class="icon-box"><svg><use href="${iconSrc}"></use></svg></div>` : '' }
-		</div>
-		`;
-	}
-
-	click() {
-		this.fire("flow-shell-link-click", {el:this})
-		console.log("opening href:",this.href);
-		require('nw.gui').Shell.openExternal( this.href );
-
-	}
-}
-
-FlowShellLink.define('flow-shell-link');
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_WINDOW_LINK_349 : &'static str = r###"
-
-
-
-//if(typeof nw != 'undefined'){
-	/*chrome.webRequest.onBeforeRequest.addListener(function(details) {
-    	console.log("onBeforeRequest", details)
-		return {cancel: false};
-    },
-    {urls: ["<all_urls>"]},
-    ["blocking"]);*/
-	//onHeadersReceived
-	/*
-	chrome.webRequest.onResponseStarted.addListener(function(details){
-		let {responseHeaders, url, type} = details;
-		
-		if(type == "script"){
-			console.log("onHeadersReceived", responseHeaders, details)
-			let found = responseHeaders.find(a=>{
-				return a.name && a.name.toLowerCase() == 'content-type';
-			})
-			if(!found)
-				responseHeaders.push({name: "Content-Type", value: "text/javascript"})
-		}
-		return responseHeaders;
-	},
-	{urls: ["<all_urls>"]},
-	['responseHeaders', 'extraHeaders']);
-	*/
-//}
-
-/**
-* @class FlowWindowLink
-* @extends BaseElement
-*
-* @property {String} [url]
-* @property {String} [id]
-* @property {String} [title]
-* @property {Boolean} [disabled]
-* @property {String} [icon] window icon
-* @property {Number} [width]
-* @property {Number} [height]
-* @property {Boolean} [resizable]
-* @property {Boolean} [frame]
-* @property {Boolean} [transparent]
-* @property {Number} [min_width]
-* @property {Number} [min_height]
-* @property {Number} [max_width]
-* @property {Number} [max_height]
-* @property {Boolean} [as_desktop]
-* @property {Boolean} [always_on_top] 
-* @property {Boolean} [visible_on_all_workspaces] (OS X Only)
-* @property {Boolean} [new_instance] Open the window in a separate process
-*
-*
-* @cssvar {font-family} [--font-family=var(--flow-font-family, "Open Sans")]
-* @cssvar {font-weight} [--font-weight=var(--flow-font-weight, normal)]
-* @cssvar {color} [--flow-link-color=var(--flow-link-color, #017b68)]
-* @cssvar {color} [--flow-link-hover-color=var(--flow-link-hover-color, #017b68)]
-* @cssvar {fill} [--flow-primary-color=rgba(0,151,115,1)]
-*
-* @example
-*   <flow-window-link href="url">text</flow-window-link>
-*
-* http://docs.nwjs.io/en/latest/References/Manifest%20Format/#window-subfields
-*
-*/
-export class FlowWindowLink extends BaseElement {
-	static get properties() {
-		return {
-			disabled:{type:Boolean, reflect: true},
-			icon:{type:String},
-			url : { type : String },
-			id : { type : String },
-			title : { type : String },
-			width : { type : Number },
-			height : { type : Number },
-			resizable : { type : Boolean },
-			frame : { type : Boolean },
-			transparent : { type : Boolean },
-			fullscreen : { type : Boolean },
-			min_width : { type : Number },
-			min_height : { type : Number },
-			max_width : { type : Number },
-			max_height : { type : Number },
-			as_desktop : { type : Boolean },
-			always_on_top : { type : Boolean },
-			visible_on_all_workspaces : { type : Boolean },
-			new_instance : { type : Boolean },
-		}
-	}
-
-	static get styles(){
-		return css`
-			:host{
-				display:inline-block;
-				font-family:var(--flow-font-family, "Open Sans");
-				font-weight:var(--flow-font-weight, normal);
-			}
-			:host([disabled]){
-				opacity:0.5;
-				cursor:default;
-				pointer-events:none;
-			}
-			:host(:not([disabled])){
-				cursor:pointer;
-			}
-
-			.link-wrapper {
-				color: var(--flow-link-color, #017b68);
-				display: flex;
-			}
-
-			.link-wrapper:hover {
-				color: var(--flow-link-hover-color, #017b68);
-			}
-/*
-			.icon-box {
-				display: block;
-				width: 16px;
-				height: 16px;
-				margin-bottom: -4px;
-				opacity: 0.65;
-			}
-
-			.icon-box svg {
-				fill: var(--flow-primary-color, #017b68);
-				width: 100%;
-				height: 100%;
-			}
-*/
-			.content {
-				display: block;
-			}
-		`;
-	}
-
-	constructor(){
-		super();
-
-		this.width = 1024;
-		this.height = 768;
-		this.resizable = true;
-		this.frame = true;
-		this.transparent = false;
-		this.fullscreen = false;
-		this.icon = undefined;
-		this.min_width = undefined;
-		this.min_height = undefined;
-		this.max_width = undefined;
-		this.max_height = undefined;
-		this.as_desktop = false;
-		this.always_on_top = false;
-		this.visible_on_all_workspaces = false;
-		this.new_instance = undefined;
-		this.show = true;
-		this.url = '';
-
-		if(!window.flow)
-			window.flow = { };
-		if(!window.flow['flow-window-link'])
-			window.flow['flow-window-link'] = { windows : [ ] };
-	}
-
-	render() {
-		//let iconSrc = this.iconPath(this.linkicon || `external-link-square-alt`);
-		return html`
-		<div class="link-wrapper" @click=${this.click}>
-			<div class="content"><slot></slot></div>
-		</div>
-			`;
-			//${ this.icon ? html`<div class="icon-box"><svg><use href="${iconSrc}"></use></svg></div>` : '' }
-	}
-
-	click() {
-		this.fire("flow-window-link-click", {el:this})
-		console.log("opening url:",this.url);
-		//require('nw.gui').Shell.openExternal( this.href );
-
-		const { 
-			id, 
-			title, 
-			width, 
-			height, 
-			resizable, 
-			frame, 
-			transparent, 
-			show, 
-			fullscreen, 
-			icon, 
-			min_width, 
-			min_height, 
-			max_width, 
-			max_height, 
-			as_desktop, 
-			always_on_top, 
-			visible_on_all_workspaces, 
-			new_instance 
-		} = this;
-
-		let args = {
-			id, 
-			title, 
-			width, 
-			height, 
-			resizable, 
-			frame, 
-			transparent, 
-			show, 
-			fullscreen, 
-			icon, 
-			min_width, 
-			min_height, 
-			max_width, 
-			max_height, 
-//			as_desktop, 
-			always_on_top, 
-//			visible_on_all_workspaces, 
-			new_instance,
-			//new_instance: true,
-			// id: this.id,
-			// title: this.title,
-			// width: 1027,
-			// height: 768,
-			// resizable: true,
-			// frame: true,
-			// transparent: false,
-			// show: true,
-			// http://docs.nwjs.io/en/latest/References/Manifest%20Format/#window-subfields
-		};
-
-
-
-        if(this.url && typeof nw != 'undefined') {
-            nw.Window.open(this.url, args, (win, b) => {
-            	win.window.appOrigin = location.origin;
-				window.flow['flow-window-link'].windows.push(win);
-
-				//this.window = win;
-				
-
-                // console.log("win", win)
-                // win.app = this;
-                // global.abcapp = "123";
-                // resolve();
-            });
-        }
-
-	}
-}
-
-FlowWindowLink.define('flow-window-link');
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FA_ICON_418 : &'static str = r###"
-
-
-/**
- *
- * @export
- * @class FaIcon
- * @extends {BaseElement}
- * @property {String} [style] inner svg tag style text
- * @example
- * <fa-icon icon="fal:chart-network"></fa-icon>
- * <fa-icon icon="icons:chart-network"></fa-icon>
- */
-export class FaIcon extends BaseElement {
-	static get properties() {
-		return {
-			color:String,
-			src: String,
-			style: String,
-			css: String,
-			size:Number,
-			w:Number,
-			h:Number,
-			icon:String
-		};
-	}
-	static get styles() {
-		return css`
-		:host {
-			display: inline-block;
-			padding: var(--fa-icon-padding, 0px);
-			margin: var(--fa-icon-margin, 0px);
-			width: var(--fa-icon-size, 19px);
-			height: var(--fa-icon-size, 19px);
-		}
-		svg,img{
-			width: var(--fa-icon-size, 19px);
-			height: var(--fa-icon-size, 19px);
-			fill: var(--fa-icon-color);
-		}
-		img{object-fit:contain;}
-		`;
-	}
-	constructor() {
-		super();
-		this.src = '';
-		this.style = '';
-		this.css = '';
-		//this.size = 19;
-		this.color = '';
-	}
-	firstUpdated() {
-		//this.src = this.getSources(this.class_);
-	}
-	render() {
-		this.src = this.iconPath(this.icon);
-		//let size1 = this.style.getPropertyValue("--fa-icon-size");
-		//console.log("size1size1", size1)
-		let {size, color, w, h} = this;
-		w = (w||size)?`width:${w||size}px;`:'';
-		h = (h||size)?`height:${h||size}px;`:'';
-		color = color?`fill:${color};`:'';
-		let ext = this.src.split(/\?#/)[0].split(".").pop().toLowerCase();
-		if(['png', 'jpeg', 'jpg'].includes(ext)){
-			return html`<img style="${w}${h}${color}${this.css||''}" src="${this.src}" />`;
-		}
-		return html`
-		<svg style="${w}${h}${color}${this.style}"><use href="${this.src}"></use></svg>
-		`;
-	}
-}
-FaIcon.define('fa-icon');
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_D3_391 : &'static str = r###"
-
-
-export class Flowd3Element extends BaseElement {
-	static get properties() {
-		return {
-		};
-	}
-
-	static get styles(){
-		return css `
-			
-			:host([hidden]){display:none;}
-			.d3-holder{
-				min-height:100px;
-				min-width:100px;
-				display:flex;
-				flex-direction:column;
-				box-sizing:border-box;
-				position:relative;
-				user-select: none;      
-			}
-            
-            #d3 {flex:1;overflow:hidden}
-		`;
-	}
-	constructor() {
-		super();
-	}
-
-    render() {
-		return html`<div id="d3"></div>`;
-	}
-
-    firstUpdated() {
-		this.el_d3 = this.renderRoot.getElementById('d3');
-		if(this.el_d3){
-			this._firstUpdated();
-		}else{
-			this.debounce("_firstUpdated", ()=>{
-				this._firstUpdated()
-			}, 500)
-		}
-	}
-	_firstUpdated() {
-		this.el_d3 = this.renderRoot.getElementById('d3');
-		if(!this.el_d3)
-			return
-		this.el_d3Rect = this.getBoundingClientRect.call(this.el_d3);
-		this.el_d3.getBoundingClientRect = ()=>{
-			if(this.el_d3Rect.width==0 && this.el_d3Rect.height==0)
-				this.el_d3Rect = this.getBoundingClientRect.call(this.el_d3);
-			return this.el_d3Rect;
-		}
-	
-    
-        this.init_d3();
-    }
-   
-    
-    init_d3() {
-		this.svg = d3.select(this.el_d3).append("svg");
-		//this.svg.attr("viewBox", this.svgViewBox || [0,0,1,1]);
-		this.svg.attr("width", this.svgWidth || '100%');
-		this.svg.attr("height", this.svgHeight || '100%');
-		this.svg.attr('preserveAspectRatio', this.svgPreserveAspectRatio || 'xMidYMid meet');
-    	this.el = this.svg.append("g")
-    	this.el.transform = d3.zoomIdentity.translate(0, 0).scale(1);
-		this.updateSVGSize();
-		//setTimeout(()=>{
-		//	this.updateSVGSize();
-		//}, 100)
-
-		this.fire("ready", {})
-    }
-
-    onElementResize(){
-    	if(this.el_d3)
-    		this.el_d3Rect = this.getBoundingClientRect.call(this.el_d3);
-		this.updateSVGSize();
-    }
-
-    connectedCallback(){
-    	super.connectedCallback();
-    	//this._onWindowResize = this._onWindowResize || this.onWindowResize.bind(this);
-		//window.addEventListener("resize", this._onWindowResize)
-		if(!this.__resizeObserver){
-    		this.__resizeObserver = new ResizeObserver(()=>{
-	    		this.onElementResize();
-			});
-			this.__resizeObserver.observe(this);
-	    }
-    }
-
-    disconnectedCallback() {
-		super.disconnectedCallback();
-		//if(this._onWindowResize)
-		//	window.removeEventListener("resize", this._onWindowResize)
-		if(this.__resizeObserver){
-			this.__resizeObserver.unobserve(this);
-			this.__resizeObserver.disconnect();
-			delete this.__resizeObserver;
-		}
-	}
-
-    updateSVGSize(){
-    	if(!this.el_d3)
-    		return
-    	let {width, height} = this.el_d3.getBoundingClientRect();
-    	this.svg.attr("viewBox", this.svgViewBox || [0,0, width, height]);
-    	this.draw();
-    }
-
-    draw(){
-    	//
-    }
-}
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_SAMPLER_401 : &'static str = r###"
-
-
-if(!flow.samplers) {
-	flow.samplers = {
-        inst : { },
-        sinks : [ ],
-		get : (ident, options) => {
-			let sampler = flow.samplers.inst[ident];
-			if(!sampler)
-				sampler = flow.samplers.inst[ident] = new FlowSampler(ident, options);
-			return sampler;
-        },
-        registerSink : (fn) => {
-            flow.samplers.sinks.push(fn);
-        },
-        unregisterSink : (fn) => {
-            let idx = flow.samplers.sinks.indexOf(fn);
-            if(idx >= 0)
-                flow.samplers.sinks.splice(idx, 1);
-        }        
-	}
-}
-
-export class FlowSampler {
-
-	static get(...args) {
-		return flow.samplers.get(...args);
-	}
-
-	constructor(ident, options = { }) {
-		this.ident = ident;
-		if(!this.ident)
-			throw new Error('fatal: FlowSampler::constructor() missing options.ident');
-		
-		this.options = options;
-		this.generator = this.options.generator;
-        this.data = [ ];
-		this.eventHandlers = new Map();
-		this.eventHandlers.set("data", new Map());
-
-		if(this.options.interval)
-			this.start();
-	}
-
-	async start() {
-		if(this.running)
-			return Promise.reject('already running');
-
-		const { interval } = options;
-		this.interval = setInterval(this.poller.bind(this), interval);
-
-		this.running = true;
-	}
-
-	stop() {
-		if(this.interval) {
-			clearInterval(this.interval);
-			delete this.interval;
-		}
-
-		this.running = false;
-	}
-
-	poll(poller) {
-		this.generator = poller;
-	}
-
-	poller() {
-		if(!this.generator) {
-			console.error('FlowSampler::poller() missing generator');
-			return;
-		}
-
-		if(typeof this.generator != 'function') {
-			console.error('FlowSampler::poller() generator must be a function');
-			return;
-		}
-
-        
-		this.generator(ts, lastTS);
-		
-	}
-
-	put(value) {
-        const { ident, data, options, sinks } = this;
-		const date = new Date();
-		data.push({date,value});
-		let max = options.maxSamples || (60*5);
-		while(data.length > max)
-			data.shift();
-        this.fire('data', {ident,data});
-        flow.samplers.sinks.forEach((sink) => {
-            sink(ident, value, date);
+`;
+
+
+export const buildPagination = (total, skip=0, limit=25)=>{
+    skip = +skip;
+    limit = +limit;
+    total = +total;
+
+    let totalPages = Math.ceil(total/limit);
+    let activePage = Math.min(Math.ceil((skip+1)/limit), totalPages);
+    let maxPages = Math.min(isSmallScreen?3:10, totalPages);
+    let half = Math.floor(maxPages/2);
+    let prev = Math.max(activePage-1, 1);
+    let next = Math.min(activePage+1, totalPages)
+    let p = 1;
+    if(activePage-half > 1)
+        p = activePage-maxPages+Math.min(totalPages-activePage, half)+1;
+
+    let pages = [];
+    for(let i=0; i<maxPages; i++){
+        pages.push({
+            p,
+            skip:(p-1)*limit,
+            active:activePage==p,
         })
-    }
-
-    lastEntry() {
-        if(!this.data.length)
-            return undefined;
-        return this.data[this.data.length-1];
-    }
-
-
-    last(_default) {
-        if(!this.data.length)
-            return _default;
-        return this.data[this.data.length-1].value;
-    }
-
-    first(_default = undefined) {
-        if(!this.data.length)
-            return _default;
-        return this.data[0].value;
-    }
-
-	fire(name, data={}){
-		let ce = new CustomEvent(`flow-sampler-${name}-${this.ident}`, {detail:data})
-		document.body.dispatchEvent(ce);
-		let handlers = this.eventHandlers.get(name);
-		if(handlers){
-			handlers.forEach((v, fn)=>{
-				fn({data});
-			})
-		}
-	}
-	on(name, fn){
-		let handlers = this.eventHandlers.get(name);
-		if(!handlers)
-			return
-		handlers.set(fn, 1);
-		//document.body.addEventListener(`flow-sampler-${name}-${this.ident}`, fn);
-	}
-	off(name, fn){
-		let handlers = this.eventHandlers.get(name);
-		if(!handlers)
-			return
-		handlers.delete(fn);
-		//document.body.removeEventListener(`flow-sampler-${name}-${this.ident}`, fn);
-    }
-    
-
-}
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_DATA_BADGE_386 : &'static str = r###"
-
-
-
-
-/**
-* @class FlowDataBadge
-* @extends BaseElement
-* @example
-*   <flow-data-badge title="text">value</flow-data-badge>
-* @property {Boolean} [disabled] 
-* @property {String} [title] 
-* @property {String} [prefix] 
-* @property {String} [suffix] 
-* @property {String} [align] 
-* @cssvar {font-family} [--flow-data-badge-font-family="Julius Sans One"]
-* @cssvar {font-weight} [--flow-data-badge-font-weight=bold]
-* @cssvar {border} [--flow-primary-color=#333]
-* @cssvar {width} [--flow-data-badge-width]
-* @cssvar {min-width} [--flow-data-badge-min-width]
-* @cssvar {max-width} [--flow-data-badge-max-width]
-* @cssvar {margin} [--flow-data-badge-margin]
-* @cssvar {border} [--flow-data-badge-container-border=2px solid var(--flow-primary-color,#333)]
-* @cssvar {background-color} [--flow-data-badge-bg=inherit]
-* @cssvar {padding} [--flow-data-badge-container-padding=2px 6px]
-* @cssvar {margin} [--flow-data-badge-container-margin=6px]
-* @cssvar {box-shadow} [--flow-data-badge-container-box-shadow=2px 2px 1px rgba(1, 123, 104, 0.1)]
-* @cssvar {border-radius} [--flow-data-badge-container-border-radius=10px]
-* @cssvar {opacity} [--flow-data-badge-title-opacity=1]
-* @cssvar {font-size} [--flow-data-badge-title-font-size=10px] 
-* @cssvar {color} [--flow-data-badge-caption]
-* @cssvar {font-size} [--flow-data-badge-value-font-size=14px]
-* @cssvar {font-family} [--flow-data-badge-value-font-family="Exo 2"]
-* @cssvar {font-weight} [--flow-data-badge-value-font-weight=normal]
-* @cssvar {color} [--flow-data-field-value=#333]
-*/
-export class FlowDataBadge extends BaseElement {
-	static get properties() {
-		return {
-			disabled:{type:Boolean, reflect:true},
-			title:{type:String},
-			prefix : { type : String },
-			suffix:{type:String},
-			align:{type:String}
-		}
-	}
-
-	static get styles(){
-		return css`
-			:host{
-				display:inline-block;
-				font-weight:bold;
-				font-size:13px;
-				text-transform:uppercase;
-				cursor:pointer;
-				font-family:var(--flow-data-badge-font-family, "Julius Sans One");
-				font-weight:var(--flow-data-badge-font-weight, bold);
-				width:var(--flow-data-badge-width);
-				min-width:var(--flow-data-badge-min-width);
-				max-width:var(--flow-data-badge-max-width);
-				margin:var(--flow-data-badge-margin);
-			}
-			:host([disabled]){opacity:0.5;cursor:default;pointer-events:none;}
-			.colon{display:none}
-			:host(.has-colon) .colon{display:inline;}
-			.container{
-				white-space: nowrap;
-				border: var(--flow-data-badge-container-border, 2px) solid var(--flow-primary-color,#333);
-				background-color:var(--flow-data-badge-bg, inherit);
-				xdisplay:flex;xflex-firection:column;xalign-items:center;
-				padding:var(--flow-data-badge-container-padding,2px 6px);
-				margin: var(--flow-data-badge-container-margin, 6px);
-				box-shadow:var(--flow-data-badge-container-box-shadow, 2px 2px 1px rgba(1, 123, 104, 0.1));
-				border-radius:var(--flow-data-badge-container-border-radius, 10px);
-
-			}
-			.container>div{padding:2px;}
-			.title{
-				text-align:left; 
-				opacity:var(--flow-data-badge-title-opacity,1);
-				xmargin-top:7px; 
-				font-size: var(--flow-data-badge-title-font-size, 10px); 
-				color:var(--flow-data-badge-caption);
-				xtext-shadow: 0px 0px 0px var(--flow-data-badge-caption-shadow, #fff); }
-			.value{
-				text-align:right;opacity:1;
-				font-size:var(--flow-data-badge-value-font-size,14px);
-				font-family:var(--flow-data-badge-value-font-family,"Exo 2");
-				font-weight:var(--flow-data-badge-value-font-weight,normal);
-				
-			}
-			.prefix{opacity:0.9;margin-right:3px;margin-top:3px; font-size: 10px; }
-			.suffix{opacity:0.9;margin-left:3px;margin-top:3px; font-size: 10px; }
-			.col { display: flex; flex-direction: column; align-items: left; }
-			.row { display: flex; flex-direction: row; color: var(--flow-data-field-value,#333); }
-		`;
-	}
-
-	render() {
-		return html
-		`<div class="container col">
-			<div class="title">${this.title}<span class="colon">:</span></div>
-			<div class="row">
-				${ (!this.align || this.align == 'right') ? html`<div style="flex:1;"></div>` : '' }
-				<div class="prefix">${this.prefix}</div>
-				<div class="value"><slot></slot></div>
-				<div class="suffix">${this.suffix}</div>
-				${ (this.align == 'left') ? html`<div style="flex:1;"></div>` : '' }
-			</div>
-		</div>`;	
-	}
-}
-
-//FlowDataBadge.define('flow-data-badge');
-FlowDataBadge.define('flow-data-badge');
-
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_DATA_BADGE_GRAPH_366 : &'static str = r###"
-
-
-
-
-/**
-* @class FlowDataBadgeGraph
-* @extends Flowd3Element
-* @prop {Boolean} disabled
-* @prop {String} title
-* @prop {String} prefix
-* @prop {String} suffix
-* @prop {String} align
-* @prop {Number} value
-* @prop {String} sampler
-* @prop {String} type
-* @prop {Number} range
-* @cssvar {font-family} [--flow-data-badge-font-family="Julius Sans One"]
-* @cssvar {font-weight} [--flow-data-badge-font-weight=bold]
-* @cssvar {color} [--flow-data-badge-caption]
-* @cssvar {color} [--flow-data-field-value=#333]
-* @example
-*   <flow-data-badge-graph title="text">value</flow-data-badge-graph>
-*
-*/
-export class FlowDataBadgeGraph extends Flowd3Element {
-	static get properties() {
-		return {
-			disabled:{type:Boolean, reflect:true},
-			title:{type:String},
-			prefix : { type : String },
-			suffix:{type:String},
-			align:{type:String},
-			value:{type:Number},
-			sampler:{type:String},  // sampler: 'kaspad.kd0.info.
-			type:{type:String},
-			range:{type:Number},
-		}
-	}
-
-	static get styles(){
-		return [Flowd3Element.styles, css`
-			:host{
-				display:inline-flex;
-				font-weight:bold;
-				font-size:13px;
-				text-transform:uppercase;
-				cursor:pointer;
-				font-family:var(--flow-data-badge-font-family, "Julius Sans One");
-				font-weight:var(--flow-data-badge-font-weight, bold);
-				border-radius: 10px;
-				overflow: hidden;
-
-				/*width:300px;height:300px;*/
-			}
-			:host([disabled]){opacity:0.5;cursor:default;pointer-events:none;}
-			.colon{display:none}
-			:host(.has-colon) .colon{display:inline;}
-
-			:host([.large]) { 
-			}
-
-			.container{
-				white-space: nowrap;
-				xdisplay:flex;xflex-firection:column;xalign-items:center;
-				padding:2px 6px;
-				/*min-height: inherit;*/
-			}
-			.container>div{padding:2px;}
-			.title{flex:1; text-align:left; opacity:1;xmargin-top:7px; font-size: 10px; color: var(--flow-data-badge-caption); xtext-shadow: 0px 0px 0px var(--flow-data-badge-caption-shadow, #fff); }
-			.value{text-align:right; opacity:1;font-size:14px;font-family:"Exo 2";font-weight:normal;}
-			.prefix{opacity:0.9;margin-right:3px;margin-top:3px; font-size: 10px; }
-			.suffix{opacity:0.9;margin-left:3px;margin-top:3px; font-size: 10px; }
-			.col { display: flex; flex-direction: column; align-items: left;  }
-			.row { display: flex; flex-direction: row; flex:0; color: var(--flow-data-field-value,#333); }
-
-
-			.wrapper {
-				/*width:100%;height:100%;*/
-				position:relative;
-				flex:1;
-				margin:6px;overflow:hidden;
-				border: 2px solid var(--flow-primary-color,#333);
-				box-shadow: 2px 2px 1px rgba(1, 123, 104, 0.1);
-				border-radius: 10px;
-				/*
-				min-width: var(--flow-data-badge-graph-width,240px);
-				min-height: var(--flow-data-badge-graph-height,80px);				
-				*/				
-			}
-			.wrapper > div {
-				width:100%;height:100%;
-				position:relative;left:0px;top:0px;bottom:0px;right:0px;
-				/*display: flex;
-				flex-direction: column;*/
-				/*min-height: inherit;*/
-			}
-
-			.d3-holder{
-				min-height:10px;
-				min-width:10px;
-				opacity:1;
-				border-radius:10px;
-				/*border: 1px solid red;*/
-				/*margin: 0px -5px 0px -1px;
-				z-index: 100;*/
-			}
-
-			.wrapper>div.d3-holder{position:absolute;}
-
-		`];
-	}
-
-	constructor() {
-		super();
-		this.range = 60 * 5;
-		this.refresh = 1e3;
-		//this.svgViewBox = [-1, 0, 100, 50]
-		//this.svgPreserveAspectRatio = 'xMidYMid meet';
-		this.svgPreserveAspectRatio = 'xMaxYMax meet';
-	}
-
-	connectedCallback() {
-		super.connectedCallback();
-		if(this.sampler)
-			this.interval = setInterval(this.draw.bind(this), this.refresh);
-	}
-
-	disconnectedCallback() {
-		super.disconnectedCallback();
-
-		if(this.interval)
-			clearInterval(this.interval);
-		if(this._draw){
-			let sampler = FlowSampler.get(this.sampler || 'test-sampler');
-			sampler.off('data', this._draw);
-			this._draw = null;
-		}
-	}
-
-	onElementResize(){
-		super.onElementResize();
-		dpc(()=>{
-			this.draw();
-		})
-	}
-
-	render() {
-
-		dpc(()=>{
-			this.draw();
-		})
-
-		return html
-		`
-		<div class='wrapper'>
-			<div class="d3-holder">${super.render()}</div>
-			<div>
-				<div class="container col">
-					<div class="title">${this.title}<span class="colon">:</span></div>
-					<div class="row">
-						${ (!this.align || this.align == 'right') ? html`<div style="flex:1;"></div>` : '' }
-						<div class="prefix">${this.prefix}</div>
-						<div class="value"><slot></slot></div>
-						<div class="suffix">${this.suffix}</div>
-						${ (this.align == 'left') ? html`<div style="flex:1;"></div>` : '' }
-					</div>
-				</div>
-			</div>
-		</div>
-		`;	
-	}
-
-	getMargin(){
-		return {
-			bottom:0,
-			top:0,
-			left:0,
-			right:0
-		}
-	}
-
-
-	draw(){
-        if(!this.sampler)
-			return;
-
-        let sampler = FlowSampler.get(this.sampler || 'test-sampler');
-		if(!this._draw){
-			this._draw = this.draw.bind(this);
-			sampler.on('data', this._draw);
-		}
-
-        const { data } = sampler;
-		this.redraw(data);
-	}
-
-	redraw(data){
-
-		let margin = this.getMargin();
-		let {height, width} = this.el_d3.getBoundingClientRect();
-
-		//console.log("data", data)
-
-		let [min,max] = d3.extent(data, d => d.date);
-		//console.log("processing min-max[1]",min,max);
-		min = max - 1000*this.range;//@anton why we are extending this min?
-
-
-		const x = d3.scaleUtc()
-		.domain([min,max])
-		//.domain(d3.extent(data, d => d.date))//.nice()
-		.range([margin.left, width - margin.right])
-
-		const y = d3.scaleLinear()
-		//.domain([min,max])//.nice()
-		.domain(d3.extent(data, d => d.value))//.nice()
-		//.domain([0, d3.max(data, d => d.value)]).nice()
-		.range([height - margin.bottom, margin.top]);
-		/*
-		const xAxis = g => g
-		.attr("transform", `translate(0,${height - margin.bottom})`)
-		//.call(d3.axisBottom(x).ticks(width / 80).tickSizeOuter(0));
-
-		const yAxis = g => g
-		.attr("transform", `translate(${margin.left},0)`)
-		.call(d3.axisLeft(y))
-		.call(g => g.select(".domain").remove())
-		// .call(g => g.select(".tick:last-of-type text").clone()
-		// 	.attr("x", 3)
-		// 	.attr("text-anchor", "start")
-		// 	.attr("font-weight", "bold")
-		// 	.text(this.title));
-		*/
-
-		const area = d3.area()
-			.curve(d3.curveLinear)
-			.x(d => x(d.date))
-			.y0(y(0))
-			.y1(d => y(d.value));
-
-		const { el } = this;
-
-		if(!this.path)
-			this.path = el.append('path')
-				.attr("transform", `translate(${margin.left},0)`)
-				.attr('stroke-opacity', 'var(--flow-data-badge-graph-stroke-opacity, 1.0)')
-				.attr("stroke-linejoin", "round")
-				.attr("stroke-linecap", "round")
-				.attr("stroke-width", 'var(--flow-data-badge-graph-stroke-width, 0)')
-				.attr('fill','var(--flow-data-badge-graph-fill, steelblue)')
-                .attr('stroke','var(--flow-data-badge-graph-stroke, #000)')
-                
-				
-		this.path.datum(data)
-			.attr('d',area);
-	}
-}
-
-FlowDataBadgeGraph.define('flow-data-badge-graph');
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_DIALOG_360 : &'static str = r###"
-//import '../resources/extern/dialog/dialog-polyfill.js';
-
-
-/**
-* @class FlowDialog
-* @extends BaseElement
-* @example
-*   <flow-dialog heading="Title">value</flow-dialog>
-* @property {Boolean} [disabled] 
-* @property {String} [heading] 
-* @property {Array} [btns] 
-* @property {Object} [body] 
-*/
-export class FlowDialog extends BaseElement {
-	static get properties() {
-		return {
-			disabled:{type:Boolean, reflect:true},
-			heading:{type:String},
-			btns:{type:Array},
-			body:{type:Object},
-			hideCloseBtn:{type:Boolean},
-			compact:{type:Boolean}
-		}
-	}
-
-	static buildArgs(...arg){
-		let args = arg.shift();
-		let handler = arg[arg.length-1];
-		if(typeof(args) == 'string'){
-			args = {
-				title:args,
-				body:arg.shift(),
-				cls:arg.shift(),
-				btns:arg.shift(),
-				modal:arg.shift(),
-			};
-		}
-		args.handler = args.handler || args.callback;
-		args.modal = args.modal !== false;
-
-		if(!args.handler && typeof(handler) == 'function')
-			args.handler = handler
-
-		//console.log("args", args)
-
-		return args;
-	}
-
-	static getHandler(btnName,  args){
-		let {btns, handler} = args;
-		if(!btnName || !btns || !btns.length)
-			return handler;
-
-		let btn = btns.find(btn=>((btn.value||btn.text)+"").toLowerCase() == btnName);
-		return btn? (btn.handler || btn.callback || handler):handler;
-	}
-
-	static _show(args){
-
-		let {btns, body, title, modal, cls, hideCloseBtn, compact, alignTo} = args;
-		let {autoClose} = args;
-		let dg = document.createElement("flow-dialog");
-		let promise = new Promise((resolve, reject)=>{
-			let resolved = false;
-			let onWindoClick = (e)=>{
-				if(resolved){
-					removeWinEventListener();
-					return
-				}
-				let t = e.target;
-				let menu = t && t.closest && t.closest("flow-dialog");
-				if(menu != dg){
-					removeWinEventListener();
-					dg.destroy();
-				}
-			}
-			let onWindoResize = e=>{
-				//console.log("onWindoResize22: dg.dialog", dg._isPolyfill)
-				if(dg._isPolyfill){
-					//console.log("onWindoResize: dg.dialog", dg.dialog)
-					dialogPolyfill.reposition(dg.dialog)
-				}
-			}
-			let removeWinEventListener = ()=>{
-				window.removeEventListener("click", onWindoClick)
-				window.removeEventListener("resize", onWindoResize)
-			}
-			let _resolve = (result)=>{
-				if(resolved)
-					return
-				resolved = true;
-				dg.remove();
-				dg.removeEventListener("btn-click", onBtnClicked);
-				removeWinEventListener();
-				resolve(result);
-			}
-			let onBtnClicked = e=>{
-				let result = e.detail;
-				let {btn} = result;
-				let handler = this.getHandler(btn, args);
-				if(handler)
-					return handler(_resolve, result, dg, btn, e);
-
-				dg.resolve(result);
-			}
-			dg.resolve = _resolve;
-
-			dg.addEventListener("btn-click", onBtnClicked)
-			if(cls)
-				dg.classList.add(...cls.split(" "));
-			if(btns)
-				dg.btns = btns;
-			if(body)
-				dg.body = body;
-			if(title)
-				dg.heading = title;
-			if(hideCloseBtn)
-				dg.hideCloseBtn = true;
-			if(compact)
-				dg.compact = true;
-			if(alignTo)
-				this.alignTo(alignTo, dg, args);
-
-
-			document.body.append(dg)
-			setTimeout(()=>{
-				modal?dg.showModal():dg.show();
-				if(autoClose){
-					window.addEventListener("click", onWindoClick)
-				}
-				//console.log("onWindoResize:1")
-				window.addEventListener("resize", onWindoResize)
-
-			}, 100)
-			
-		})
-
-		promise.dialog = dg;
-		return promise
-	}
-
-	static alignTo(alignTarget, dialog, args){
-		let {vOffset=0, hOffset=0, targetPos='left-bottom', dialogPos='left-top'} = args;
-		let box = alignTarget.getBoundingClientRect();
-		let dialogBox = dialog.getBoundingClientRect();
-		let style = dialog.style;
-		let [H,V] = targetPos.split("-");
-		let [dH, dV] = dialogPos.split("-");
-		let dVOpposite = dV=='top'?'bottom':'top';
-		let dHOpposite = dH=='left'?'right':'left';
-		style[dVOpposite] = 'unset';
-		style[dHOpposite] = 'unset';
-		let setPos = ()=>{
-			style[dH] = (box[H]+hOffset)+"px";
-			style[dV] = (box[V]+vOffset)+"px";
-			
-			/*
-			if(targetPos == 'right-top'){
-				
-			}else{
-				style.top = (box.bottom+vOffset)+"px";
-				style.left = (box.right-dialogBox.width+hOffset)+"px";
-			}
-			*/
-		}
-
-		setPos();
-		dialog.addEventListener("updated", e=>{
-			let {dialog} = e.detail
-			dialogBox = dialog.getBoundingClientRect();
-			style = dialog.style;
-			setPos();
-		})
-	}
-
-	static alert(...args){
-		args = this.buildArgs(...args)
-		if(!args.btns){
-			args.btns = ['Ok:primary']
-		}
-		return this._show(args)
-	}
-	static show(...args){
-		return this._show(this.buildArgs(...args))
-	}
-
-	static confirm(...args){
-		args = this.buildArgs(...args);
-		if(!args.btns){
-			args.btns = ['Cancel', 'Yes:danger']
-		}
-
-		return this._show(args);
-	}
-
-	createRenderRoot(){
-		return this;
-	}
-
-	render() {
-		return html
-		`<dialog @close=${this.onDialogClose} ?compact=${this.compact}>
-			<div class="heading" ?hide=${!this.heading}>${this.heading}</div>
-			<span class="close-btn" title="Close" ?hide=${this.hideCloseBtn}
-				@click="${this.onCloseClick}">&times;</span>
-			<div class="body">
-				${this.renderBody()}
-			</div>
-			<div class="buttons" @click=${this.onBtnClick} ?hide=${!this.btns||!this.btns.length}>
-				${this.renderBtns()}
-			</div>
-		</dialog>`;	
-	}
-
-	renderBody(){
-		return this.body||"";
-	}
-
-	renderBtns(){
-		let value, text, cls;
-		return (this.btns || ['Ok'])
-		.map(b=>{
-			if(typeof(b)=='string'){
-				let [t, c, v] = b.split(":");
-				text = t;
-				value = v || text;
-				cls = c||'';
-			}else{
-				text = b.text;
-				value = b.value || text;
-				cls = b.cls||"";
-			}
-			return html
-			`<flow-btn 
-				class="${cls}" 
-				value="${(value+"").toLowerCase()}">${text}</flow-btn>`
-		})
-	}
-
-	firstUpdated(){
-		this.dialog = this.renderRoot.querySelector('dialog');
-		this._isPolyfill = !this.dialog.showModal
-		dialogPolyfill.registerDialog(this.dialog)
-		if(this._show)
-			this[this._show]();
-	}
-
-	updated(){
-		super.updated();
-		this.dispatchEvent(new CustomEvent('updated', {detail:{dialog:this.dialog}, bubbles:true}))
-	}
-
-	show(){
-		if(this.dialog)
-			return this.dialog.show()
-
-		this._show = 'show';
-	}
-	showModal(){
-		if(this.dialog)
-			return this.dialog.showModal();
-		this._show = 'showModal';
-	}
-
-	close(){
-		this._show = false;
-		if(this.dialog)
-			this.dialog.close();
-	}
-
-	destroy(){
-		this.close();
-		this.remove();
-	}
-
-	onCloseClick(){
-		if(this.resolve)
-			return this.resolve({btn:"close"})
-		this.destroy();
-	}
-
-	onDialogClose(e){
-		if(!this.autoClose && this._show){
-			this[this._show]();
-			return
-		}
-		let detail = {e};
-		this.dispatchEvent(new CustomEvent('closed', {detail}))
-	}
-	onBtnClick(e){
-		let btnEl = e.target.closest("flow-btn");
-		let btn = btnEl?.getAttribute("value");
-		if(!btn)
-			return
-		let inputs = [...this.renderRoot.querySelectorAll(".input, flow-input, flow-checkbox, input, textarea, select,flow-menu")];
-		let values = {}, name;
-		inputs.forEach(input=>{
-			name = input.name||input.getAttribute("name")||input.getAttribute("data-name");
-			values[name] = input.value;
-		})
-		let detail = {
-			btn,
-			values
-		}
-
-		//console.log("onBtnClick", detail)
-		this.dispatchEvent(new CustomEvent('btn-click', {detail}))
-	}
-}
-
-window.FlowDialog = FlowDialog;
-
-FlowDialog.define('flow-dialog', [
-	()=>window.dialogPolyfill?null:baseUrl+'resources/extern/dialog/dialog-polyfill.css',
-	()=>window.dialogPolyfill?null:baseUrl+'/resources/extern/dialog/dialog-polyfill.js'
-]);
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_PAGES_416 : &'static str = r###"
-
-
-let flowPagesStyle = css`
-	flow-pages>h1,
-	flow-pages>.title{
-	    padding:10px;
-	    font-size:2rem;
-	}
-	flow-pages .buttons{margin:10px;display:flex;justify-content:flex-end;z-index:10}
-	flow-pages .buttons .flex{flex:1;}
-	flow-pages .buttons flow-btn{margin:0px 5px;padding:5px 5px;user-select:none;}
-	flow-pages .buttons flow-btn svg{
-	    width:20px;
-	    height:20px;
-	    margin-right:10px;
-	    fill:var(--flow-primary-color, rgba(0,151,115,1.0));
-	    pointer-events:none;
-	}
-	flow-pages .buttons flow-btn span+svg{
-	    margin-left:10px;
-	    margin-right:0px;
-	}
-`
-
-let style = document.head.querySelector('style.flow-pages-style') || document.createElement("style");
-style.innerHTML = flowPagesStyle.toString();
-style.classList.add("flow-pages-style");
-if(!style.parentNode)
-	document.head.insertBefore(style, document.head.querySelector('link[href*="flow-ux.css"], :last-child').nextSibling);
-export {flowPagesStyle};
-
-/**
- * @export
- * @class FlowPages
- * @extends {BaseElement}
- * 
- * @property {Array} pages
- * @property {Number} index 
- * 
- * @cssvar {fill|background-color} [--flow-primary-color=rgba(0,151,115,1)]
- * @cssvar {background-color} [--flow-background-color=#FFF]
- * @cssvar {box-shadow} [--flow-pages-dots-box-shadow=var(--flow-box-shadow)]
- * @cssvar {border} [--flow-border-color=var(--flow-primary-color, rgba(0,151,115,1))]
- * @cssvar {border-color} [--flow-active-border-color=var(--flow-primary-color, rgba(0,151,115,1))]
- * 
- * @example
- * <flow-pages>
- * 	<flow-page>Page 1</flow-page>
- *  <flow-page>Page 2</flow-page>
- * </flow-pages>
- *
- */
-
-export class FlowPages extends BaseElement {
-	static get properties() {
-		return {
-			pages:{type:Array},
-			index:{type:Number},
-			dotoffset:{type:Number}
-		}
-	}
-	static get styles() {
-		return css`
-			:host{
-				display:flex;
-				flex-direction:column;
-			}
-
-			.wrapper{
-				flex:1;
-				position:relative;
-			}
-
-			.wrapper ::slotted(flow-page){
-				background-color:var(--flow-background-color, #FFF);
-				position:absolute;
-				left:0px;
-				top:0px;
-				width:100%;
-				height:100%;
-				z-index:1;
-				opacity:0;
-				transition:opacity 1s ease;
-			}
-			.wrapper ::slotted(flow-page.back),
-			.wrapper ::slotted(flow-page.active){
-				z-index:3;
-				opacity:1;
-			}
-
-			.dots{
-				pointer-events: none;
-				z-index:5;
-				position:absolute;bottom:10px;
-				display:none;
-				justify-content:center;
-				width:100%;
-			}
-			:host(.has-dots) .dots{
-				display:flex;
-			}
-			.dots i{
-				display:block;width:10px;height:10px;background-color:#FFF;
-				box-shadow:var(--flow-pages-dots-box-shadow, var(--flow-box-shadow));
-				margin:4px;
-				border:2px solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border-radius:50%;
-			}
-
-			.dots i.active{
-				background-color:var(--flow-primary-color, rgba(0,151,115,1));
-				border-color:var(--flow-active-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
-			}
-
-			.dots i:not(.active){cursor:pointer;}
-
-
-			.buttons flow-btn {
-				align-items:center;
-				display:flex;
-			}
-
-
-		`;
-	}
-	render(){
-		let dots = new Array((this.pages || []).length).fill(0);
-		if(dots.length)
-			dots[this.index||0] = 1;
-
-		let css = '';
-		if(this.dotoffset)
-			css = `bottom: -${this.dotoffset}px`;
-
-		return html`
-		<slot name="title"></slot>
-		<div class="wrapper">
-			<slot></slot>
-			<div class="dots" style="${css}" @click="${this.onDotsClick}">${dots.map((active,i)=>{
-				return html`<i data-index="${i}" class="${active?'active':''}"></i>`
-			})}</div>
-		</div>
-		
-		<div @click="${this.onButtonClick}">
-			<slot name="buttons"></slot>
-		</div>
-		`;
-	}
-	firstUpdated(){
-		this.wrapper = this.renderRoot.querySelector(".wrapper");
-		this.buttons = this.renderRoot.querySelector(".buttons");
-		let slot = this.shadowRoot.querySelector('slot[name="buttons"]');
-		this.btns = {};
-		slot.addEventListener('slotchange', e=>{
-			this.updateBtns(slot.assignedNodes());
-			
-		});
-		this.updateBtns(slot.assignedNodes());
-
-		let pages = this.querySelectorAll("flow-page");
-		this.initiPages(pages);
-	}
-	updateBtns(nodes){
-		[...nodes].forEach(p=>{
-			p.querySelectorAll("[data-btn]").forEach(btn=>{
-				let name = btn.getAttribute("data-btn");
-				if(name)
-					this.btns[name] = btn;
-			})
-		})
-	}
-	get nextBtn(){
-		return this.btns.next;
-	}
-	get prevBtn(){
-		return this.btns.prev;
-	}
-	get skipBtn(){
-		return this.btns.skip;
-	}
-	initiPages(pages){
-		this.pages = [...pages];
-		this.maxIndex = this.pages.length-1;
-		let index = this.pages.findIndex(p=>p.classList.contains("active"))
-		this.setActive(index)
-	}
-	onDotsClick(e){
-		let target = e.target;
-		let index = parseInt(target.getAttribute("data-index"));
-		if(isNaN(index))
-			return
-
-		this.setActive(index);
-	}
-	onButtonClick(e){
-		let btnTypeToAction ={
-			'next': 'showNext',
-			'prev': 'showPrevious'
-		}
-		let target = e.target.closest('flow-btn');
-		if(!target)
-			return
-		let action = target.getAttribute("data-action");
-		if(!action){
-			let btnType = target.getAttribute("data-btn");
-			action = btnType && btnTypeToAction[btnType];
-		}
-		if(!action || !this[action])
-			return
-
-		this[action]();
-	}
-	showPrevious(){
-		this.setActive(this.index-1)
-	}
-	showNext(){
-		this.setActive(this.index+1)
-	}
-	closePages(){
-		this.fire("close-pages");
-	}
-	setActive(index){
-		if(index<0)
-			index = 0
-		else if(index > this.maxIndex){
-			this.closePages();
-			return
-		}
-		
-		let newPage = this.getPage(index)
-		if(!newPage)
-			return
-		this.lastIndex = this.index;
-		this.index = index;
-		if(this.index === this.lastIndex)
-			return
-		let lastPage = this.getPage(this.lastIndex)
-		if(lastPage){
-			lastPage.classList.remove("active");
-			lastPage.style.zIndex = 2
-		}
-
-		newPage.classList.add("active");
-		newPage.style.zIndex = 3
-
-		//console.log("index", index, this.maxIndex)
-		let prevBtn = this.prevBtn;
-		let nextBtn = this.nextBtn;
-		let skipBtn = this.skipBtn;
-		let nextBtnSpan = nextBtn?.querySelector("span");
-		if(prevBtn){
-			if(index<=0)
-				prevBtn.setAttribute("disabled", true);
-			else
-				prevBtn.removeAttribute("disabled");
-
-			if(nextBtnSpan)
-				nextBtnSpan.innerText = 'NEXT';				
-			skipBtn.style.display = "block";
-		}
-		if(nextBtn){
-			if(index>=this.maxIndex) {
-				skipBtn.style.display = "none";
-				if(nextBtnSpan)
-					nextBtnSpan.innerText = 'FINISH';
-			}
-			else
-				nextBtn.removeAttribute("disabled");
-		}
-		this.fireChangeEvent();
-	}
-	getPage(index){
-		return this.pages[index];
-	}
-	fireChangeEvent(){
-		this.fire("change", {index: this.index})
-	}
-}
-
-FlowPages.define('flow-pages');
-
-
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_CODE_408 : &'static str = r###"
-
-if (!window.PR) {
-	let prettify = document.createElement("script");
-	prettify.src = baseUrl + 'resources/extern/google-prettify/prettify.js';
-	document.head.appendChild(prettify);
-}
-
-/**
- * @export
- * @class FlowCode
- * @prop {Boolean} fixindent
- * @prop {String} lang
- * @extends {BaseElement}
- * @cssvar {white-space} [--flow-code-white-space=nowrap]
- * @cssvar {font-family} [--flow-code-font-family=monospace]
- * @cssvar {font-size} [--flow-code-font-size=1rem]	
- * @cssvar {padding} [--flow-code-padding=5px]
- * @cssvar {margin} [--flow-code-margin=1px]
- * @cssvar {border} [--flow-code-border=none]
- */
-export class FlowCode extends BaseElement {
-	static get properties() {
-		return {
-			lang : {type:String},
-			fixindent:{type:Boolean},
-			theme:{type:String}
-		}
-	}
-	static get styles() {
-		return css`
-
-			.pln{
-				color:var(--flow-code-pln, #000);
-			}
-			@media screen{
-				.str{color:var(--flow-code-str, #080)}
-				.kwd{color:var(--flow-code-kwd, #008)}
-				.com{color:var(--flow-code-com, #800)}
-				.typ{color:var(--flow-code-typ, #606)}
-				.lit{color:var(--flow-code-lit, #066)}
-				.opn{color:var(--flow-code-opn, #660)}
-				.clo{color:var(--flow-code-clo, #660)}
-				.pun{color:var(--flow-code-pun, #660)}
-				.tag{color:var(--flow-code-tag, #008)}
-				.atn{color:var(--flow-code-atn, #606)}
-				.atv{color:var(--flow-code-atv, #080)}
-				.dec{color:var(--flow-code-dec, #606)}
-				.var{color:var(--flow-code-var, #606)}
-				.fun{color:var(--flow-code-fun, red)}
-			}
-			@media print,projection{
-				.kwd,.tag,
-				.typ{font-weight:var(--flow-code-print-tag-font-weight, 700)}
-				.str{color:var(--flow-code-print-str, #060)}
-				.kwd{color:var(--flow-code-print-kwd, #006)}
-				.com{
-					color:var(--flow-code-print-com, #600);
-					font-style:var(--flow-code-print-com-font-style, italic)
-				}
-				.typ{color:var(--flow-code-print-typ, #404)}
-				.lit{color:var(--flow-code-print-lit, #044)}
-				.opn{color:var(--flow-code-print-opn, #440)}
-				.clo{color:var(--flow-code-print-clo, #440)}
-				.pun{color:var(--flow-code-print-pun, #440)}
-				.tag{color:var(--flow-code-print-tag, #006)}
-				.atn{color:var(--flow-code-print-atn, #404)}
-				.atv{color:var(--flow-code-print-atv, #060)}
-			}
-			pre{
-				background:var(--flow-code-pre-bg);
-			}
-			pre.prettyprint{padding:2px;}
-			ol.linenums{
-				margin-top:var(--flow-code-linenums-margin-top, 0);
-				margin-bottom:var(--flow-code-linenums-margin-bottom, 0);
-				color:var(--flow-code-linenums-color, inherit);
-			}
-			li.L0,li.L1,li.L2,li.L3,li.L4,li.L5,li.L6,li.L7,li.L8,li.L9{
-				list-style-type:none;
-				padding-left:var(--flow-code-lines-padding-left, 0);
-				background-color:var(--flow-code-lines-bg, initial);
-			}
-			li.L1,li.L3,li.L5,li.L7,li.L9{
-				background:var(--flow-code-odd-line-bg, #eee)
-			}
-
-			pre{
-				margin:0px;
-				white-space:var(--flow-code-white-space, nowrap);
-				font-family:var(--flow-code-font-family, monospace);
-				font-size:var(--flow-code-font-size, 1rem);
-				padding:var(--flow-code-pre-padding, 0px 0px 16px);
-			}
-
-			:host{
-				display:inline-block;max-width:100%;box-sizing: border-box;
-				overflow:auto;
-				padding:var(--flow-code-padding, 5px);
-				margin:var(--flow-code-margin, 1px);
-				border:var(--flow-code-border, none);
-				background:var(--flow-code-pre-bg);
-			}
-
-			:host(.block),
-			:host([block]){display:block}
-			:host(.hide){display:none}
-
-			/*:host(:not(.no-border):not([no-border])){*/
-			:host(.border, [border]){
-				border:2px solid var(--flow-primary-color);
-			}
-
-
-			/* hemisu-light */
-			/*
-			pre.theme-hemisu-light{
-				font-family:Menlo,Bitstream Vera Sans Mono,DejaVu Sans Mono,Monaco,Consolas,monospace;
-				border:0!important
-			}
-			*/
-			.theme-hemisu-light{
-				--flow-code-pre-bg:#fff;
-				--flow-code-lines-bg:#fff;
-				--flow-code-pln:#111;
-				--flow-code-linenums-color:#999;
-
-				--flow-code-lines-padding-left:1em;
-				--flow-code-linenums-margin-top:0;
-				--flow-code-linenums-margin-bottom:0;
-
-				--flow-code-str:#739200;
-				--flow-code-kwd:#739200;
-				--flow-code-com:#999;
-				--flow-code-typ:#f05;
-				--flow-code-lit:#538192;
-				--flow-code-pun:#111;
-				--flow-code-opn:#111;
-				--flow-code-clo:#111;
-				--flow-code-tag:#111;
-				--flow-code-atn:#739200;
-				--flow-code-atv:#f05;
-				--flow-code-dec:#111;
-				--flow-code-var:#111;
-				--flow-code-fun:#538192;
-			}
-
-
-			.theme-hemisu-dark{
-				--flow-code-pre-bg:#000000;
-				--flow-code-lines-bg:#000000;
-				--flow-code-pln:#EEEEEE;
-				--flow-code-linenums-color:#777777;
-
-				--flow-code-lines-padding-left:1em;
-				--flow-code-linenums-margin-top:0;
-				--flow-code-linenums-margin-bottom:0;
-
-				--flow-code-str:#B1D631;
-				--flow-code-kwd:#B1D631;
-				--flow-code-com:#777777;
-				--flow-code-typ:#BBFFAA;
-				--flow-code-lit:#9FD3E6;
-				--flow-code-pun:#EEEEEE;
-				--flow-code-opn:#EEEEEE;
-				--flow-code-clo:#EEEEEE;
-				--flow-code-tag:#EEEEEE;
-				--flow-code-atn:#B1D631;
-				--flow-code-atv:#BBFFAA;
-				--flow-code-dec:#EEEEEE;
-				--flow-code-var:#EEEEEE;
-				--flow-code-fun:#9FD3E6;
-			}
-
-			.theme-atelier-lakeside-dark{
-				--flow-code-pre-bg:#161b1d;
-				--flow-code-lines-bg:#161b1d;
-				--flow-code-pln:#ebf8ff;
-				--flow-code-linenums-color:#5a7b8c;
-
-				--flow-code-lines-padding-left:1em;
-				--flow-code-linenums-margin-top:0;
-				--flow-code-linenums-margin-bottom:0;
-
-				--flow-code-str:#568c3b;
-				--flow-code-kwd:#6b6bb8;
-				--flow-code-com:#6b6bb8;
-				--flow-code-typ:#257fad;
-				--flow-code-lit:#935c25;
-				--flow-code-pun:#ebf8ff;
-				--flow-code-opn:#ebf8ff;
-				--flow-code-clo:#ebf8ff;
-				--flow-code-tag:#d22d72;
-				--flow-code-atn:#935c25;
-				--flow-code-atv:#2d8f6f;
-				--flow-code-dec:#935c25;
-				--flow-code-var:#d22d72;
-				--flow-code-fun:#257fad;
-			}
-
-			.theme-atelier-lakeside-light{
-				--flow-code-pre-bg:#ebf8ff;
-				--flow-code-lines-bg:#ebf8ff;
-				--flow-code-pln:#161b1d;
-				--flow-code-linenums-color:#7195a8;
-
-				--flow-code-lines-padding-left:1em;
-				--flow-code-linenums-margin-top:0;
-				--flow-code-linenums-margin-bottom:0;
-
-				--flow-code-str:#568c3b;
-				--flow-code-kwd:#6b6bb8;
-				--flow-code-com:#7195a8;
-				--flow-code-typ:#257fad;
-				--flow-code-lit:#935c25;
-				--flow-code-pun:#161b1d;
-				--flow-code-opn:#161b1d;
-				--flow-code-clo:#161b1d;
-				--flow-code-tag:#d22d72;
-				--flow-code-atn:#935c25;
-				--flow-code-atv:#2d8f6f;
-				--flow-code-dec:#935c25;
-				--flow-code-var:#d22d72;
-				--flow-code-fun:#257fad;
-			}
-
-		`;
-	}
-	constructor() {
-		super();
-		this.lang = 'html';
-	}
-	render() {
-		//let indent = this.clcIndent();
-		if (!this.innerHTML_) {
-			
-			let ta = this.querySelector("textarea"); 
-			let v = ta ? ta.value : this.innerHTML;
-			if(this.fixindent){
-				v = v.split("\n");
-				let c = v[0]; 
-				let count = 0;
-				let spaces = true;
-				while(spaces) {
-					if(/^\t/.test(c)) {
-						count++;
-						c = c.substring(1); 
-					} else if(/^    /.test(c)) {
-						count++;
-						c = c.substring(4);
-					} else 
-						spaces = false;
-				}
-				if(count>0){
-					let regExp = `^(\t|    ){1,${count}}`;
-					regExp = new RegExp(regExp)
-					v = v.map(l => {
-						l = l.replace(regExp, "");
-						return l;
-					}).join("\n");
-				}else{
-					v = v.join("\n");
-				}
-			}
-			this.innerHTML_ = v;
-		}
-
-		let theme = this.theme?' theme-'+this.theme:'';
-		return html`<pre class="lang-${this.lang}${theme}">${this.innerHTML_}</pre>`
-	} 
-	htmlEscape(s) {
-		return s
-			.replace(/&/g, '&amp;')
-			.replace(/</g, '&lt;')
-			.replace(/>/g, '&gt;');
-	}
-
-	updated() {
-		this.updateStyle();
-	}
-
-	updateStyle() {
-		if (!window.PR) {
-			if (!this.count)
-				this.count = 0;
-			this.count++;
-			if (this.count > 1000)
-				return
-			return setTimeout(() => this.updateStyle(), 100);
-		}
-
-		let pre = this.renderRoot.querySelector("pre");
-		//console.log("window.PR ready", pre)
-		//window.PR.prettyPrint(null, this.renderRoot.querySelector("pre"))
-		let code = PR.prettyPrintOne(this.htmlEscape(this.innerHTML_))
-		if (this.code != code) {
-			this.code = code;
-			//console.log("updating....")
-			//this.update()
-			pre.innerHTML = code;
-		}
-
-	}
-}
-
-FlowCode.define("flow-code");
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_CANVAS_432 : &'static str = r###"
-
-
-export class FlowCanvasElement extends BaseElement {
-	constructor() {
-		super();
-
-		this.canvasScale = 0.75;
-	}
-
-	getPixelRatio(){
-    	const ctx = this.canvas.getContext("2d"),
-        dpr = window.devicePixelRatio || 1,
-        bsr = ctx.webkitBackingStorePixelRatio ||
-              ctx.mozBackingStorePixelRatio ||
-              ctx.msBackingStorePixelRatio ||
-              ctx.oBackingStorePixelRatio ||
-              ctx.backingStorePixelRatio || 1;
-
-    	return dpr / bsr * 2;
-	}
-
-	setHiDPICanvas(w, h, ratio) {
-		const can = this.canvas;
-		let w_ = w;
-		let h_ = h;
-		can.width = w_ * ratio;
-		can.height = h_ * ratio;
-		// can.style.width = w_ + "px";
-		// can.style.height = h_ + "px";
-		can.getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
-	}
-
-	updateCanvas() {
-		if(!this.canvas)
-			return;
-
-		let parentBox = this.getBoundingClientRect();
-		let canvasBox = this.canvas.getBoundingClientRect();
-		let { width, height } = canvasBox;
-		this.PIXEL_RATIO = this.getPixelRatio();
-		this.setHiDPICanvas(width*this.canvasScale,height*this.canvasScale,this.PIXEL_RATIO);
-		this.redraw(this.canvasContext2d, canvasBox);
-	}
-
-	get htmlCanvasElement() {
-		let box = this.getBoundingClientRect();
-		return html`<canvas id="canvas" style="height:100%;width:100%;" width="${box.width*this.canvasScale}" height="${box.height*this.canvasScale}">Your browser does not support the HTML5 canvas tag</canvas>`;
-	}
-
-	firstUpdated() {
-		if(window.ResizeObserver){
-			this.resizeObserver = new ResizeObserver(e => {
-				this.fire('flow-canvas-resize', {}, {bubbles:true})
-			});
-			this.resizeObserver.observe(this);
-		}
-
-		[
-			'mousedown','mouseup','mousemove','click', 'pointerdown',
-			'pointerup', 'pointermove','mouseenter','mouseleave'
-		].forEach((event) => {
-			this.addEventListener(event, (e) => { this.onMouseEvent(event,e); });
-		})
-
-		this.addEventListener('flow-canvas-resize', (e)=>{
-			this.debounce("flow-canvas-resize", this.handleResize.bind(this), 100);
-		})
-
-		this.canvas = this.renderRoot.getElementById('canvas');
-		this.canvasContext2d = this.canvas.getContext('2d');
-		this.ctx.globalAlpha = 0;
-		this.updateCanvas();
-	}
-
-	handleResize() {
-		this.updateCanvas();
-	}
-
-	redraw(ctx, size) {
-		throw new Error('BaseCanvasElement::redraw() - missing implementation!');
-	}
-}
-
-
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_COLOR_SELECTOR_423 : &'static str = r###"
-
-
-
-
-/**
-* @class FlowColorSlider
-* @extends BaseElement
-* @prop {Number} min
-* @prop {Number} max
-* @prop {Boolean} vertical
-* @prop {Object} color
-* @prop {String} chanel
-* @example
-*   <flow-color-slider></flow-color-slider>
-*/
-
-export class FlowColorSlider extends FlowCanvasElement {
-	static get properties() {
-		return {
-			min : { type:Number },
-			max : { type:Number },
-			vertical:{ type:Boolean },
-			color:{ type: Object, reflect: true },
-			channel : { type:String }
-		}
-	}
-
-	static get styles(){
-		return css`
-			:host{
-				display:block;
-			}
-			:host([disabled]){
-				opacity:0.5;
-				cursor:default;
-				pointer-events:none;
-			}
-			:host(:not([disabled])){
-				cursor:pointer;
-			}
-		`;
-	}
-
-	constructor(){
-		super();
-
-		this.min = 0;
-		this.max = 255;
-		this.vertical = false;
-		this.color = { };
-		this.channel = '?';
-
-		this.mixer = new ColorMixer();
-	}
-
-	render() {
-		let box = this.getBoundingClientRect();
-		return html`
-		<canvas id="canvas" style="height:100%;width:100%;" width="${box.width*this.scale}" height="${box.height*this.scale}">Your browser does not support the HTML5 canvas tag</canvas>
-		`;
-	}
-
-	click(e) {
-		console.log('flow-color-slider click:',e);
-		this.fire("flow-color-slider-click", {el:this, e})
-	}
-
-	firstUpdated(){
-		if(window.ResizeObserver){
-			this.resizeObserver = new ResizeObserver(e => {
-				this.fire('flow-resize', {}, {bubbles:true})
-			});
-			this.resizeObserver.observe(this);
-		}
-
-		['mousedown','mouseup','mousemove','click', 'pointerdown', 'pointerup', 'pointermove','mouseenter','mouseleave'].forEach((event) => {
-			this.addEventListener(event, (e) => { this.onMouseEvent(event,e); });
-		})
-
-		this.addEventListener('flow-resize', (e)=>{
-			this.debounce("flow-resize", this._onResize.bind(this), 100);
-		})
-
-		this.canvas = this.renderRoot.getElementById('canvas');
-		this.ctx = this.canvas.getContext('2d');
-		this.ctx.globalAlpha = 0;
-		this.updateCanvas();
-
-		this.color.registerSink(()=>{
-			this.redraw();
-		})
-	}
-
-	_onResize() {
-		console.log('_onResize!');
-		this.updateCanvas();
-		// this.verbose && console.log('resize:', this.getBoundingClientRect());
-	}
-
-	registerSink(sink) {
-		this.sink = sink;
-	}
-
-	onMouseEvent(event,e) {
-		//console.log('onMouseEvent',event,e,this);
-
-		let update = false;
-		if(event == 'click')
-			update = true;
-		else
-		if(event == 'mousedown') {
-			this.drag = true;
-			this.setCapture();
-		}
-		else
-		if(event == 'mouseup')
-			this.drag = false;
-		else
-		if(event == 'mousemove' && this.drag)
-			update = true;
-
-		if(update) {
-			let x = e.offsetX;
-			let v = x / this.size.width * (this.max - this.min) + this.min;
-			this.color.change(v, this.channel);
-			this.color.notify();
-		}
-	}
-
-	redraw(){
-		let parentBox = this.getBoundingClientRect();
-		let canvasBox = this.canvas.getBoundingClientRect();
-//		this.verbose && console.log('parentBox:',parentBox);
-//		this.verbose && console.log('canvasBox:',canvasBox);
-		this.canvasBox = canvasBox;
-		let { width, height } = canvasBox;
-		this.size = { width, height };
-
-		width *= this.scale;
-		height *= this.scale;
-		let absolute = this.value / this.max;
-
-		const { ctx } = this;
-		ctx.clearRect(0, 0, width, height);
-		ctx.lineWidth = 1;
-
-		for(let v = 0; v < width; v++) {
-			const c = (v * this.max / width);
-			this.mixer.assign(this.color);
-			this.mixer.change(c, this.channel);
-
-			ctx.strokeStyle = `rgba(${this.mixer.r},${this.mixer.g},${this.mixer.b},1.0)`;
-			ctx.beginPath();
-			ctx.moveTo(v, 0);
-			ctx.lineTo(v, height);
-			ctx.stroke();
-		}
-
-		let v = this.color[this.channel] / this.max * width;
-		ctx.strokeStyle = `rgba(0,0,0,1.0)`;
-		ctx.beginPath();
-		ctx.moveTo(v, 0);
-		ctx.lineTo(v, height);
-		ctx.stroke();
-	}
-}
-
-FlowColorSlider.define('flow-color-slider');
-
-
-class ColorMixer {
-	constructor(v = { r : 0, g : 0, b : 0, h : 0, s : 0, v : 0, a : 1, }) {
-		this.sinks = [ ];
-		Object.assign(this,v);
-	}
-
-	registerSink(sink) {
-		this.sinks.push(sink);
-	}
-
-	notify() {
-		this.sinks.forEach(fn=>fn(this));
-		// this.sinks.forEach(fn=>fn(this));
-	}
-
-	assign(src) {
-		const { r, g, b, h, s, v, a } = src;
-		Object.assign(this, { r, g, b, h, s, v, a });
-	}
-
-	change(value, channel) {
-
-		if(channel == 'h' || channel == 's' || channel == 'v') {
-			this[channel] = value;
-			Object.assign(this, HSVtoRGB(this));
-		}
-		else {
-			this[channel] = Math.round(value);
-			Object.assign(this, RGBtoHSV(this));
-		}
-	}
-}
-
-/**
-* @class FlowColorSolid
-* @extends BaseElement
-* @prop {Object} color
-* @example
-*   <flow-color-solid></flow-color-solid>
-*/
-export class FlowColorSolid extends BaseElement {
-	static get properties() {
-		return {
-			color : { type : Object, reflect : true }
-		}
-	}
-
-	static get styles() {
-		return css`
-			:host {
-				display : block;
-				border: 1px solid #ccc;
-			}
-
-			.solid {
-				min-width: 32px;
-				min-height: 32px;
-				width: 100%;
-				height: 100%;
-			}
-		`;
-	}
-
-	constructor() {
-		super();
-	}
-
-
-	firstUpdated() {
-		this.color.registerSink(()=>{
-			this.requestUpdate();
-		});
-	}
-
-	render() {
-		let clr = `rgba(${this.color.r},${this.color.g},${this.color.b}, 1.0)`;
-		return html`
-			<div class='solid' style="background-color: ${clr}">
-			</div>			
-		`;
-	}
-}
-
-FlowColorSolid.define('flow-color-solid');
-
-/**
-* @class FlowColorSelector
-* @extends BaseElement
-* @prop {String} caption
-* @example
-*   <flow-color-selector></flow-color-selector>
-*/
-
-export class FlowColorSelector extends BaseElement {
-	static get properties() {
-		return {
-			caption : { type : String },
-		}
-	}
-
-	static get styles() {
-		return css`
-			:host {
-				display : block;
-				border: 1px solid #ccc;
-				padding: 6px;
-				margin: 6px;
-			}
-			
-			#wrapper {
-				display: flex;
-				flex-direction: column;
-			}
-
-			#caption {
-				text-align: left;
-			}
-
-			#ctl {
-				display: flex;
-				flex-direction: row;
-			}
-
-			.sliders {
-				flex: 1;
-				display: flex;
-				flex-direction: column;
-			}
-
-			flow-color-slider {
-				min-height: 24px;
-				margin: 4px;
-				border: 1px solid #000;
-			}
-
-			flow-color-solid {
-				width: 96px;
-				height: 96px;
-			}
-		`;
-	}
-
-	constructor() {
-		super();
-
-		this.color = new ColorMixer();
-		this.color.registerSink(()=>{
-
-		})
-	}
-
-	firstUpdated() {
-		this.addEventListener('flow-color-slider-click', (e)=>{
-			console.log("color selector receiving flow-color-slider-click!");
-			//this.debounce("flow-resize", this._onResize.bind(this), 100);
-		})
-
-	}
-
-	render() {
-		return html`
-			<div id="wrapper">
-				<div id="caption">${this.caption}</div>
-				<div id="ctl">
-					<div class='sliders'>
-						<flow-color-slider .color=${this.color} channel="r"></flow-color-slider>
-						<flow-color-slider .color=${this.color} channel="g"></flow-color-slider>
-						<flow-color-slider .color=${this.color} channel="b"></flow-color-slider>
-						<flow-color-slider .color=${this.color} channel="h" max="1"></flow-color-slider>
-						<flow-color-slider .color=${this.color} channel="s" max="1"></flow-color-slider>
-						<flow-color-slider .color=${this.color} channel="v" max="1"></flow-color-slider>
-					</div>
-					<div>
-						<flow-color-solid .color=${this.color}></flow-color-solid>
-					</div>			
-				</div>
-			</div>
-		`;
-	}
-}
-
-FlowColorSelector.define('flow-color-selector');
-
-
-/* accepts parameters
- * h  Object = {h:x, s:y, v:z}
- * OR 
- * h, s, v
-*/
-function HSVtoRGB(h, s, v) {
-    var r, g, b, i, f, p, q, t;
-    if (arguments.length === 1) {
-        s = h.s, v = h.v, h = h.h;
-    }
-    i = Math.floor(h * 6);
-    f = h * 6 - i;
-    p = v * (1 - s);
-    q = v * (1 - f * s);
-    t = v * (1 - (1 - f) * s);
-    switch (i % 6) {
-        case 0: r = v, g = t, b = p; break;
-        case 1: r = q, g = v, b = p; break;
-        case 2: r = p, g = v, b = t; break;
-        case 3: r = p, g = q, b = v; break;
-        case 4: r = t, g = p, b = v; break;
-        case 5: r = v, g = p, b = q; break;
+        p++;
     }
     return {
-        r: Math.round(r * 255),
-        g: Math.round(g * 255),
-        b: Math.round(b * 255)
-    };
+        totalPages,
+        activePage,
+        isLast:activePage==totalPages,
+        isFirst:activePage==1,
+        prev,
+        next,
+        last:totalPages,
+        lastSkip:(totalPages-1)*limit,
+        prevSkip:(prev-1) * limit,
+        nextSkip:(next-1) * limit,
+        total,
+        skip,
+        limit,
+        pages,
+        maxPages,
+        half
+    }
 }
 
-/* accepts parameters
- * r  Object = {r:x, g:y, b:z}
- * OR 
- * r, g, b
-*/
-function RGBtoHSV(r, g, b) {
-    if (arguments.length === 1) {
-        g = r.g, b = r.b, r = r.r;
-    }
-    var max = Math.max(r, g, b), min = Math.min(r, g, b),
-        d = max - min,
-        h,
-        s = (max === 0 ? 0 : d / max),
-        v = max / 255;
+export const renderPagination = (pagination, clickHandler, options={})=>{
+    if(!pagination)
+        pagination = {pages:[], isFirst:true, isLast:true, totalPages:0, type:''};
+    let {pages, isFirst, isLast, prevSkip, nextSkip, totalPages, lastSkip, type} = pagination;
 
-    switch (max) {
-        case min: h = 0; break;
-        case r: h = (g - b) + d * (g < b ? 6: 0); h /= 6 * d; break;
-        case g: h = (b - r) + d * 2; h /= 6 * d; break;
-        case b: h = (r - g) + d * 4; h /= 6 * d; break;
-    }
-
-    return {
-        h: h,
-        s: s,
-        v: v
-    };
+    let hideNextPrev = pages.length ==0?' hidden':'';
+    let FIRST = options.first||'FIRST';
+    let LAST = options.last||'LAST';
+    let PREV = options.prev||'<';
+    let NEXT = options.next||'>';
+    clickHandler = clickHandler || (e=>{});
+    return html`
+    <div class="pagination-box" ?disabled="${!pages.length}" @click=${clickHandler}>
+        <div class="pagination" data-pagination="${type}">
+            <a class="first ${(isFirst?'disabled':'')+hideNextPrev}" data-skip="0">${FIRST}</a>
+            <a class="prev ${(isFirst?'disabled':'')+hideNextPrev}" data-skip="${prevSkip}">${PREV}</a>
+            ${repeat(pages, p=>p.p, p=>html`
+                <a class="${p.active?'active':''}" data-skip="${p.skip}">${p.p}</a>
+            `)}
+            <a class="next ${(isLast?'disabled':'')+hideNextPrev}"  data-skip="${nextSkip}">${NEXT}</a>
+            <a class="first ${(isLast?'disabled':'')+hideNextPrev}" data-skip="${lastSkip}">${LAST}</a>
+        </div>
+    </div>`;
 }
 
+export const loadingMaskStyle = css`
+    .mask{
+        position:absolute;
+        left:0px;
+        top:0px;
+        right:0px;
+        bottom:0px;
+        width:100%;
+        height:100%;
+        opacity:1;
+        z-index:1000;
+        background-color:rgba(0, 0, 0, 0.7);
+        background-color:var(--flow-loading-mask-bg-color, rgba(0, 0, 0, 0.7));
+        animation: fade-out 1s ease forwards;
+    }
+    .mask .loading-logo{
+        width: 100px;
+        height: 100px;
+        position: relative;
+        left: 50%;
+        top: 50%;
+        margin: -50px 0 0 -50px;
+    }
 
+    :host(.loading) .mask,
+    .loading .mask{
+        animation-name: fade-in;
+    }
+    :host(:not(.loading)) .mask .loading-logo .animate{
+        fill:#009688;
+    }
+    @keyframes fade-in{
+        0% {z-index:-1; opacity:0}
+        1% {z-index:1000; opacity:0}
+        100% {z-index:1000; opacity:1}
+    }
+    @keyframes fade-out{
+        0% {z-index:1000; opacity:1}
+        99% {z-index:1000; opacity:0}
+        100% {z-index:-1; opacity:0}
+    }
+`;
 "###;
 
-const ASPECTRON_FLOW_UX_SRC_FLOW_REFERENCE_350 : &'static str = r###"
-
-
+const LIT_REACTIVE_ELEMENT_REACTIVE_ELEMENT_89 : &'static str = r###"
 
 /**
-* @class FlowReference
-* @extends BaseElement
-* @property {String} [for]
-* @property {String} [type]
-* @example
-*   <flow-tooltip>Button 1</flow-tooltip>
-*
-*
-*/
-
-export class FlowReference extends BaseElement {
-	static get properties() {
-		return {
-			for : { type : String },
-            type : { type : String },
-            icon : {type : String},
-            visible : { type : Boolean },
-            'right-align-tooltip':{type:Boolean}
-		}
-	}
-
-	static get styles() {
-		return css`
-			:host {
-		
-            }
-			.icon-box{
-				display:inline-block;
-				width:20px;
-				max-width:20px;
-				text-align:center;
-				/*border: 1px solid red;*/
-			}
-	
-			.icon-box svg{
-				width:15px;
-				height:15px;
-				margin-right: 8px;
-				margin-bottom: 8px;
-				/*margin-left: 8px;*/
-				/*fill:var(--flow-primary-color, rgba(0,151,115,1.0));*/
-				fill: #666;
-			}
-			.tooltip-content{display:none}			
-		`;
-	}
-	constructor() {
-        super();
-    }
-
-	render() {
-		let iconSrc = "";
-		if(this.icon != "-")
-			iconSrc = this.iconPath(this.icon || "fal:info-circle");
-		// const iconSrc = this.iconPath(this.icon || "info-circle");
-
-		return html`
-			<slot></slot>
-			<span class="tooltip" @mouseenter="${this.onTooltipMouseEnter}">
-				<div class="icon-box"><svg><use href="${iconSrc}"></use></svg></div>
-				<slot class="tooltip-content" name="tooltip"></slot>
-			</span>
-		`;
-	}
-
-	firstUpdated(){
-		super.firstUpdated();
-		this.tooltipEl = this.renderRoot.querySelector(".tooltip");
-		this.tooltipTextEl = document.createElement("div");
-		this.tooltipTextEl.classList.add("flow-tooltip-text")
-		this.tooltipSlot = this.renderRoot.querySelector(".tooltip-content");
-		this.tooltipSlot.addEventListener('slotchange', e=>{
-			this.updateTooltipContent();
-		});
-		document.body.append(this.tooltipTextEl);
-		this.updateTooltipContent();
-
-		this.tooltipTextEl.addEventListener("mouseenter", ()=>{
-			this.mouseInTooltipContent = true;
-		})
-
-		this.tooltipTextEl.addEventListener("mouseleave", ()=>{
-			this.mouseInTooltipContent = false;
-			this.tooltipTextEl.classList.remove("active")
-			if(this.timeoutId){
-				clearTimeout(this.timeoutId)
-				delete this.timeoutId;
-			}
-		})
-	}
-
-	updateTooltipContent(){
-		let nodes = this.tooltipSlot.assignedNodes();
-		this.tooltipTextEl.innerHTML = "";
-		nodes.forEach(n=>{
-			this.tooltipTextEl.append(n.cloneNode(true));
-		})
-	}
-
-	onTooltipMouseEnter(e){
-		let box = this.tooltipEl.getBoundingClientRect();
-		//console.log("box", box)
-		let cX = box.left + box.width/2;
-		let cY = box.top + box.height/2;
-		let winWidth = window.innerWidth;
-		let winHWidth = winWidth/2;
-		let winHeight = window.innerHeight;
-		let winHHeight = winHeight/2;
-
-		let style = this.tooltipTextEl.style;
-		if(this['top-align-tooltip'] || cY > winHHeight){
-			style.top = 'initial';
-			style.bottom = (winHeight-box.top)+"px";
-		}else{
-			style.bottom = 'initial';
-			style.top = box.bottom+"px";
-		}
-		
-		if(this['right-align-tooltip'] || cX > winHWidth){
-			style.left = 'initial';
-			style.right = (winWidth - box.right)+"px";
-		}else{
-			style.right = 'initial';
-			style.left = box.left+"px";
-		}
-
-		this.tooltipTextEl.classList.add("active")
-		this.checkAndCloseTooltipIfAway();
-	}
-	checkAndCloseTooltipIfAway(e){
-		this.timeoutId = setTimeout(()=>{
-			if(this.mouseInTooltipContent)
-				return this.checkAndCloseTooltipIfAway();
-			this.tooltipTextEl.classList.remove("active")
-		}, 1000)
-	}
-}
-
-FlowReference.define('flow-reference');
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */var s;const e=window,r=e.trustedTypes,h=r?r.emptyScript:"",o=e.reactiveElementPolyfillSupport,n={toAttribute(t,i){switch(i){case Boolean:t=t?h:null;break;case Object:case Array:t=null==t?t:JSON.stringify(t)}return t},fromAttribute(t,i){let s=t;switch(i){case Boolean:s=null!==t;break;case Number:s=null===t?null:Number(t);break;case Object:case Array:try{s=JSON.parse(t)}catch(t){s=null}}return s}},a=(t,i)=>i!==t&&(i==i||t==t),l={attribute:!0,type:String,converter:n,reflect:!1,hasChanged:a};class d extends HTMLElement{constructor(){super(),this._$Ei=new Map,this.isUpdatePending=!1,this.hasUpdated=!1,this._$El=null,this.u()}static addInitializer(t){var i;this.finalize(),(null!==(i=this.h)&&void 0!==i?i:this.h=[]).push(t)}static get observedAttributes(){this.finalize();const t=[];return this.elementProperties.forEach(((i,s)=>{const e=this._$Ep(s,i);void 0!==e&&(this._$Ev.set(e,s),t.push(e))})),t}static createProperty(t,i=l){if(i.state&&(i.attribute=!1),this.finalize(),this.elementProperties.set(t,i),!i.noAccessor&&!this.prototype.hasOwnProperty(t)){const s="symbol"==typeof t?Symbol():"__"+t,e=this.getPropertyDescriptor(t,s,i);void 0!==e&&Object.defineProperty(this.prototype,t,e)}}static getPropertyDescriptor(t,i,s){return{get(){return this[i]},set(e){const r=this[t];this[i]=e,this.requestUpdate(t,r,s)},configurable:!0,enumerable:!0}}static getPropertyOptions(t){return this.elementProperties.get(t)||l}static finalize(){if(this.hasOwnProperty("finalized"))return!1;this.finalized=!0;const t=Object.getPrototypeOf(this);if(t.finalize(),void 0!==t.h&&(this.h=[...t.h]),this.elementProperties=new Map(t.elementProperties),this._$Ev=new Map,this.hasOwnProperty("properties")){const t=this.properties,i=[...Object.getOwnPropertyNames(t),...Object.getOwnPropertySymbols(t)];for(const s of i)this.createProperty(s,t[s])}return this.elementStyles=this.finalizeStyles(this.styles),!0}static finalizeStyles(i){const s=[];if(Array.isArray(i)){const e=new Set(i.flat(1/0).reverse());for(const i of e)s.unshift(t(i))}else void 0!==i&&s.push(t(i));return s}static _$Ep(t,i){const s=i.attribute;return!1===s?void 0:"string"==typeof s?s:"string"==typeof t?t.toLowerCase():void 0}u(){var t;this._$E_=new Promise((t=>this.enableUpdating=t)),this._$AL=new Map,this._$Eg(),this.requestUpdate(),null===(t=this.constructor.h)||void 0===t||t.forEach((t=>t(this)))}addController(t){var i,s;(null!==(i=this._$ES)&&void 0!==i?i:this._$ES=[]).push(t),void 0!==this.renderRoot&&this.isConnected&&(null===(s=t.hostConnected)||void 0===s||s.call(t))}removeController(t){var i;null===(i=this._$ES)||void 0===i||i.splice(this._$ES.indexOf(t)>>>0,1)}_$Eg(){this.constructor.elementProperties.forEach(((t,i)=>{this.hasOwnProperty(i)&&(this._$Ei.set(i,this[i]),delete this[i])}))}createRenderRoot(){var t;const s=null!==(t=this.shadowRoot)&&void 0!==t?t:this.attachShadow(this.constructor.shadowRootOptions);return i(s,this.constructor.elementStyles),s}connectedCallback(){var t;void 0===this.renderRoot&&(this.renderRoot=this.createRenderRoot()),this.enableUpdating(!0),null===(t=this._$ES)||void 0===t||t.forEach((t=>{var i;return null===(i=t.hostConnected)||void 0===i?void 0:i.call(t)}))}enableUpdating(t){}disconnectedCallback(){var t;null===(t=this._$ES)||void 0===t||t.forEach((t=>{var i;return null===(i=t.hostDisconnected)||void 0===i?void 0:i.call(t)}))}attributeChangedCallback(t,i,s){this._$AK(t,s)}_$EO(t,i,s=l){var e;const r=this.constructor._$Ep(t,s);if(void 0!==r&&!0===s.reflect){const h=(void 0!==(null===(e=s.converter)||void 0===e?void 0:e.toAttribute)?s.converter:n).toAttribute(i,s.type);this._$El=t,null==h?this.removeAttribute(r):this.setAttribute(r,h),this._$El=null}}_$AK(t,i){var s;const e=this.constructor,r=e._$Ev.get(t);if(void 0!==r&&this._$El!==r){const t=e.getPropertyOptions(r),h="function"==typeof t.converter?{fromAttribute:t.converter}:void 0!==(null===(s=t.converter)||void 0===s?void 0:s.fromAttribute)?t.converter:n;this._$El=r,this[r]=h.fromAttribute(i,t.type),this._$El=null}}requestUpdate(t,i,s){let e=!0;void 0!==t&&(((s=s||this.constructor.getPropertyOptions(t)).hasChanged||a)(this[t],i)?(this._$AL.has(t)||this._$AL.set(t,i),!0===s.reflect&&this._$El!==t&&(void 0===this._$EC&&(this._$EC=new Map),this._$EC.set(t,s))):e=!1),!this.isUpdatePending&&e&&(this._$E_=this._$Ej())}async _$Ej(){this.isUpdatePending=!0;try{await this._$E_}catch(t){Promise.reject(t)}const t=this.scheduleUpdate();return null!=t&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){var t;if(!this.isUpdatePending)return;this.hasUpdated,this._$Ei&&(this._$Ei.forEach(((t,i)=>this[i]=t)),this._$Ei=void 0);let i=!1;const s=this._$AL;try{i=this.shouldUpdate(s),i?(this.willUpdate(s),null===(t=this._$ES)||void 0===t||t.forEach((t=>{var i;return null===(i=t.hostUpdate)||void 0===i?void 0:i.call(t)})),this.update(s)):this._$Ek()}catch(t){throw i=!1,this._$Ek(),t}i&&this._$AE(s)}willUpdate(t){}_$AE(t){var i;null===(i=this._$ES)||void 0===i||i.forEach((t=>{var i;return null===(i=t.hostUpdated)||void 0===i?void 0:i.call(t)})),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(t)),this.updated(t)}_$Ek(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$E_}shouldUpdate(t){return!0}update(t){void 0!==this._$EC&&(this._$EC.forEach(((t,i)=>this._$EO(i,this[i],t))),this._$EC=void 0),this._$Ek()}updated(t){}firstUpdated(t){}}d.finalized=!0,d.elementProperties=new Map,d.elementStyles=[],d.shadowRootOptions={mode:"open"},null==o||o({ReactiveElement:d}),(null!==(s=e.reactiveElementVersions)&&void 0!==s?s:e.reactiveElementVersions=[]).push("1.5.0");export{d as ReactiveElement,n as defaultConverter,a as notEqual};
+//# sourceMappingURL=reactive-element.js.map
 
 "###;
 
-const ASPECTRON_FLOW_UX_SRC_FLOW_FORMAT_378 : &'static str = r###"
+const LIT_REACTIVE_ELEMENT_CSS_TAG_31 : &'static str = r###"
+/**
+ * @license
+ * Copyright 2019 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+const t=window,e=t.ShadowRoot&&(void 0===t.ShadyCSS||t.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,s=Symbol(),n=new WeakMap;class o{constructor(t,e,n){if(this._$cssResult$=!0,n!==s)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o;const s=this.t;if(e&&void 0===t){const e=void 0!==s&&1===s.length;e&&(t=n.get(s)),void 0===t&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),e&&n.set(s,t))}return t}toString(){return this.cssText}}const r=t=>new o("string"==typeof t?t:t+"",void 0,s),i=(t,...e)=>{const n=1===t.length?t[0]:e.reduce(((e,s,n)=>e+(t=>{if(!0===t._$cssResult$)return t.cssText;if("number"==typeof t)return t;throw Error("Value passed to 'css' function must be a 'css' function result: "+t+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(s)+t[n+1]),t[0]);return new o(n,t,s)},S=(s,n)=>{e?s.adoptedStyleSheets=n.map((t=>t instanceof CSSStyleSheet?t:t.styleSheet)):n.forEach((e=>{const n=document.createElement("style"),o=t.litNonce;void 0!==o&&n.setAttribute("nonce",o),n.textContent=e.cssText,s.appendChild(n)}))},c=e?t=>t:t=>t instanceof CSSStyleSheet?(t=>{let e="";for(const s of t.cssRules)e+=s.cssText;return r(e)})(t):t;export{o as CSSResult,S as adoptStyles,i as css,c as getCompatibleStyle,e as supportsAdoptingStyleSheets,r as unsafeCSS};
+//# sourceMappingURL=css-tag.js.map
 
-
-export class FlowFormat {
-	static 'duration'(v) {
-		let hrs = Math.floor(v/1000/60/60);
-		let min = Math.floor(v/1000/60%60);
-		let sec = Math.floor(v/1000%60);
-		if(!hrs && !min && !sec)
-			return this.commas(v);
-		let t = '';
-		if(hrs) t += (hrs < 10 ? '0'+hrs : hrs) + ' h ';
-		if(hrs || min) t += (min < 10 ? '0'+min : min) + ' m ';
-		if(hrs || min || sec) t += (sec < 10 ? '0'+sec : sec) + ' s ';
-		return t;
-	}
-	static 'commas'(v, precision = 0) {
-		var parts = parseFloat(v).toFixed(parseInt(precision)).toString().split('.');
-	    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-	    return parts.join('.');
-	}
-		
-	static 'cs'(v, ctx) {
-		const { precision } = ctx;
-		return FlowFormat.commas(v, precision || 0);
-	}
-	static 'fiat'(v) { return this.commas(v,2); }
-	static 'crypto'(v, opt) { 
-		let result = this.commas(v,8); 
-		if(opt?.noTrailingZeros) {
-			let [int,frac] = result.split('.');
-			frac = frac.replace(/0+$/,'');
-			return frac ? `${int}.${frac}` : int;
-		}
-		return result;
-
-	}
-	static 'int'(v) { return this.commas(parseInt(v)); }
-	static 'file-size-si'(v) { return parseFloat(v).toFileSize(true); }
-	static 'file-size'(v) { return parseFloat(v).toFileSize(); }
-	static 'hash-rate'(v, ctx) { return parseFloat(v).toHashMetric(ctx.precision, ctx.unit, ctx.commas) + "H/s"; }
-	static 'default'(v, ctx) {
-		return FlowFormat.cs(v, ctx);
-		// const { precision } = ctx;
-		// if(precision)
-		// 	return parseFloat(v).toFixed(parseInt(precision));
-		// return parseInt(v);
-	}
-}
-
-if(!Number.prototype.toFileSize)
-	Object.defineProperty(Number.prototype, 'toFileSize', {
-		value: function(a, asNumber){
-			var b,c,d;
-			var r = (
-				a=a?[1e3,'k','B']:[1024,'K','iB'],
-				b=Math,
-				c=b.log,
-				d=c(this)/c(a[0])|0,this/b.pow(a[0],d)
-			).toFixed(2)
-
-			if(!asNumber){
-				r += ' '+(d?(a[1]+'MGTPEZY')[--d]+a[2]:'Bytes');
-			}
-			return r;
-		},
-		writable:false,
-		enumerable:false
-	});
-
-
-if(!Number.prototype.toUnitSize)
-	Object.defineProperty(Number.prototype, 'toUnitSize', {
-		value: function(asNumber){
-			var a,b,c,d;
-			var r = (
-				a=1e3,
-				b=Math,
-				c=b.log,
-				d=c(this)/c(a)|0,this/b.pow(a,d)
-			).toFixed(2)
-
-			if(!asNumber){
-				r += ' '+(d?('KMGTPEZY')[--d]:' ');
-			}
-			return r;
-		},
-		writable:false,
-		enumerable:false
-	});
-
-
-if(!Number.prototype.toHashMetric)
-	Object.defineProperty(Number.prototype, 'toHashMetric', {
-		value: function(precision, unit, commas) {
-
-			var l = [
-				[1e24, 'Y'],
-				[1e21, 'Z'],
-				[1e18, 'E'],
-				[1e15, 'P'],
-				[1e12, 'T'],
-				[1e9, 'G'],
-				[1e6, 'M'],
-				[1e3, 'k']
-			];
-
-			var i = 0;
-			if(unit) {
-				while(i < l.length-1 && unit != l[i][1])
-					i++;
-
-			}
-			else {
-				while(i < l.length-1 && (this) < l[i][0])
-					i++;
-				unit = l[i][1];
-			}
-
-			var v = this / l[i][0];
-			
-			precision = _.isUndefined(precision) ? 2 : parseInt(precision);
-			if(commas) {
-				var parts = v.toFixed(precision).toString().split('.');
-				parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-				return parts.join('.') + ' ' + unit;
-			}
-			else {
-				return v.toFixed(precision) + ' ' + unit;
-			}
-		},
-		writable:false,
-		enumerable:false
-	});	
 "###;
 
-const ASPECTRON_FLOW_UX_SRC_FLOW_GRAPH_351 : &'static str = r###"
-
-
-
-
+const LIT_ELEMENT_INDEX_674 : &'static str = r###"
 
 /**
-* @class FlowGraph
-* @extends Flowd3Element
-* @prop {Boolean} disabled
-* @prop {String} title 
-* @prop {String} prefix
-* @prop {String} suffix
-* @prop {String} align
-* @prop {Number} value
-* @prop {String} data
-* @prop {String} sampler
-* @prop {Number} range
-* @prop {Boolean} overlay
-* @prop {String} format
-* @prop {Number} precision 
-* @prop {Boolean} axes
-* @prop {Boolean} info
-* @cssvar {font-family} [--flow-data-field-font-family="Julius Sans One"]
-* @cssvar {font-weight} [--flow-data-field-font-weight=bold]
-* @cssvar {background-color} [--flow-background-color]
-* @cssvar {background} [--flow-graph-info-bg=#FFF);
-* @cssvar {border} [--flow-graph-info-border=1px solid #DDD]
-* @example
-*   <flow-graph>overlay content</flow-graph>
-*
-*/
-export class FlowGraph extends Flowd3Element {
-	static get properties() {
-		return {
-			disabled:{type:Boolean, reflect:true},
-			title:{type:String},
-			prefix:{type:String },
-			suffix:{type:String},
-			align:{type:String},
-			value:{type:Number},
-			data:{type:String},  // sampler: 'kaspad.kd0.info.
-			sampler:{type:String},
-			range:{type:Number},
-			overlay:{type:Boolean},
-			format:{type:String},
-			precision:{type:Number},
-			axes:{type:Boolean},
-			info:{type:Boolean},
-		}
-	}
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */console.warn("The main 'lit-element' module entrypoint is deprecated. Please update your imports to use the 'lit' package: 'lit' and 'lit/decorators.ts' or import from 'lit-element/lit-element.ts'. See https://lit.dev/msg/deprecated-import-path for more information.");
+//# sourceMappingURL=index.js.map
 
-	static get styles(){
-		return [Flowd3Element.styles, css`
-			:host{
-				display:inline-flex;
-				font-weight:bold;
-				font-size:13px;
-				text-transform:uppercase;
-				cursor:pointer;
-				font-family:var(--flow-data-field-font-family, "Julius Sans One");
-				font-weight:var(--flow-data-field-font-weight, bold);
-				border-radius: 10px;
-				overflow: hidden;
-				position:relative;
-			}
-			:host([disabled]){opacity:0.5;cursor:default;pointer-events:none;}
-			.colon{display:none}
-			:host(.has-colon) .colon{display:inline;}
-			.container{
-				white-space: nowrap;
-				padding:2px 6px 6px 6px;
-				height: 100%;
-			}
-			
-			.container>div{padding:2px;}
-			.title{flex:1; text-align:left; opacity:1;xmargin-top:7px; font-size: 10px; color: var(--flow-data-badge-caption); xtext-shadow: 0px 0px 0px var(--flow-data-badge-caption-shadow, #fff); }
-			.value{text-align:right; opacity:1;font-size:14px;font-family:"Exo 2";font-weight:normal;background-color: var(--flow-background-color:);}
-			.prefix{opacity:0.9;margin-right:3px;margin-top:3px; font-size: 10px;}
-			.suffix{opacity:0.9;margin-left:3px;margin-top:3px; font-size: 10px;}
-			.col{display: flex; flex-direction: column; align-items: left;}
-			.row{display: flex; flex-direction: row; flex:0;}
+"###;
 
-			.wrapper {
-				/*width:100%;height:100%;*/
-				position:relative;
-				flex:1;
-				margin:6px;overflow:hidden;
-				/*
-				min-width: var(--flow-data-badge-graph-with,240px);
-				min-height: var(--flow-data-badge-graph-height,80px);				
-				*/				
-			}
-			
-			:host([border]) .wrapper {
-				border: 2px solid var(--flow-primary-color,#333);
-				box-shadow: 2px 2px 1px rgba(1, 123, 104, 0.1);
-				border-radius: 10px;
+const LIT_REACTIVE_ELEMENT_DECORATORS_BASE_38 : &'static str = r###"
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+const e=(e,t,o)=>{Object.defineProperty(t,o,e)},t=(e,t)=>({kind:"method",placement:"prototype",key:t.key,descriptor:e}),o=({finisher:e,descriptor:t})=>(o,n)=>{var r;if(void 0===n){const n=null!==(r=o.originalKey)&&void 0!==r?r:o.key,i=null!=t?{kind:"method",placement:"prototype",key:n,descriptor:t(o.key)}:{...o,key:n};return null!=e&&(i.finisher=function(t){e(t,n)}),i}{const r=o.constructor;void 0!==t&&Object.defineProperty(o,n,t(n)),null==e||e(r,n)}};export{o as decorateProperty,e as legacyPrototypeMethod,t as standardPrototypeMethod};
+//# sourceMappingURL=base.js.map
 
-			}
+"###;
 
-			.wrapper > div {
-				width:100%;height:100%;
-				position:relative;left:0px;top:0px;bottom:0px;right:0px;
-			}
+const LIT_REACTIVE_ELEMENT_DECORATORS_CUSTOM_ELEMENT_40 : &'static str = r###"
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+const e=e=>n=>"function"==typeof n?((e,n)=>(customElements.define(e,n),n))(e,n):((e,n)=>{const{kind:t,elements:s}=n;return{kind:t,elements:s,finisher(n){customElements.define(e,n)}}})(e,n);export{e as customElement};
+//# sourceMappingURL=custom-element.js.map
 
-			.d3-holder{
-				min-height:10px;
-				min-width:10px;
-				opacity:1;
-				border-radius:10px;
-			}
-			.wrapper>div.d3-holder{position:absolute;}
-			.overlay{pointer-events:none}
-			.info{
-				position:absolute;pointer-events:none;
-				background:var(--flow-graph-info-bg, #FFF);
-				border:var(--flow-graph-info-border, 1px solid #DDD);
-				padding:3px;font-size:0.7rem;left:10px;top:10px;
-				opacity:0;max-width:48%;
-			}
-			.info-dot{opacity:0}
-			[flex] {
-				flex: 1;
-			}
+"###;
 
+const LIT_REACTIVE_ELEMENT_DECORATORS_PROPERTY_33 : &'static str = r###"
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+const i=(i,e)=>"method"===e.kind&&e.descriptor&&!("value"in e.descriptor)?{...e,finisher(n){n.createProperty(e.key,i)}}:{kind:"field",key:Symbol(),placement:"own",descriptor:{},originalKey:e.key,initializer(){"function"==typeof e.initializer&&(this[e.key]=e.initializer.call(this))},finisher(n){n.createProperty(e.key,i)}};function e(e){return(n,t)=>void 0!==t?((i,e,n)=>{e.constructor.createProperty(n,i)})(e,n,t):i(e,n)}export{e as property};
+//# sourceMappingURL=property.js.map
 
-			.axis {
-				font-size:12px;
-				font-family: "Consolas", "Source Sans Pro";
-				font-weight: 300;
-				strokeColor: #333;
-			}
+"###;
 
-			.axis text {
-				fill:var(--flow-background-inverse-soft, #aaa);
-			}
-			.axis path {
-				stroke:var(--flow-background-inverse-soft, #aaa);
-			}
-			.axis line {
-				stroke:var(--flow-background-inverse-soft, #aaa);
-			}
+const LIT_REACTIVE_ELEMENT_DECORATORS_STATE_37 : &'static str = r###"
 
-			.value-container {
-				/*background-color: var(--flow-background-color, rgba(0,0,0,0));*/
-				display:flex;
-				flex-direction:row;
-			}
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */function t(t){return r({...t,state:!0})}export{t as state};
+//# sourceMappingURL=state.js.map
 
-			.title-bottom { display: none; }
-			.host([bottom])	.title-bottom { display: block; }
-			.host([bottom])	.title-top { display: none; }
-			.host([top])	.title-bottom { display: none; }
-			.host([top])	.title-top { display: block; }
-		`];
-	}
+"###;
 
-	constructor() {
-		super();
-		this.sampler = '';
-		this.range = 60 * 5;
-		this.refresh = 1e3;
-		this.precision = 0;
-		this.axes = false;
-		this.info = false;
+const LIT_REACTIVE_ELEMENT_DECORATORS_EVENT_OPTIONS_32 : &'static str = r###"
 
-		this.svgPreserveAspectRatio = 'xMaxYMax meet';
-	}
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */function e(e){return r({finisher:(r,t)=>{Object.assign(r.prototype[t],e)}})}export{e as eventOptions};
+//# sourceMappingURL=event-options.js.map
 
-	onElementResize(){
-		super.onElementResize();
-		dpc(()=>{
-			super.onElementResize();
-			this.requestUpdate("element-resize", null);
-		})
-		dpc(1000, ()=>{
-			super.onElementResize();
-			this.requestUpdate("element-resize", null);
-		})
-	}
+"###;
 
-	connectedCallback() {
-		super.connectedCallback();
-		if(this.sampler)
-			this.interval = setInterval(this.requestUpdate.bind(this), this.refresh);
-	}
+const LIT_REACTIVE_ELEMENT_DECORATORS_QUERY_34 : &'static str = r###"
 
-	disconnectedCallback() {
-		super.disconnectedCallback();
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */function i(i,n){return o({descriptor:o=>{const t={get(){var o,n;return null!==(n=null===(o=this.renderRoot)||void 0===o?void 0:o.querySelector(i))&&void 0!==n?n:null},enumerable:!0,configurable:!0};if(n){const n="symbol"==typeof o?Symbol():"__"+o;t.get=function(){var o,t;return void 0===this[n]&&(this[n]=null!==(t=null===(o=this.renderRoot)||void 0===o?void 0:o.querySelector(i))&&void 0!==t?t:null),this[n]}}return t}})}export{i as query};
+//# sourceMappingURL=query.js.map
 
-		if(this.interval)
-			clearInterval(this.interval);
-	}
+"###;
 
-	render() {
+const LIT_REACTIVE_ELEMENT_DECORATORS_QUERY_ALL_36 : &'static str = r###"
 
-		dpc(()=>{
-			this.draw();
-		})
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */function e(e){return r({descriptor:r=>({get(){var r,o;return null!==(o=null===(r=this.renderRoot)||void 0===r?void 0:r.querySelectorAll(e))&&void 0!==o?o:[]},enumerable:!0,configurable:!0})})}export{e as queryAll};
+//# sourceMappingURL=query-all.js.map
 
-		let value = '';
-		//this.log("render flow-graph");
-		if(this.sampler) {
-			let idents = this.sampler.split(':');
-			let ident = idents.shift(); 
-			let sampler =  FlowSampler.get(ident);
-			value = sampler.last() || '';
-			if(value !== undefined) { 
-				value = FlowFormat[this.format || 'default'](value || 0, this);
-			}
-		}
-		else {
-			console.log("no sampler", this);
-		}
+"###;
 
+const LIT_REACTIVE_ELEMENT_DECORATORS_QUERY_ASYNC_35 : &'static str = r###"
 
-		if(this.overlay) {
-			return html`
-			<div class='wrapper'>
-				<div class="d3-holder">${super.render()}</div>
-				<div class="overlay">
-					<div class="container col">
-						<!-- div class="title title-top">${this.title}<span class="colon">:</span></div -->
-						<div class="row">
-							<div class="title title-top">${this.title}<span class="colon">:</span></div>
-							${ (!this.align || this.align == 'right') ? html`<div style="flex:1;"></div>` : '' }
-							<div class="value-container">
-								<div class="prefix">${this.prefix}</div>
-								<div class="value">${value}</div>
-								<div class="suffix">${this.suffix}</div>
-							</div>
-							${ (this.align == 'left') ? html`<div style="flex:1;"></div>` : '' }
-						</div>
-						<div flex></div>
-						<!-- div class="row">
-							<div class="title title-bottom">${this.title}<span class="colon">:</span></div>
-							${ (!this.align || this.align == 'right') ? html`<div style="flex:1;"></div>` : '' }
-							<div class="value-container">
-								<div class="prefix">${this.prefix}</div>
-								<div class="value">${value}</div>
-								<div class="suffix">${this.suffix}</div>
-							</div>
-							${ (this.align == 'left') ? html`<div style="flex:1;"></div>` : '' }
-						</div -->
-					</div>
-				</div>
-			</div>
-			<div class="info"></div>
-			`;	
-		} else {
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+function e(e){return r({descriptor:r=>({async get(){var r;return await this.updateComplete,null===(r=this.renderRoot)||void 0===r?void 0:r.querySelector(e)},enumerable:!0,configurable:!0})})}export{e as queryAsync};
+//# sourceMappingURL=query-async.js.map
 
-			return html`
-			<div class='wrapper'>
-				<div class="d3-holder">${super.render()}</div>
-				<div>
-					<div class="container col">
-						<slot></slot>
-					</div>
-				</div>
-			</div>
-			<div class="info"></div>
-			`;	
-		}
-	}
+"###;
 
-	getMargin(){
-		if(this.axes){
-			return {
-				bottom:40,
-				top:30,
-				left:20,
-				right:20
-			}
-		}
-		return {
-			bottom:0,
-			top:10,
-			left:0,
-			right:0
-		}
-	}
-	draw(){
-		let margin = this.getMargin();
-		let {height:fullHeight, width:fullWidth} = this.el_d3.getBoundingClientRect();
-		let width = fullWidth - margin.left - margin.right;
-    	let height = fullHeight - margin.top - margin.bottom;
+const LIT_REACTIVE_ELEMENT_DECORATORS_QUERY_ASSIGNED_ELEMENTS_39 : &'static str = r###"
 
-		if(!this.sampler)
-			return;
-		let samplerIdents = this.sampler.split(':');
-		
-		let samplers = samplerIdents.map((ident) => {
-			let sampler =  FlowSampler.get(ident);
-			if(!this._draw){
-				this._draw = this.draw.bind(this);
-				sampler.on('data', this._draw);
-			}
-			return sampler;
-		})
-		
-		let data = samplers[0].data;
+/**
+ * @license
+ * Copyright 2021 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */var n;const e=null!=(null===(n=window.HTMLSlotElement)||void 0===n?void 0:n.prototype.assignedElements)?(o,n)=>o.assignedElements(n):(o,n)=>o.assignedNodes(n).filter((o=>o.nodeType===Node.ELEMENT_NODE));function l(n){const{slot:l,selector:t}=null!=n?n:{};return o({descriptor:o=>({get(){var o;const r="slot"+(l?`[name=${l}]`:":not([name])"),i=null===(o=this.renderRoot)||void 0===o?void 0:o.querySelector(r),s=null!=i?e(i,n):[];return t?s.filter((o=>o.matches(t))):s},enumerable:!0,configurable:!0})})}export{l as queryAssignedElements};
+//# sourceMappingURL=query-assigned-elements.js.map
 
-		//console.log(JSON.stringify(data, null))
-		let [min,max] = d3.extent(data, d => d.date);
-		//console.log("processing min-max[1]",min,max);
-		if(!this.axes)
-			min = max - 1000*this.range;
-		let maxTextLength = 0;
-		data.forEach(d=>{
-			if(d.value.toFixed(this.precision).length>maxTextLength)
-				maxTextLength = d.value.toFixed(this.precision).length;
-		})
+"###;
 
-		if(this.axes && margin.left < maxTextLength * 10){
-			let oldLeft = margin.left
-			margin.left = maxTextLength * 10;
-			width += oldLeft - margin.left;
-		}
+const LIT_REACTIVE_ELEMENT_DECORATORS_QUERY_ASSIGNED_NODES_41 : &'static str = r###"
 
-
-		const x = d3.scaleUtc()
-		.domain([min, max])
-		.range([0, width])
-
-		const y = d3.scaleLinear()
-		.domain(d3.extent(data, d => d.value)).nice()
-		.range([height, 0]);
-
-		let xAxis, yAxis;
-		if(this.axes){
-			xAxis = g => g
-			.attr("transform", `translate(0,${height})`)
-			.call(d3.axisBottom(x).ticks(width / 80).tickSizeOuter(0));
-
-			yAxis = g => g
-			//.attr("transform", `translate(${margin.left},0)`)
-			.call(d3.axisLeft(y).ticks(height / 20).tickSizeOuter(0))
-			//.call(g => g.select(".domain").remove())
-		}
-		
-		// .call(g => g.select(".tick:last-of-type text").clone()
-		// 	.attr("x", 3)
-		// 	.attr("text-anchor", "start")
-		// 	.attr("font-weight", "bold")
-		// 	.text(this.title));
-
-		const area = d3.area()
-			.curve(d3.curveLinear)
-			.x(d => x(d.date))
-			.y0(height)
-			.y1(d => y(d.value));
-
-		const { el } = this;
-		// el.append('path')
-		// 	.datum(data)
-		// 	.attr('fill','var(--flow-graph-fill, steelblue)')
-		// 	.attr('stroke','var(--flow-graph-stroke, steelblue)')
-		// 	.attr('d',area);
-		let t = `translate(${margin.left},${margin.top})`;
-		if(el.__t != t){
-			el.__t = t
-			el.attr("transform", t)
-		}
-
-		if(this.svg.__w != fullWidth){
-			this.svg.__w = fullWidth;
-			this.svg
-				.attr("width", fullWidth)
-		}
-		if(this.svg.__h != fullHeight){
-			this.svg.__h = fullHeight;
-			this.svg
-				.attr("height", fullHeight)
-		}
-			
-
-		if(!this.path)
-			this.path = el.append('path')
-				.attr('stroke-opacity', 'var(--flow-graph-stroke-opacity, 1.0)')
-				.attr("stroke-linejoin", "round")
-				.attr("stroke-linecap", "round")
-				.attr("stroke-width", 'var(--flow-graph-stroke-width, 0)')
-				.attr('fill','var(--flow-graph-fill, steelblue)')
-				.attr('stroke','var(--flow-graph-stroke, "#000)')
-
-		try {				
-			this.path.datum(data)
-				.attr('d', area);
-		} catch(ex) {
-			if(this.sampler)
-				console.log('error while processing sampler:',this.sampler);
-			console.log(ex);
-
-		}
-
-		if(this.info){
-			let me = this;
-			let bisect = d3.bisector(d=>d.date).left;
-			//let _data = data.map(d=>d.date.getTime());
-			let timeFormat = d3.timeFormat("%x %X");
-			this.getDataByPoint = (p)=>{
-				let x0 = x.invert(p-margin.left);
-				/*let t = x0.getTime();
-				let dif = -1, _dif, index=-1;
-				_data.forEach((ts, i)=>{
-					_dif = Math.abs(ts-t)
-					if(dif<0 || dif>_dif){
-						index = i;
-						dif = _dif
-					}
-				})
-				//console.log("index", index, x0, p)*/
-				let index = bisect(data, x0);
-				let d = data[index];
-				if(!d)
-					return
-				let cx = x(d.date);
-				let cy = y(d.value);
-				let l = null;
-				let r = null;
-				if(cx>width*0.5){
-					r = width-cx+margin.right+12;
-				}else{
-					l = cx+12+margin.left
-				}
-				return {cx, cy, d, l, r, t:cy+12+margin.top};
-			}
-			if(!this.infoEl){
-				this._infoEl = this._infoEl||this.renderRoot.querySelector('.info')
-				this.infoEl = d3.select(this._infoEl);
-				this.infoDot = el.append("circle")
-					.attr("class", "info-dot")
-			        .attr("fill", "var(--flow-graph-info-dot-fill, red)")
-			        .attr("stroke", "var(--flow-graph-info-dot-stroke, none)")
-			        .attr("r", 3)
-				this.svg 
-					.on('mousemove', function(_d){
-						let p = d3.mouse(this)[0];
-					    let data = me.getDataByPoint(p);
-						//console.log("ddd", d.value, x0)
-						if(!data)
-							return
-						let {cx, cy, l, r, t, d} = data;
-						let infoEl = me.infoEl;
-						infoEl
-							.html(FlowFormat[me.format||'default'](d.value, me)+", "+timeFormat(d.date))
-		     				.style("top", t+"px")
-		     			if(l){
-		     				infoEl.style("right", 'initial')
-		     				infoEl.style("left", l+"px")
-		     			}else{
-		     				infoEl.style("right", r+"px")
-		     				infoEl.style("left", 'initial')
-		     			}
-						infoEl.transition()
-							.duration(50)
-							.style("opacity", 1)
-						me.infoDot
-							.style("opacity", 1)
-							.attr("cx", cx)
-			        		.attr("cy", cy)
-					})
-					.on('mouseout', ()=>{
-						this.infoDot.style("opacity", 0);
-						this.infoEl.transition()
-							.duration(50)
-							.style("opacity", 0);
-					});
-			}
-		}
-
-
-		if(this.axes){
-			this.xAxis = this.xAxis || el.append("g")
-			this.xAxis.call(xAxis);
-			this.yAxis = this.yAxis || el.append("g")
-			this.yAxis.call(yAxis);
-
-			this.xAxis.classed('axis', true);
-			this.yAxis.classed('axis', true);
-		}
-
-	}
-}
-
-FlowGraph.define('flow-graph');
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */function o(o,n,r){let l,s=o;return"object"==typeof o?(s=o.slot,l=o):l={flatten:n},r?t({slot:s,flatten:n,selector:r}):e({descriptor:e=>({get(){var e,t;const o="slot"+(s?`[name=${s}]`:":not([name])"),n=null===(e=this.renderRoot)||void 0===e?void 0:e.querySelector(o);return null!==(t=null==n?void 0:n.assignedNodes(l))&&void 0!==t?t:[]},enumerable:!0,configurable:!0})})}export{o as queryAssignedNodes};
+//# sourceMappingURL=query-assigned-nodes.js.map
 
 "###;
 
@@ -20377,3095 +26665,6 @@ export class FlowEvents{
 		return this.listeners;
 	}
 }
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_SOCKET_417 : &'static str = r###"
-
-
-
-
-export class FlowSocket {
-	constructor(options){
-		this.online = false;
-		
-
-		this.options = Object.assign({
-			path:'/rpc',
-			id:UID(),
-			timeout:30,
-			origin:window.location.origin
-		}, options || {});
-
-		this.timeout  = this.options.timeout;
-		this.id = this.options.id;
-		this.transport = this.options.transport || 'ws';
-
-		this.init();
-	}
-
-	init() {
-		this.initEvent();
-		this.connected = false;
-		if (this.options.path)
-			this.connect();
-	}
-
-	initEvent() {
-		this.pending = new Map();
-		this.events = new FlowEvents();
-	}
-
-	connect_impl() {
-
-		switch(this.transport) {
-			case 'ws': {
-				const url = this.options.origin.replace(/^http/,'ws')+this.options.path;
-				// console.log('WS connecting to',url);
-				this.socket_impl = new WebSocket(this.options.origin.replace(/^http/,'ws')+this.options.path);
-			} break;
-
-			case 'sockjs': {
-				this.socket_impl = SockJS(this.options.origin+this.options.path, this.options.args || {});
-			} break;
-		}
-
-		this.socket_impl.onopen=(event)=>{
-			this.online = true;
-			console.log("RPC connected");
-			this.events.emit('open');
-		}
-		this.socket_impl.onerror=(err)=>{
-			console.log("RPC connect_error", err);
-			this.events.emit('connect.error', err);
-			this.socket_impl.close();
-//			this.reconnect_impl();
-		}
-		this.socket_impl.onmessage=(msg)=>{
-			let [ event, data ] = JSON.parse(msg.data);
-			this.intake.emit(event, data);
-		}
-		this.socket_impl.onclose=(event)=>{
-			this.online = false;
-			console.log("RPC disconnected");
-			this.events.emit('disconnect');
-
-			this.pending.forEach((info, id)=>{
-				info.callback({ error : "Connection Closed"});
-			});
-
-			this.pending.clear();
-
-			this.reconnect_impl();
-		};
-	}
-
-	reconnect_impl() {
-		dpc(1000, ()=>{
-			this.connect_impl();
-		})
-	}
-
-	async connect(){
-		if (this._connected || !this.options.path)
-			return;
-		this._connected = true;
-		this.events.emitAsync('rpc-connecting');
-		//let io = this.options.io || window.SockJS;
-		this.intake = new FlowEvents();
-		this.socket = {
-			on : (...args) => { this.intake.on(...args); },
-			emit : (subject, msg) => { this.socket_impl.send(JSON.stringify([subject,msg])); }
-		}
-		this.socket.on('auth.setcookie', (msg)=>{
-			document.cookie = msg.cookie;
-		})
-		this.socket.on('auth.getcookie', ()=>{
-			let cookie = (document.cookie.length === 0) ? null : document.cookie;
-			let response = {
-				cookie: cookie
-			}
-			this.socket_impl.send(JSON.stringify(['auth.cookie', response]));
-		})
-		this.socket.on('ready', (msg) => {
-			if(msg.websocketMode != this.options.websocketMode)
-				throw new Error(`Error - incompatible websocket mode: client ${this.options.websocketMode} server: ${msg.websocketMode}`);
-			this.events.emit('connect');
-		})
-
-		this.connect_impl();
-
-		await this.initSocketHandlers();
-
-		let timeoutMonitor = ()=>{
-			let ts = Date.now();
-			let purge = [ ]
-			this.pending.forEach((info, id)=>{
-				if(ts - info.ts > this.timeout * 1000) {
-					info.callback({ error : "Timeout "});
-					purge.push(id);
-				}
-			});
-			purge.forEach(id=>{
-				this.pending.delete(id);
-			});
-			dpc(1000, timeoutMonitor);
-		}
-		dpc(1000, timeoutMonitor);
-
-	}
-
-	close(){
-		if(this.socket)
-			this.socket.close();
-	}
-
-    
-	on(op, callback) {
-		this.events.on(op, callback);
-	}
-
-
-	initSocketHandlers() { return Promise.resolve(); }
-}
-
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_SOCKET_RPC_400 : &'static str = r###"
-
-
-
-
-export class FlowSocketRPC extends FlowSocket {
-	constructor(options) {
-		super(Object.assign({},options,{websocketMode:'RPC'}));
-		this.asyncSubscribers = new AsyncQueueSubscriberMap();
-	}
-
-	initSocketHandlers() {
-
-		this.socket.on('publish', msg=>{
-			let {subject, data} = msg;
-			if(this.trace) {
-				if(this.trace === 1 || this.trace === true)
-					console.log('RPC ['+this.id+']:', subject);
-				else
-				if(this.trace === 2)
-					console.log('RPC ['+this.id+']:', subject, data);
-			}
-			this.asyncSubscribers.post(subject, {data});
-		})
-
-		this.socket.on('response', (msg)=>{
-			let {rid, error, data} = msg;
-			let info = rid && this.pending.get(rid);
-			if(info) {
-				try {
-					info.callback.call(this, error, data);
-				} catch(ex) {
-					console.error('RPC handler error:', msg);
-					console.error(ex);
-				}
-			}
-			else if(rid) {
-				console.log("RPC received unknown rpc callback (strange server-side retransmit?)");
-			}
-
-			rid && this.pending.delete(rid);
-		})
-
-		return Promise.resolve();
-	}
-
-	subscribe(subject) {
-		return this.asyncSubscribers.subscribe(subject);
-	}
-
-	publish(subject, data) {
-		return this.socket.emit('publish', {subject, data});
-	}
-
-	request(subject, data, callback) {
-		return new Promise((resolve, reject) => {
-
-			if(typeof(data)=='function') {
-				callback = data;
-				data = undefined;
-			}
-
-			let rid = UID();
-
-			this.pending.set(rid, {
-				ts:Date.now(),
-				callback : (err, resp) => {
-					if(callback)
-						callback(err,resp);
-					else
-					if(err)
-						reject(err);
-					else
-						resolve(resp);
-				}
-			});
-
-			this.socket.emit('request', {
-				rid,
-				req : {subject, data}
-			});
-		})
-	}
-
-}
-
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_SOCKET_NATS_359 : &'static str = r###"
-
-
-
-
-export class FlowSocketNATS extends FlowSocket {
-	constructor(options) {
-		super(Object.assign({},options,{websocketMode:'NATS'}));
-		this.trace = false;
-		this.subscribers = new Map();
-		this.subscriptionTokenMap = new Map();
-		this.handlers = new Map();
-
-		this.asyncSubscribers = new AsyncQueueSubscriberMap();
-	}
-
-	initSocketHandlers() {
-
-		this.on('connect', ()=>{
-			// reconnect subscribers
-			this.connectSubscribers(this.asyncSubscribers);
-		});
-
-		this.socket.on('message', msg=>{
-			this.trace && console.log("sio/message",msg);
-			let {subject, data} = msg;
-			if(msg.op){
-				subject = msg.op;
-				data = msg;
-			}
-			if(this.trace) {
-				if(this.trace === 1 || this.trace === true)
-					console.log('RPC ['+this.id+']:', subject);
-				else
-				if(this.trace === 2)
-					console.log('RPC ['+this.id+']:', subject, data);                
-			}
-			this.events.emit(subject, data);
-		})
-
-		this.socket.on('publish::response', (msg)=>{
-			this.trace && console.log("sio/publish::response",msg);
-			let {rid, error, data} = msg;
-			let info = rid && this.pending.get(rid);
-			if(info)
-				info.callback.call(this, error, data);
-			else if(rid)
-				console.log("RPC received unknown rpc callback (strange server-side retransmit?)");
-
-			rid && this.pending.delete(rid);
-		})
-
-		this.socket.on('subscribe::response', (msg)=>{
-			this.trace && console.log("sio/subscribe::response",msg);
-			let {rid, error, token, subject} = msg;
-			let info = rid && this.pending.get(rid);
-			if(info) {
-				info.callback.call(this, error, token);
-				let handler = this.handlers.get(rid);
-				if(!error && subject?.length && handler) {
-					let subscribers = this.subscribers.get(subject);
-					if(!subscribers){
-						subscribers = new Map();
-						this.subscribers.set(subject, subscribers)
-					}
-					//subscribers.set(rid, {token, handler});
-					subscribers.set(token, {token, handler});
-					this.handlers.delete(rid);
-					this.subscriptionTokenMap.set(token, { subscribers, rid });
-				}
-			}
-			else if(rid)
-				console.log("RPC received unknown subscribe::response rid");
-
-			rid && this.pending.delete(rid);
-		})
-
-		this.socket.on('unsubscribe::response', (msg)=>{
-			this.trace && console.log("sio/subscribe::response",msg);
-			let {rid, error, ok} = msg;
-			let info = rid && this.pending.get(rid);
-			if(info)
-				info.callback.call(this, error, ok);
-			else if(rid)
-				console.log("RPC received unknown unsubscribe::response rid");
-
-			rid && this.pending.delete(rid);
-		})
-
-
-		this.socket.on('request', (msg)=>{
-			this.trace && console.log("sio/request",msg);
-			let { req : { subject, data }, rid } = msg;
-			
-			// TODO - check this.events for handlers
-		})
-
-
-		this.socket.on('publish', (msg)=>{
-			this.trace && console.log("sio/publish",msg);
-			let { subject, data,  token} = msg;
-
-//			console.log("PUBLISH",msg);
-
-			//this.events.emit(subject, data);
-			const subscribers = this.subscribers.get(subject);
-			if(subscribers){
-				const target = subscribers.get(token);
-				if(target){
-					//console.log("PUBLISHING     SUBJECT::::", subject, "  TOKEN:", token, "    DATA:", data);
-					target.handler(data);
-				}
-				//subscribers.forEach(subscriber=>subscriber.handler(data));
-			}
-			// TODO - check this.events for handlers
-
-			this.asyncSubscribers.post(subject, {data});
-		})
-
-		this.socket.on('response', (msg)=>{
-			this.trace && console.log("sio/response",msg);
-			let {rid, error, data} = msg;
-			error = error || data?.error;
-			if(error?.code == "TIMEOUT" && !error.error)
-				error.error = "NATS TIMEOUT";
-			let info = rid && this.pending.get(rid);
-			if(info)
-				info.callback.call(this, error, data);
-			else if(rid)
-				console.log("NATS RPC received unknown rpc callback (strange server-side retransmit?)");
-
-			rid && this.pending.delete(rid);
-		})
-
-		return Promise.resolve();
-	}
-
-	on(op, callback) {
-		this.events.on(op, callback);
-	}
-
-	request(subject, data, callback) {
-		return new Promise((resolve, reject) => {
-			if(typeof(data)=='function'){
-				callback = data;
-				data = undefined;
-			}
-
-			let rid = UID();
-			this.pending.set(rid, {
-				ts:Date.now(),
-				callback : (error, data)=>{
-					if(callback) {
-						callback(error, data);
-					} else {
-						if(error) {
-							console.log('NATS request error - Subject:',subject,'Error:',error)
-							reject(error);
-						}
-						else
-							resolve(data);
-					}
-				}
-			})
-
-			this.socket.emit('request', {
-				rid,
-				req : {subject, data}
-			});
-		});
-	}
-
-	publish(subject, data, callback) {
-		return new Promise((resolve, reject) => {
-			let rid = UID();
-
-			let ack = !!callback;
-
-			ack && this.pending.set(rid, {
-				ts:Date.now(),
-				callback : (err, data)=>{
-					if(typeof callback == 'function')
-						return callback(err, data);
-					else
-						return err ? reject(err) : resolve();
-				}
-			})
-
-			this.socket.emit('publish', {
-				req : { subject, data },
-				rid,
-				ack
-			})
-		});
-	}
-
-
-	subscribe(subject, opt) {
-
-		//this.create_nats_subscription_(subject);
-
-		let subscriber = this.asyncSubscribers.subscribe(subject);
-
-		subscriber.on('subscribe',(subject)=>{
-			this.registerSubscriptionWithNATS_(subject, subscriber, opt);	
-		})
-
-		subscriber.on('unsubscribe',(subject)=>{
-			this.unsubscribe(subscriber);	
-		})
-
-//		this.registerSubscriptionWithNATS_(subject, subscriber, opt);
-		// console.log("NATS SUBSCRIPTION:", subject);
-		return subscriber;
-	}
-
-	connectSubscribers(subscribers) {
-
-		// this.asyncSubscribers
-		subscribers.forEach((subscriber)=>{
-			const { subject } = subscriber;
-			subscriber.ready = this.registerSubscriptionWithNATS_(subject, subscriber);
-		});
-
-	}
-
-
-	registerSubscriptionWithNATS_(subject, subscriber, opt = { }) {
-		subscriber.state = 'connecting';
-		let rid = UID();
-		let p = new Promise((resolve, reject)=>{
-			// if(handler)
-			// 	this.handlers.set(rid, handler);
-			this.pending.set(rid, {
-				ts:Date.now(),
-				callback:(err, token)=>{
-					if(err)
-						console.error('subscribe failure for subject:',subject);
-					subscriber.token = token;
-					subscriber.state = 'connected';
-					//console.log("NATS - SUCCESSFUL SUBSCRIPTION to",subject,token,subscriber.state);
-					return err?reject(err):resolve(subscriber);
-				}
-			});
-
-			this.socket.emit('subscribe', {
-				req : { subject, opt },
-				rid
-			})
-		});
-		p.rid = rid;
-		return p;
-	}
-
-
-	unsubscribe(subscriber) {
-//		this.unsubscribe_local_refs(token);
-//		if(subscriber.state == 'connecting')
-
-		const { token } = subscriber;
-		let rid = UID();
-		let p = new Promise((resolve, reject)=>{
-			this.pending.set(rid, {
-				ts:Date.now(),
-				callback:(err, ok)=>{
-					return err?reject(err):resolve(ok);
-				}
-			});
-
-			this.socket.emit('unsubscribe', {
-				req : { token },
-				rid
-			})
-		});
-		p.rid = rid;
-		return p;
-	}
-
-/*
-	unsubscribe_local_refs(token) {
-		// this.subscriptionTokenMap.set(token, { subscribers, rid });
-		let rec = this.subscriptionTokenMap.get(token);
-		if(!rec)
-			return;
-
-		const { rid } = rec;
-
-		this.handlers.delete(rid);
-		this.pending.delete(rid);
-		this.subscribers.forEach(subscribers=>{
-			subscribers.delete(rid);
-		})
-	}
-*/
-}
-
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_APP_381 : &'static str = r###"
-
-
-
-
-
-
-/**
-* @class FlowApp
-* @extends BaseElement
-* @example <flow-app></flow-app>
-* 
-* @property {String} ["menu-icon"] 
-* @property {Boolean} [floating-drawer]
-* @property {Boolean} [open-drawer]
-* @cssvar {font-family} [--flow-btn-font-family=var(--flow-font-family, initial)]
-* @cssvar {width} [--flow-app-width=100vw]
-* @cssvar {height} [--flow-app-height=100vh]
-* @cssvar {align-items} [--flow-app-header-align-items=center]
-* @cssvar {height} [--flow-app-header-height=60px]
-* @cssvar {background-color} [--flow-app-header-bg=#161926]
-* @cssvar {color} {--flow-app-header-color=#91aec1]
-* @cssvar {padding} [--flow-app-header-padding=0px 100px]
-* @cssvar {padding} [--flow-app-header-link-padding=0px 0px 0px 16px]
-* @cssvar {color} [--flow-app-header-color=#91aec1]
-* @cssvar {background-color} [--flow-app-drawer-bg=var(--flow-background-color, inherit)]
-* @cssvar {color} [--flow-app-drawer-color=var(--flow-color, inherit)]
-* @cssvar {width} [--flow-app-drawer-width=300px]
-* @cssvar {overflow} [--flow-app-drawer-overflow=initial]
-* @cssvar {transition} [--flow-app-drawer-transition=left 0.5s ease]
-* @cssvar {z-index} [--flow-app-drawer-z-index=10001]
-* @cssvar {left} [--flow-app-drawer-hidden-left=-500px]
-* @cssvar {transition} [--flow-app-drawer-transition=right 0.5s ease]
-* @cssvar {right} [--flow-app-drawer-hidden-right=-500px]
-* @cssvar {overflow} [--flow-app-main-overflow=auto]
-* @cssvar {position} [--flow-app-main-position=initial]
-* @cssvar {display} [--flow-app-main-display=initial]
-* @cssvar {align-items} (--flow-app-main-align-items=stretch]
-* @cssvar {justify-content} [--flow-app-main-align-justify-content=space-between);
-* @cssvar {height} [--flow-app-header-height=60px]
-* @cssvar {padding} --flow-app-header-padding=0px 100px]
-* @cssvar {z-index} --flow-app-body-mask-z-index=10000]
-* @cssvar {background-color} [--flow-app-body-mask-bg=initial]
-* @cssvar {padding} [--flow-app-header-sm-padding=0px 15px]
-* #cssvar {overflow} [--flow-app-body-overflow=hidden]
-*/
-	// {--fa-icon-color} [--flow-app-drawer-close-icon-color=var(--flow-color)]
-	// {--fa-icon-color} [--flow-app-menu-icon-color=var(--flow-color)]		
-	// {--flow-dropdown-trigger-bg} [--flow-app-header-bg=#161926]
-	// {--flow-dropdown-trigger-color} [--flow-app-header-color=#91aec1]
-	// {--flow-dropdown-trigger-hover-color} [--flow-app-header-color=#91aec1]
-export const FlowAppMixin = (baseClass)=>{
-	class base extends baseClass{
-		constructor(...args) {
-			super(...args)
-			this.uid = UID();
-			this.setTheme(this.getTheme("light"));
-			flow.app = this;
-		}
-
-		getDefaultRPC() { return this.defaultRPC; }
-
-		getTheme(defaultTheme){
-			return getTheme(defaultTheme);
-		}
-
-		setTheme(theme){
-			setTheme(theme);
-		}
-
-		initSocketRPC(options={}){
-			return new Promise((resolve, reject) => {
-				this.rpc = new FlowSocketRPC(Object.assign({
-					path:"/rpc"
-				}, options||{}));
-
-				this.rpc.events.on("connect", ()=>{
-					this.log("RPC:init");
-					console.log("READY!!!!!")
-					this.onNetworkIfaceOnline();
-					resolve();
-				})
-				this.rpc.events.on('disconnect', () => {
-					console.log("disconnected...");
-					this.onNetworkIfaceOffline();
-				});
-
-				this.defaultRPC = this.rpc;
-			})
-		}
-
-		// taken from BaseElement...
-		fireEvent(eventName, detail={}, options={}){
-			let ev = new CustomEvent(eventName, Object.assign({}, options, {detail}));
-			return window.dispatchEvent(ev);
-		}
-	
-		initSocketNATS(options={}){
-			return new Promise((resolve, reject) => {
-				this.nats = new FlowSocketNATS(Object.assign({
-					path:"/nats"
-				}, options));
-
-				this.nats.events.on("connect", ()=>{
-					this.log("NATS:init");
-					this.onNetworkIfaceOnline();
-					resolve();
-				})
-
-				this.nats.events.on('disconnect', () => {
-					console.log("disconnected...");
-					this.onNetworkIfaceOffline();
-				})
-
-				this.defaultRPC = this.nats;
-			})
-		}
-
-		setLoading(isLoading=true, el=null){
-			(el || document.body).classList.toggle("loading", isLoading)
-		}
-
-		initLog(...args){
-			if(super._initLog)
-				return super._initLog(...args)
-			const name = this.constructor.name;
-			this.log = Function.prototype.bind.call(
-				console.log,
-				console,
-				`%c[${name}]`,
-				`font-weight:bold;color:#41c7ef`
-			);
-		}
-
-		onNetworkIfaceOnline(){
-			this._online = true;
-			this.fireEvent('network-iface-online');
-		}
-		onNetworkIfaceOffline(){
-			if(this._online) {
-				this._online = false;
-				this.fireEvent('network-iface-offline');
-			}
-		}
-
-		isOnline(){
-			return this._online;
-		}
-	}
-	return base;
-}
-
-export class FlowAppLayout extends BaseElement{
-	static get properties(){
-		return {
-			"menu-icon":{type:String},
-			"floating-drawer":{type:Boolean, reflect:true},
-			"open-drawer":{type:Boolean, reflect:true},
-		}
-	}
-	static get styles(){
-		return [ScrollbarStyle, css`
-			:host{
-				display:flex;
-				flex-direction:column;
-				width:var(--flow-app-width, 100vw);
-				height:var(--flow-app-height, 100vh);
-			}
-			.header{
-				display:flex;flex-direction:row;
-				align-items:var(--flow-app-header-align-items, center);
-				height:var(--flow-app-header-height, 60px);
-				background-color:var(--flow-app-header-bg, #161926);
-				color:var(--flow-app-header-color, #91aec1);
-				padding:var(--flow-app-header-padding, 0px 100px);
-				--flow-dropdown-trigger-bg:var(--flow-app-header-bg, #161926);
-				--flow-dropdown-trigger-color:var(--flow-app-header-color, #91aec1);
-				--flow-dropdown-trigger-hover-bg:transparent;
-				--flow-dropdown-trigger-hover-color:var(--flow-app-header-color, #91aec1);
-				--flow-dropdown-trigger-width:20px;
-				--flow-dropdown-trigger-padding:0px;
-			}
-			:host([no-header]) .header{display:none}
-			.header-sm{display:none}
-			.header ::slotted(.logo){
-				height:100%;
-				max-height:80%;
-			}
-			.logo ::slotted(.logo){
-				max-height:80%;
-			}
-			.header ::slotted(a.link){
-				padding:var(--flow-app-header-link-padding, 0px 0px 0px 16px);
-				color:var(--flow-app-header-color, #91aec1);
-				text-decoration:none;
-			}
-			.footer {
-				height: var(--flow-app-footer-height, initial);
-				color:var(--flow-app-footer-color, #000);
-				background:var(--flow-app-footer-bg, #91aec1);				
-			}
-			
-			.body{
-				flex:1;display:flex;flex-direction:row;
-				overflow:var(--flow-app-body-overflow, hidden);
-			}
-			.drawer{
-				background-color:var(--flow-app-drawer-bg, var(--flow-background-color, inherit));
-				color:var(--flow-app-drawer-color, var(--flow-color, inherit));
-				width:var(--flow-app-drawer-width, 300px);
-				overflow:var(--flow-app-drawer-overflow, initial);
-				position:relative;
-			}
-			:host([no-drawer]) .drawer{display:none}
-			:host([floating-drawer]) .drawer{
-				position:absolute;
-				left:0px;top:0px;bottom:0px;
-				transition:var(--flow-app-drawer-transition, left 0.5s ease);
-				z-index:var(--flow-app-drawer-z-index, 10001);
-			}
-			:host([floating-drawer]:not([open-drawer])) .drawer{
-				left:var(--flow-app-drawer-hidden-left, -500px);
-			}
-			:host([floating-drawer][right-drawer]) .drawer{
-				left:initial;right:0px;
-				transition:var(--flow-app-drawer-transition, right 0.5s ease);
-			}
-			:host([floating-drawer][right-drawer]:not([open-drawer])) .drawer{
-				right:var(--flow-app-drawer-hidden-right, -500px);
-			}
-			.main{
-				flex:1;
-				overflow:var(--flow-app-main-overflow, hidden);
-				position:var(--flow-app-main-position, initial);
-				display:var(--flow-app-main-display, flex);
-				flex-direction:var(--flow-app-main-flex-direction, column);
-			}
-
-			.wrapper {
-				/*
-				min-height: 100%;
-				height:var(--flow-app-wrapper-height, 100%);
-				margin-bottom: calc(-1 * var(--flow-app-footer-height,0px));
-				*/
-				height:var(--flow-app-wrapper-height, 100px);
-				overflow:var(--flow-app-wrapper-overflow, auto);
-				position:var(--flow-app-wrapper-position, initial);
-				display:var(--flow-app-wrapper-display, initial);
-				flex:var(--flow-app-wrapper-flex, 1);
-			}
-			:host([main-v-box]) .main{
-				display:flex;flex-direction:column;
-				align-items:var(--flow-app-main-align-items, stretch);
-				justify-content:var(--flow-app-main-align-justify-content, space-between);
-			}
-			fa-icon{
-				--fa-icon-color:var(--flow-color);
-			}
-
-			.menu-icon{
-				cursor:pointer;
-				--fa-icon-color:var(--flow-app-menu-icon-color, var(--flow-color));
-			}
-			.drawer-top{
-				height:var(--flow-app-header-height, 60px);
-				display:flex;align-items:center;
-				padding:var(--flow-app-header-padding, 0px 100px);
-			}
-			.main-mask{
-				position:absolute;z-index:var(--flow-app-body-mask-z-index, 10000);
-				left:0px;top:0px;right:0px;bottom:0px;width:100%;height:100%;
-				background-color:var(--flow-app-body-mask-bg, initial);
-			}
-			:host([floating-drawer][open-drawer]) .main{position:relative}
-			:host(:not([floating-drawer])) .drawer-top,
-			:host(:not([floating-drawer])) .main-mask,
-			:host(:not([open-drawer])) .main-mask{display:none}
-			.drawer-close-icon{
-				cursor:pointer;
-				--fa-icon-color:var(--flow-app-drawer-close-icon-color, var(--flow-color));
-			}
-
-			@media(max-width:760px){
-				:host([floating-drawer]) .header-sm{display:flex}
-				:host([floating-drawer]) .header:not(.header-sm){display:none}
-				.drawer-top,
-				.header{
-					padding:var(--flow-app-header-sm-padding, 0px 15px);
-				}
-			}
-
-
-
-			::slotted(.flex){flex:1}
-		`]
-	}
-
-	render(){
-		return html`
-		<div class="header"><slot name="logo"></slot><slot name="header"></slot></div>
-		<div class="header header-sm"><fa-icon class="menu-icon"
-			icon="${this['menu-icon'] || 'bars'}" 
-			@click="${this.toggleFloatingDrawer}"></fa-icon><slot 
-			name="header-sm"></slot></div>
-		<div class="body">
-			<div class="drawer sbar">
-			<div class="drawer-top">
-				<fa-icon class="drawer-close-icon"
-				icon="${this['drawer-close-icon'] || 'times'}" 
-				@click="${this.toggleFloatingDrawer}"></fa-icon>
-			</div>
-			<slot name="drawer"></slot></div>
-			<div class="main sbar">
-				<div class="wrapper">
-					<slot name="main"></slot><div 
-					class="main-mask" @click="${this.toggleFloatingDrawer}"></div>
-				</div>
-				<div class="footer">
-					<slot name="footer"></slot>
-				</div>
-			</div>
-		</div>
-		`
-	}
-
-	toggleFloatingDrawer(){
-		if(!this['floating-drawer'])
-			return
-		this['open-drawer'] = !this['open-drawer'];
-	}
-}
-
-FlowAppLayout.define("flow-app-layout");
-
-
-export class FlowApp extends FlowAppMixin(BaseElement){
-	static get properties(){
-		return {
-			"menu-icon":{type:String},
-			"floating-drawer":{type:Boolean, reflect:true},
-			"open-drawer":{type:Boolean, reflect:true},
-			"external-dom":{type:Boolean}
-		}
-	}
-	constructor(...args){
-		super(...args);
-		this.registerListener("flow-network-and-user-state-get", (e)=>{
-			//e.detail = e.detail||{};
-			e.detail.online = this.isOnline();
-			e.detail.signedin = this.signedin;
-		})
-	}
-	createRenderRoot(){
-		this.usingExternalDom = this.getAttribute("external-dom")!=null 
-			|| this.querySelector("flow-app-layout, .flow-app-layout")
-		if(this.usingExternalDom)
-			return this.attachShadow({mode:"open"});
-		return this;
-	}
-	render(){
-		if(this.usingExternalDom)
-			return html`<slot></slot>`;
-
-		return html``;
-	}
-	firstUpdated(){
-		this.setLoading(false);
-	}
-	signinCallback(){
-		this.signedin = true;
-		document.body.classList.toggle("flow-user-signedin", true);
-	}
-	signoutCallback(){
-		this.signedin = false;
-		document.body.classList.toggle("flow-user-signedin", false);
-	}
-	connectedCallback() {
-		super.connectedCallback();
-		this.signinCallback_ = (...args)=>{
-			this.signinCallback(...args);
-		}
-		window.addEventListener('flow-user-signin', this.signinCallback_);
-
-		this.signoutCallback_ = (...args)=>{
-			this.signoutCallback(...args);
-		}
-		window.addEventListener('flow-user-signout', this.signoutCallback_);
-	}
-	disconnectedCallback() {
-		super.disconnectedCallback();
-		if(this.signinCallback_){
-			window.removeEventListener('flow-user-signin', this.signinCallback_);
-			delete this.signinCallback_;
-		}
-		if(this.signoutCallback_){
-			window.removeEventListener('flow-user-signout', this.signoutCallback_);
-			delete this.signoutCallback_;
-		}
-	}
-}
-
-FlowApp.define("flow-app");
-
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_APP_DRAWER_368 : &'static str = r###"
-
-
-
-/**
-* @class FlowAppDrawer
-* @extends BaseElement
-
-* @property {Boolean} [disabled]
-* @property {String} [btnText]
-* @property {String} [value]
-* @property {Boolean} [opened]
-* @property {String} [parentSelector]
-*
-* @cssvar {font-family} [--flow-font-family="Julius Sans One"]
-* @cssvar {font-weight} [--flow-font-weight=bold]
-* @cssvar {border-radius} [--flow-appdrawer-btn-border-radius=50%]
-* @cssvar {box-shadow} [--flow-appdrawer-btn-box-shadow=0px 0px 3px 1px var(--flow-background-inverse-soft))]
-* @cssvar {padding} [--flow-appdrawer-btn-padding=10px]
-* @cssvar {right} [--flow-appdrawer-btn-right=-10px]
-* @cssvar {top} [--flow-appdrawer-btn-right=10px]
-* @cssvar {background-color} [--flow-appdrawer-btn-bg=var(--flow-background-color)]
-* @cssvar {width} [-flow-appdrawer-btn-width=15px]
-* @cssvar {height} [--flow-appdrawer-btn-height=15px]
-* @cssvar {left} [--flow-appdrawer-btn-left=15px]
-* @cssvar {top} [--flow-appdrawer-btn-top=5px]
-* @cssvar {top} [--flow-appdrawer-wrapper-top=20px]
-* @cssvar {border} [--flow-appdrawer-border=2px solid var(--flow-primary-color]
-
-* @example
-*   <flow-app-drawer></flow-app-drawer>
-*
-*/
-export class FlowAppDrawer extends BaseElement {
-	static get properties() {
-		return {
-			opened:{type:Boolean, reflect:true},
-			parentSelector:{type:String}
-		}
-	}
-
-	static get styles(){
-		return css`
-			:host{
-				display:block;
-				position:absolute;left:0px;top:0px;right:0px;bottom:0px;
-			}
-			.warpper{
-				position:absolute;left:0px;top:0px;right:0px;bottom:0px;
-				overflow:auto;
-			}
-			.toggle-btn{
-				border-radius:var(--flow-appdrawer-btn-border-radius, 50%);
-				box-shadow:var(--flow-appdrawer-btn-box-shadow, 0px 0px 3px 1px var(--flow-background-inverse-soft));
-				padding:var(--flow-appdrawer-btn-padding, 10px);
-				position:absolute;
-				right:var(--flow-appdrawer-btn-right, -10px);
-				top:var(--flow-appdrawer-btn-right, -10px);
-				background-color:var(--flow-appdrawer-btn-bg, var(--flow-background-color));
-				width:var(--flow-appdrawer-btn-width, 15px);
-				height:var(--flow-appdrawer-btn-height, 15px);
-				z-index:1000;box-sizing:border-box;cursor:pointer;
-			}
-
-			:host(.top-btn) .toggle-btn{
-				right:initial;
-				left:var(--flow-appdrawer-btn-left, 15px);
-				top:var(--flow-appdrawer-btn-top, 5px);
-			}
-			:host(.top-btn) .warpper{
-				top:var(--flow-appdrawer-wrapper-top, 20px);
-			}
-			.toggle-btn:after{
-				content:"";
-				border:var(--flow-appdrawer-border, 2px solid var(--flow-primary-color));
-				border-left-color:transparent;
-				border-bottom-color:transparent;
-				box-sizing:border-box;
-				width:50%;height:50%;
-				position:absolute;
-				left:15%;
-				top:25%;
-				transition:transform 0.2s ease;
-				transform-origin:center;
-				transform:rotate(45deg);
-			}
-			:host([opened]) .toggle-btn:after{
-				transform:translateX(4px) rotate(225deg);
-			}
-			:host(.hide-btn) .toggle-btn{display:none}
-
-		`;
-    }
-    constructor() {
-        super();
-    }
-	render() {
-		return html`<div class="warpper"><slot></slot></div>
-		<span class="toggle-btn" @click="${this.toggle}"></span>`;
-	}
-	toggle() {
-		this.opened = !this.opened;
-	}
-	updated(changes){
-		super.updated(changes);
-		if(changes.has("opened")){
-			let el = document.querySelector(this.parentSelector || "body");
-			el?.classList.toggle("drawer-opened", this.opened);
-		}
-	}
-}
-
-FlowAppDrawer.define('flow-app-drawer');
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_DROPDOWN_352 : &'static str = r###"
-
-
-/**
- * @export
- * @class FlowDropdown
- * @extends {BaseElement}
-
- * @prop {Boolean} opened 
- * @prop {Boolean} disabled
- * 
- * @cssvar {color} [--flow-color, #000);
- * @cssvar {color}[--flow-dropdown-trigger-color=#FFF]
- * @cssvar {color} [--flow-dropdown-trigger-hover-color=#FFF]
- * @cssvar {color} [--flow-dropdown-color=var(--flow-color, #000)]
- * @cssvar {font-size} [--flow-dropdown-trigger-font-size=var(--flow-input-font-size, 1rem)]
- * @cssvar {font-weight} [--flow-dropdown-trigger-font-weight=var(--flow-input-font-weight, 400)]
- * @cssvar {line-height} [--flow-dropdown-trigger-line-height=var(--flow-input-line-height, 1.2)]
- * @cssvar {background-color} [--flow-dropdown-trigger-hover-bg=var(--flow-primary-color, #3498DB)]
- * @cssvar {background-color} [--flow-dropdown-trigger-bg=var(--flow-primary-color, #3498DB)]
- * @cssvar {background-color} [--flow-dropdown-bg=var(--flow-background-color, #FFF)]
- * @cssvar {box-shadow} [--flow-box-shadow]
- * @cssvar {box-shadow} [--flow-box-shadow]
- * @cssvar {min-width} [--flow-dropdown-trigger-width=80px]
- * @cssvar {min-width} [--flow-dropdown-content-min-width=160px]
- * @cssvar {min-width} [--flow-dropdown-trigger-width=80px]
- * @cssvar {top} [--flow-dropdown-top=0px]
- * @cssvar {padding} [--flow-dropdown-trigger-padding, 21px 20px 20px);
- * @cssvar {padding} [--flow-dropdown-content-padding=5px]
- * @cssvar {padding} [--flow-dropdown-trigger-padding=21px 20px 20px]
- * @cssvar {border} [--flow-dropdown-border=none]
- * 
- * @example
- * <flow-dropdown>
- *   <div slot="trigger">Menu</div>
- *   <ul>
- *		<li>Menu Item 1</li>
- *	 	<li>Menu Item 2</li>
- *   </ul>
- * </flow-dropdown>
- */
-export class FlowDropdown extends BaseElement {
-	static get properties() {
-		return {
-			opened:{type:Boolean, reflect:true},
-			modal:{type:Boolean},
-			backdrop:{type:Boolean},
-			disabled:{type:Boolean, reflect:true},
-			absolute:{type:Boolean, reflect:true},
-			"right-align":{type:Boolean},
-			xMargin:{type:Number, value:10},
-			yMargin:{type:Number, value:10},
-			yOffset:{type:Number, value:8},
-			yOverflowMargin:{type:Number, value:-10}
-		}
-	}
-
-	static get styles() {
-		return [ScrollbarStyle, css`
-		:host{
-			display:var(--flow-dropdown-display, inline-block);margin:5px 0px;
-			vertical-align:middle;
-			color:var(--flow-color, #000);
-		}
-		.trigger{
-			background-color:var(--flow-dropdown-trigger-bg, var(--flow-primary-color, #3498DB));
-			color:var(--flow-dropdown-trigger-color, #FFF);
-			border-radius:var(--flow-dropdown-trigger-border-radius, 3px);
-			border:none;
-			user-select:none;
-			padding:var(--flow-dropdown-trigger-padding, 21px 20px 20px);
-			min-width:var(--flow-dropdown-trigger-width, 80px);
-			font-size:var(--flow-dropdown-trigger-font-size, var(--flow-input-font-size, 1rem));
-			font-weight:var(--flow-dropdown-trigger-font-weight, var(--flow-input-font-weight, 400));
-			line-height:var(--flow-dropdown-trigger-line-height, var(--flow-input-line-height, 1.2));
-		}
-		:host(:not([disabled])) .trigger{cursor:pointer;}
-
-		.trigger:hover, .trigger:focus {
-			background-color:var(--flow-dropdown-trigger-hover-bg, var(--flow-primary-color, #3498DB));
-			color:var(--flow-dropdown-trigger-hover-color, #FFF);
-		}
-		.dropdown{position:relative;display:block;}
-		.dropdown-content{
-			display:none;
-			position:absolute;
-			background-color:var(--flow-dropdown-bg, var(--flow-background-color, #FFF));
-			color:var(--flow-dropdown-color, var(--flow-color, #000));
-			min-width:var(--flow-dropdown-content-min-width, 160px);
-			overflow:auto;border-radius:3px;
-			box-shadow:var(--flow-box-shadow);
-			z-index:1000;
-			top:var(--flow-dropdown-content-top, var(--flow-dropdown-top, 0px));
-			left:var(--flow-dropdown-content-left, 0px);
-			right:var(--flow-dropdown-content-right, initial);
-			padding:var(--flow-dropdown-content-padding, 5px);
-			border:var(--flow-dropdown-border, none);
-			box-sizing:border-box;
-			transform:translate(var(--flow-transform-translate-x), var(--flow-transform-translate-y));
-		}
-		:host([opened]) .dropdown-content,
-		:host([opened]:not([absolute])) .backdrop{display:block;}
-		:host(.right-align) .dropdown-content,
-		:host([right-align]) .dropdown-content{
-			left:var(--flow-dropdown-content-left, initial);
-			right:var(--flow-dropdown-content-right, 0px);
-		}
-		:host([no-trigger]) .trigger{display:none}
-		:host([no-trigger]){margin:0px;}
-		:host([absolute]) .dropdown-content{
-			position:absolute;
-		}
-		:host(:not([absolute])) .dropdown-content{
-			position:fixed;z-index:1010;
-		}
-		:host(:not([absolute])) .backdrop{
-			position:fixed;z-index:1009;
-			top:0px;
-			bottom:0px;
-			left:0px;
-			right:0px;
-			display:none;
-			background:var(--flow-dropdown-backdrop-bg, var(--flow-backdrop-bg))
-		}
-		`];
-	}
-	render() {
-		return html`
-			<div class="trigger"><slot name="trigger"></slot></div><div class="dropdown">
-				<div class="dropdown-content">
-					<slot></slot>
-				</div>${this.renderBackdrop()}
-			</div>
-		`;
-	}
-	renderBackdrop(){
-		if(!this.backdrop && !isSmallScreen)
-			return '';
-		
-		return html`<a href="javascript:void(0)" class="backdrop"></a>`;
-	}
-	constructor(){
-		super();
-		this.initPropertiesDefaultValues();
-	}
-	firstUpdated(){
-		if(this.classList.contains("right-align"))
-			this["right-align"] = true;
-		this.triggerEl = this.renderRoot.querySelector(".trigger");
-		this.triggerEl.addEventListener("click", this._onClick.bind(this));
-		this.dropdownEl = this.renderRoot.querySelector(".dropdown");
-		this.dropdownContentEl = this.renderRoot.querySelector(".dropdown-content");
-	}
-	updated(changes){
-		this.updateDropdownSize();
-		if(changes.has("opened"))
-			this.fire(this.opened?"opened":"closed", {opened:this.opened, dd:this})
-	}
-
-	_onClick(e){
-		if(this.disabled)
-			return
-		this.toggle();
-	}
-
-	open(){
-		this.opened = true;
-	}
-	close(){
-		this.opened = false;
-	}
-	toggle(){
-		this.opened = !this.opened;
-	}
-	onWindowClick(e){
-		if(!this.opened)
-			return
-		let target = e.target;
-		//let log = document.createElement("pre");
-		//let data = [];
-		//for (let k in e){
-		//	data.push(k)
-		//}
-		//log.innerHTML = JSON.stringify(data, null, " ");
-		//target.parentNode.appendChild(log)
-		if(!target){
-			this.opened = false;
-			return
-		}
-		let dropdown = target.flowDropdown || target.closest?.('flow-dropdown');
-		let isBackdrop = target.classList?.contains("backdrop")||false;
-		if(!dropdown){
-			let path = e.path || (typeof e.composedPath == "function" ? e.composedPath() : null);
-			let p = path?.[0] || target;
-			while(p){
-				isBackdrop = isBackdrop||p.classList?.contains("backdrop")||false;
-				//data.push(p.tagName)
-				if(p.flowDropdown){
-					dropdown = p.flowDropdown;
-					break;
-				}
-				if(p.matches?.("flow-dropdown")){
-					dropdown = p;
-					break;
-				}
-				if(p instanceof ShadowRoot){
-					p = p.host;
-					continue;
-				}
-				p = p.parentNode;
-			}
-		}
-		if(!dropdown || dropdown!=this){
-			//log.innerHTML = JSON.stringify(data, null, " ");
-			this.opened = false;
-		//if clicked on this DD's backdrop and this DD is not a modal
-		}else if(isBackdrop && !this.modal){
-			this.opened = false;
-		}
-	}
-	onWindowResize(){
-		this.updateDropdownSize();
-	}
-	onParentScroll(){
-		this.updateDropdownSize();
-	}
-	updateDropdownSize(){
-		let {dropdownContentEl, dropdownEl, scrollParants, triggerEl} = this;
-
-		if(!triggerEl||!dropdownContentEl||!dropdownEl||!scrollParants||!scrollParants.length)
-			return
-
-		let parentBox = dropdownEl.getBoundingClientRect();
-		if(!this.absolute){
-			let {left, bottom, right} = parentBox;
-			let width = window.innerWidth;
-			let height = window.innerHeight;
-			let DCElStyle = dropdownContentEl.style;
-			bottom -= this.yOffset;
-			if(this["right-align"]){
-				DCElStyle.maxWidth = `${right-this.xMargin}px`;
-				DCElStyle.left = 'initial';
-				DCElStyle.right = `${width-right}px`;
-			}else{
-				DCElStyle.maxWidth = `calc(100vw - ${left+this.xMargin}px)`;
-				DCElStyle.right = 'initial';
-				DCElStyle.left = `${left}px`;
-			}
-			DCElStyle.bottom = 'unset';
-			DCElStyle.top = `${bottom}px`;
-			let maxHeight = height-(bottom+this.yMargin);
-			DCElStyle.maxHeight = `${maxHeight}px`;//`calc(100vh - ${bottom+this.yMargin}px)`;
-			//let box = dropdownContentEl.getBoundingClientRect();
-			//console.log("box.height", height, maxHeight, DCElStyle.maxHeight);
-			let triggerELBox = triggerEl.getBoundingClientRect();
-			let maxHeightInUpperPosition = triggerELBox.top+this.yOverflowMargin;
-			if (maxHeight < maxHeightInUpperPosition){
-				DCElStyle.top = 'unset';
-				DCElStyle.bottom = `calc(100% - ${triggerELBox.top}px)`;
-				DCElStyle.maxHeight = `${maxHeightInUpperPosition}px`;
-			}
-			return
-		}
-
-		//let box = dropdownContentEl.getBoundingClientRect();
-		let firstScrollParent = scrollParants[0];
-		//console.log("firstScrollParent", firstScrollParent)
-		let firstScrollParentBox = firstScrollParent.getBoundingClientRect();
-		
-
-		let topMargin = Math.max(parentBox.top - firstScrollParentBox.top, 0);
-		let top = Math.max(firstScrollParentBox.top - parentBox.top, 0);
-		let height = firstScrollParentBox.height - topMargin - 20
-
-		let leftMargin = Math.max(parentBox.left - firstScrollParentBox.left, 0);
-		let left = Math.max(firstScrollParentBox.left - parentBox.left, 0);
-		let width = firstScrollParentBox.width - leftMargin - 20
-
-		/*this.log("width, height",
-			top,
-			topMargin,
-			firstScrollParent.scrollTop,
-			firstScrollParentBox,
-			parentBox,
-			width,
-			height
-		)*/
-		DCElStyle.transform = `translate(${left}px, ${top}px)`;
-		DCElStyle.maxWidth = width+"px";
-		DCElStyle.maxHeight = height+"px";
-	}
-	connectedCallback(){
-    	super.connectedCallback();
-    	this._onWindowClick = this._onWindowClick||this.onWindowClick.bind(this);
-    	this._onWindowResize = this._onWindowResize||this.onWindowResize.bind(this);
-    	this._onParentScroll = this._onParentScroll||this.onParentScroll.bind(this);
-    	window.addEventListener("click", this._onWindowClick, {capture:true})
-    	window.addEventListener("resize", this._onWindowResize, {capture:true});
-    	let buildScrollEvents = ()=>{
-	    	this.scrollParants = this.findScrollParents();
-	    	this.scrollParants.forEach(p=>{
-	    		p.addEventListener("scroll", this._onParentScroll);
-	    	});
-	    }
-	    buildScrollEvents();
-    	if(!this.scrollParants.length){//Safari/FF issue
-    		dpc(1000, ()=>{
-    			buildScrollEvents();
-    			//this.log("this.scrollParants", this.scrollParants)
-    		});
-    	}
-    }
-	disconnectedCallback(){
-    	super.disconnectedCallback();
-    	window.removeEventListener("click", this._onWindowClick);
-    	window.removeEventListener("resize", this._onWindowResize);
-    	this.scrollParants.forEach(p=>{
-    		p.removeEventListener("scroll", this._onParentScroll);
-    	});
-    	this.scrollParants = [];
-    }
-    findScrollParents(){
-    	let list = [];
-    	let p = this.parentNode;
-    	while(p){
-    		if(p instanceof ShadowRoot){
-    			p = p.host;
-    			continue;
-    		}
-    		if(!(p instanceof HTMLElement))
-    			break;
-    		if(p.nodeName=="BODY"){
-    			list.push(p);
-    			break;
-    		}
-    		if(this.isScrollEl(p))
-    			list.push(p);
-    		p = p.parentNode;
-    	}
-
-    	return list;
-    }
-
-    isScrollEl(element){
-    	const { overflow, overflowX, overflowY } = getComputedStyle(element);
-    	//this.log("overflow:::", element, overflow, overflowX, overflowY)
-  		return /auto|scroll|overlay|hidden/.test(overflow + overflowY + overflowX);
-    }
-}
-
-FlowDropdown.define('flow-dropdown');
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_SELECT_413 : &'static str = r###"
-
-
-
-/**
- * @export
- * @class FlowSelect
- * @extends {FlowMenu}
-
-* @cssvar {font-family} [--flow-font-family="Julius Sans One"]
-* @cssvar {font-size} [--flow-select-font-size-label=0.7rem]
-* @cssvar {font-weight} [--flow-input-font-weight=400]
-* @cssvar {font-size} [--flow-input-font-size=1rem]
-* @cssvar {height} [--flow-select-input-height]
-* @cssvar {line-height} [--flow-input-line-heigh=1.2]
-* @cssvar {min-height} [--flow-select-selected-min-height=44px]
-* @cssvar {min-width} [--flow-select-selected-min-width=100px]
-* @cssvar {max-width} [--flow-select-selected-max-width=500px]
-* @cssvar {background-color} [--flow-input-bg=inherit]
-* @cssvar {border} [--flow-select-border-label=2px solid  var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)))]
-* @cssvar {border} [--flow-select-border=2px solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)))]
-* @cssvar {color} [--flow-input-color=inherit]
-* @cssvar {color} [--flow-input-placeholder=#888]
-* @cssvar {padding} [--flow-select-padding-label=2px 5px]
-* @cssvar {padding} [--flow-select-padding=5px]
-* @cssvar {margin} [--flow-select-filter-input-margin=0px 0px 5px]
-* @cssvar {color} [--flow-select-trigger-bg=transparent]
-* @cssvar {color} [--flow-select-trigger-color= var(--flow-color, #000)]
-* @cssvar {padding} [--flow-select-trigger-padding=0px]
-* @cssvar {color} [--flow-select-trigger-hover-bg=transparent]
-* @cssvar {color} [--flow-select-trigger-hover-color=var(--flow-dropdown-trigger-color)]
-* @cssvar {height} [--flow-select-trigger-line-height=1]
-* @cssvar {margin} [--flow-select-input-margin=0px]
-
- * @example
- * <flow-select label="menu" selected="0">
- *		<flow-menu-item value="0">Menu Item 1</flow-menu-item>
- *	 	<flow-menu-item value="1">Menu Item 2</flow-menu-item>
- * </flow-select>
- */
-export class FlowSelect extends FlowMenu {
-	static get properties() {
-		return {
-			label:{type:String},
-			textAttr:{type:String},
-			showfilter:{type:Boolean},
-			backdrop:{type:Boolean},
-			modal:{type:Boolean},
-			filterText:{type:String},
-			searchIcon:{type:String},
-			disabled:{type:Boolean, reflect:true},
-			placeholder:{type:String},
-			"right-align":{type:Boolean}
-		}
-	}
-
-	static get styles() {
-		return [super.styles, css`
-			:host{
-				display:var(--flow-select-display, inline-block);vertical-align:middle;
-				font-family:var(--flow-font-family, "Julius Sans One");
-				padding:var(--flow-select-padding, 0px);
-				margin:var(--flow-select-margin, 5px);
-				width:var(--flow-select-width);
-				max-width:var(--flow-select-max-width, 100%);
-				height:var(--flow-select-height);
-				--flow-dropdown-border:var(--flow-select-dropdown-border, 1px solid var(--flow-primary-color, #000));
-				--flow-dropdown-trigger-bg:var(--flow-select-trigger-bg, transparent);
-				--flow-dropdown-trigger-color:var(--flow-select-trigger-color, var(--flow-color, #000));
-				--flow-dropdown-trigger-padding:var(--flow-select-trigger-padding, 0px);
-				--flow-dropdown-trigger-hover-bg:var(--flow-select-trigger-hover-bg, transparent);
-				--flow-dropdown-trigger-hover-color:var(--flow-select-trigger-hover-color, var(--flow-dropdown-trigger-color));
-				--flow-dropdown-trigger-line-height:var(--flow-select-trigger-line-height, 1);
-				--flow-dropdown-top:var(--flow-select-dropdown-border-top, -8px);
-				--flow-dropdown-trigger-font-size:0px;
-			}
-			flow-dropdown{margin:0px;}
-			.wrapper{
-				display:flex;
-				align-items:stretch;
-				min-width:50px;
-				text-align:center;
-				/*justify-content:center;*/
-				margin-top:var(--flow-select-wrapper-margin-top,-0.5rem);
-				
-				
-			}
-			label{
-				/*font-size:0.7rem;
-				padding:2px 5px;*/
-				font-size:var(--flow-select-label-font-size, 0.7rem);
-				padding:var(--flow-select-label-padding,2px 5px);
-				/*border:2px solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)));*/
-				border: var(--flow-select-label-border, 2px) solid  var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border-radius:8px;
-				margin-left:var(--flow-select-label-margin-left,10px);
-				margin-right: var(--flow-input-label-margin-right,20px);
-				z-index:1;
-    			position:relative;background-color:var(--flow-input-bg, inherit);
-    			font-weight:var(--flow-font-weight, bold);
-			}
-			.input{
-				
-				flex:1;box-sizing:border-box;
-			    /*border:2px solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)));*/
-				border: var(--flow-select-border, 2px) solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border-radius:var(--flow-select-input-border-radius, var(--flow-input-border-radius, 8px));
-    			margin:var(--flow-select-input-margin, 0px);
-    			padding:var(--flow-select-input-padding,16px 30px 10px 10px);
-				background-color:var(--flow-select-input-bg, var(--flow-input-bg, inherit));
-				color:var(--flow-input-color, inherit);
-				font-size:var(--flow-input-font-size, 1rem);
-				font-weight:var(--flow-input-font-weight, 400);
-				line-height:var(--flow-input-line-height, 1.2);
-				text-align:left;
-				height:var(--flow-select-input-height);
-				width:var(--flow-select-input-width);
-			}
-			:host(.no-border) .input.selected{
-				border:0px;
-			}
-			[no-label] .input.selected{
-				padding-top:var(--flow-select-no-label-input-padding-top, 10px);
-			}
-			.input:focus{outline:none}
-			.input::-webkit-input-placeholder { color: var(--flow-input-placeholder, #888 ); }
-			.input.selected{
-				min-width:var(--flow-select-selected-min-width, 100px);
-				max-width:var(--flow-select-selected-max-width, 500px);
-				min-height:var(--flow-select-selected-min-height, 44px);
-				position:relative;
-				box-shadow:var(--flow-input-box-shadow);
-				height:var(--flow-select-selected-height);	
-				width:var(--flow-select-selected-width);
-				overflow: hidden;
-    			text-overflow: ellipsis;
-			}
-			.placeholder{
-				color: var(--flow-input-placeholder, #888 );
-			}
-			[multiple] .input.selected span.item{
-				margin:var(--flow-select-selected-item-margin, 2px 4px 2px 0);
-				padding:var(--flow-select-selected-item-padding, 1px 5px);
-				border-radius:var(--flow-select-selected-item-border-radius, 5px);
-				border:var(--flow-select-selected-item-border, 1px solid var(--flow-primary-color, #DDD));
-				line-height:var(--flow-input-line-height, 1.3);
-			}
-			[multiple] .input.selected{
-				display:var(--flow-select-selection-display, flex);
-				flex-wrap:var(--flow-select-selection-flex-wrap, wrap);
-				min-height:var(--flow-select-selected-min-height, 60px);
-				align-items:var(--flow-select-selection-align-items, center);
-			}
-
-			:host(:not([disabled])) .input.selected::after{
-				content:"";display:inline-block;
-				position:absolute;right:10px;
-				top:var(--flow-select-dropdown-arrow, calc(50% - 2px));
-				width:0px;height:0px;
-				border:5px solid var(--flow-primary-color, #000);
-				border-left-color:transparent;
-				border-bottom-color:transparent;
-				border-right-color:transparent;
-			}
-			flow-dropdown:not([multiple]) .input.selected{white-space:nowrap}
-			.filter{
-				padding-top:10px;border-radius:3px;
-			}
-			.filter-box{
-				position:relative;display:flex;align-items:center;
-				margin:var(--flow-select-filter-input-margin, 0px 0px 5px);
-			}
-			.filter-box[hidden]{display:none}
-			.filter-box .clear-btn{
-				position:absolute;right:10px;cursor:pointer;display:none;
-				font-size:1.5rem;color:var(--flow-input-color, inherit);
-			}
-			.filter-box input[has-content]+.clear-btn{display:inline-block}
-			.filter-box input{
-				padding-left:30px;
-			}
-			.filter-box .icon{
-				width:15px;height:15px;fill:var(--flow-primary-color);
-				position:absolute;left:10px;
-			}
-
-			.dd ::slotted([flow-select-filtred]){display:none}
-		`];
-	}
-	constructor(){
-		super();
-		this.textAttr = "data-text";
-	}
-	//focus(){
-	//	console.log("focus", this, this.dropdown?.scrollIntoView())
-	//	//this.wrapperEl?.focus();
-	//	//super.focus();
-	//}
-	render() {
-		let iconSrc = this.iconPath(this.searchIcon || "search");
-		let isLabel = !!this.label;
-		return html
-		`<flow-dropdown ?multiple="${this.multiple}" ?backdrop="${this.backdrop}"
-			?modal="${this.modal}"
-			?disabled=${this.disabled}
-			?no-label=${!isLabel}
-			?right-align=${this["right-align"]}>
-			<div slot="trigger">
-				<label ?hidden=${!isLabel}>${this.label||""}</label>
-				<div class="wrapper" @click=${this.onWrapperClick}>
-					<slot name="prefix"></slot>
-					<div class="input selected">
-						${this.renderSelected()}&nbsp;
-					</div>
-					<slot name="sufix"></slot>
-				</div>
-				
-			</div><div class="dd">
-				<div class="filter-box" ?hidden=${!this.showfilter}>
-					<svg class="icon">
-						<use href="${iconSrc}"></use>
-					</svg>
-					<input class="input filter" type="text" 
-						placeholder="${this.placeholder || 'Search...'}"
-						?has-content=${this.filterText}
-						.value="${this.filterText||''}"
-						@keyup=${this.onSearch} />
-					<a class="clear-btn" @click=${this.clearFilter}>&times;</a>
-				</div>
-				<div class="menu-list-container">
-				<slot class="menu-list"></slot>
-				${this.renderItems()}
-				</div>
-			</div>
-		</flow-dropdown>`;
-	}
-	onWrapperClick(){
-		//
-	}
-
-	renderItems(){
-		return '';
-	}
-
-	renderSelected(){
-		let map = new Map();
-		this.list.forEach(item=>{
-			let text = item.getAttribute(this.textAttr) || item.innerText;
-			map.set(item.getAttribute(this.valueAttr), text)
-		});
-
-		let items = this._selected.map(s=>{
-			if(!s)
-				return '';
-			return html`<span class="item" value="${s}">${map.get(s) || s}</span>`
-		}).filter(a=>!!a);
-
-		if(items.length)
-			return items
-		return html`<span class="placeholder">${this.placeholder||""}</span>`;
-	}
-
-	selectionChanged(){
-		super.selectionChanged();
-		if(!this.multiple && this.dropdown)
-			this.dropdown.close();
-	}
-
-	firstUpdated(){
-		super.firstUpdated();
-		if(this.classList.contains("right-align"))
-			this["right-align"] = true;
-		this.wrapperEl = this.renderRoot.querySelector("flow-dropdown .wrapper");
-		this.dropdown = this.renderRoot.querySelector("flow-dropdown");
-		let slot = this.renderRoot.querySelector('slot.menu-list');
-		this.listSlot = slot;
-		slot.addEventListener('slotchange', (e)=>{
-			this.updateList();
-		});
-		this.parseSelected();
-		this.requestUpdate("_selected", [])
-	}
-
-	updateList(changes){
-		super.updateList();
-		if(!changes)
-			this.requestUpdate("_selected", this._selected.slice(0))
-	}
-
-	clearFilter(){
-		this.filterText = "";
-		this.filterList("");
-	}
-
-	onSearch(e){
-		let text = e.target.value;
-
-		this.filterText = text;
-		this.debounce('onSearch', ()=>{
-			this.filterList(text);
-		}, 200)
-	}
-	filterList(text){
-		const rg = new RegExp(`${text}`, 'i');
-		console.log("this.list", this.list);
-		this.list.forEach(item=>{
-			let text = item.getAttribute(this.textAttr) || item.innerText;
-			let value = item.getAttribute(this.valueAttr);
-			if(!text || rg.test(value) || rg.test(text)){
-				item.removeAttribute('flow-select-filtred')
-			}else{
-				item.setAttribute('flow-select-filtred', true)
-
-			}
-		})
-	}
-
-
-	/*
-	onWindowResize(){
-		this.updateDropdownSize();
-	}
-	onParentScroll(){
-		this.updateDropdownSize();
-	}
-	
-	connectedCallback(){
-    	super.connectedCallback();
-    	
-    }
-	disconnectedCallback(){
-    	super.disconnectedCallback();
-    	
-    }
-    */
-}
-
-FlowSelect.define('flow-select');
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_TABLE_MIXIN_387 : &'static str = r###"
-
-export const TableMixin = baseClass=>{
-	class Table extends baseClass{
-
-		buildFetchRequest(options, name=""){
-			return {}//api.getRecords(options);
-		}
-
-		async loadRecords(options={}, name=""){
-			//this.log("loadRecords", this)
-			let {req, params} = this.buildFetchRequest(options, name);
-			if(!req)
-				return
-			let {result, error} = await req;
-			if(error)
-				return
-
-			let {total, items} = result;
-			let {skip, limit} = params;
-			let prefix = name?name+'_':'';
-			this[`${prefix}pagination`] = buildPagination(total, skip, limit);
-			this[`${prefix}pagination`].type = name;
-			this[`${prefix}state`] = {params};
-			this[`${prefix}items`] = items;
-			this.setLoading(false, name);
-			return result;
-		}
-		onPaginationClick(e){
-			const target = e.target;
-			if(target.matches(".disabled, .active"))
-				return
-
-			let paginationEl = target.closest("[data-pagination]");
-			let pageEl = target.closest('[data-skip]');
-			if(!paginationEl || !pageEl)
-				return
-			let name = paginationEl.getAttribute('data-pagination');
-			let skip = pageEl.getAttribute('data-skip');
-			let prefix = name?name+'_':'';
-
-			let {params={}} = this[`${prefix}state`];
-			params.skip = skip;
-			//console.log("params", params)
-			this.setLoading(true, name);
-			this.loadRecords(params, name);
-		}
-
-		setLoading(isLoading, listName=""){
-			let el = listName?this.querySelector(`.${listName}-holder`):this;
-			(el || this).classList.toggle("loading", !!isLoading)
-		}
-	}
-
-	return Table;
-}
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_LINK_419 : &'static str = r###"
-
-
-
-
-
-/**
-* @class FlowLink
-* Wraps content in a clickable element, simulating behavior of the `a` element.
-* Intended for opening a new browser tab regardless of whether the element is
-* instantiated inside of a browser environment or inside of NWJS.
-* @extends BaseElement
-*
-* @property {Boolean} [disabled] 
-* @property {Boolean} [icon]
-* @property {String} [href]
-* @property {String} [target]
-*
-* @cssvar {font-family} [--flow-font-family="Julius Sans One"]
-* @cssvar {font-weight} [--flow-font-weight=bold]
-* @cssvar {font-size} [--flow-link-font-size=1rem]
-* @cssvar {color} [--flow-link-color=#017b68]
-* @cssvar {color} [--flow-link-hover-color=#017b68]
-* @cssvar {fill} [--flow-primary-color=017b68]
-*
-* @example
-*   <flow-link href="href" target="_blank">text</flow-link>
-*
-*/
-export class FlowLink extends BaseElement {
-	static get properties() {
-		return {
-			disabled:{type:Boolean, reflect: true},
-			icon:{type:Boolean, reflect: true},
-			href : { type : String },
-			target : { type : String }
-		}
-	}
-
-	static get styles(){
-		return css`
-			:host{
-				display:inline-block;
-				font-family:var(--flow-link-font-family, var(--flow-font-family, "Julius Sans One"));
-				font-weight:var(--flow-link-font-weight, var(--flow-font-weight, bold));
-				font-size:var(--flow-link-font-size, 1rem);
-			}
-			:host([disabled]){
-				opacity:0.5;
-				cursor:default;
-				pointer-events:none;
-			}
-			:host(:not([disabled])){
-				cursor:pointer;
-			}
-
-			.link-wrapper {
-				color: var(--flow-link-color, #017b68);
-				display: flex;
-			}
-
-			.link-wrapper:hover {
-				color: var(--flow-link-hover-color, #017b68);
-			}
-
-			.icon-box {
-				display: block;
-				width: 16px;
-				height: 16px;
-				margin-bottom: -4px;
-				opacity: 0.65;
-			}
-
-			.icon-box svg {
-				fill: var(--flow-primary-color, #017b68);
-				width: 100%;
-				height: 100%;
-			}
-
-			.content {
-				display: block;
-			}
-		`;
-	}
-
-	constructor(){
-		super();
-	}
-
-	render() {
-		let iconSrc = this.iconPath(`external-link-square-alt`);
-		return html`
-		<div class="link-wrapper" @click=${this.click}>
-			<div class="content"><slot></slot></div>
-			${ this.icon ? html`<div class="icon-box"><svg><use href="${iconSrc}"></use></svg></div>` : '' }
-		</div>
-		`;
-	}
-
-	click() {
-		// console.log("opening href:",this.href,"target:",this.target);
-		this.fire("flow-link-click", {el:this})
-		if(!this.href)
-			return
-		if(typeof nw == 'undefined') {
-			let a = document.createElement('a');
-			a.href = this.href;
-			if(this.target)
-				a.target = this.target;
-			a.click();
-		} else {
-			require('nw.gui').Shell.openExternal(this.href);	
-		}
-	}
-
-}
-
-FlowLink.define('flow-link');
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_SELECTOR_395 : &'static str = r###"
-
-
-
-
-export class FlowSelector extends FlowSelect{
-
-    
-    static get properties(){
-        return {
-            mergeProps:{type:String},
-            mergeAttributes:{type:String},
-            mergeInnerHTML:{type:Boolean}
-        }
-    }
-
-    static get styles(){
-        return [FlowSelect.styles, css`
-            :host{
-                --flow-select-input-height:var(--flow-selector-input-height, auto);
-                width:var(--flow-selector-width, unset);
-            }
-            flow-dropdown{
-                width:var(--flow-selector-dropdown-width, auto);
-            }
-            .input.selected{
-                min-height:var(--flow-selector-selected-min-height, 50px);
-                min-width:var(--flow-selector-selected-min-width, 10px);
-                width:var(--flow-selector-selected-width, 100%);
-                font-size:0px;display:flex;align-items:center;
-                box-sizing:border-box;
-                padding:var(--flow-selector-selected-padding, 16px 30px 10px 10px);
-                flex-wrap:var(--flow-selector-selected-flex-wrap, wrap);
-            }
-            .input.selected::after{
-                top:calc(50% - 2px);
-            }
-            .input.selected .item{
-                margin:var(--flow-selector-item-margin, 0px);
-                font-size:var(--flow-selector-item-line-height, 1rem);
-                line-height:var(--flow-selector-item-line-height, 1.1);
-            }
-            :host([multiple]) .selected .item{
-                margin:var(--flow-selector-multiple-item-margin, 0px 5px 5px 0px);
-            }
-        `]
-    }
-
-    constructor(){
-        super();
-        this.mergeProps = "";
-    }
-
-    renderSelected(){
-        let map = new Map();
-        this.list.forEach(item=>{
-            map.set(item.getAttribute(this.valueAttr), item)
-        })
-        return this._selected.map(value=>{
-            let item = map.get(value)
-            if(!item)
-                return
-            let clone = item.cloneNode(this.mergeInnerHTML||false);
-            clone.removeAttribute('flow-select-filtred')
-            clone.classList.remove("menu-item", "selected");
-            clone.classList.add("item")
-            return this.mergeNobeProperties(clone, item);
-        }).filter(item=>!!item)
-    }
-
-    get selectedNodes(){
-        let map = new Map();
-        this.list.forEach(item=>{
-            map.set(item.getAttribute(this.valueAttr), item)
-        })
-        return this._selected.map(value=>{
-            return map.get(value)
-        }).filter(item=>!!item)
-    }
-
-    mergeNobeProperties(clone, org){
-        let props = [];
-        if(this.mergeProps){
-            props = this.mergeProps.split(",")
-        }else if(org.constructor?.properties){
-            props = Object.keys(org.constructor?.properties||{})
-        }
-        props.forEach(p=>{
-            clone[p] = org[p];
-        })
-        if(this.mergeAttributes){
-            let attributes = this.mergeAttributes.split(",");
-            attributes.forEach(name=>{
-                if(!name)
-                    return
-                clone.setAttribute(name, org.getAttribute(name));
-            })
-        }
-        return clone;
-    }
-}
-
-FlowSelector.define('flow-selector');
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_CLOCK_WIDGET_353 : &'static str = r###"
-
-let Defaults = [
-	'America/Los_Angeles:San_Francisco',
-	'America/New_York',
-	'Europe/London',
-	'Europe/Moscow',
-	'Asia/Dubai',
-	'Asia/Hong_Kong',
-	'Asia/Tokyo',
-//	'Asia/Tel_Aviv'
-]
-
-export class FlowClockWidget extends BaseElement {
-
-	static get properties() {
-		return {
-			locale: {type: String},
-			tz: {type: String},
-			city:{type:String}
-		}
-	}
-
-	static get styles() {
-		return css`
-			:host {
-				padding: 0px;
-			}
-			[col] { display: flex; flex-direction: column; }
-			[row] { display: flex; flex-direction: row; }
-			.caption { 
-				font-size: var(--flow-clock-widget-caption-font-size, 9px);
-				text-transform:var(--flow-clock-widget-caption-text-transform, uppercase);
-				white-space: nowrap;
-			}
-			.time-wrapper {
-				align-items: flex-start;
-				padding: 1px;
-			}
-			.time { 
-				font-size: var(--flow-clock-widget-time-font-size, 14px);
-				font-family: var(--flow-clock-widget-time-font-family, "Consolas");	
-			}
-			.suffix {
-				font-size: var(--flow-clock-widget-suffix-font-size, 10px);				
-			}
-		`;
-	}
-
-	constructor() {
-		super();
-
-		this.locale = 'en-US';
-		this.tz = '';
-		this.city = '';
-	}
-
-	connectedCallback() {
-		super.connectedCallback();
-		this.interval = setInterval(()=>{this.requestUpdate()}, 1000);
-	}
-
-	disconnectedCallback() {
-		super.disconnectedCallback();
-		if(this.interval) {
-			clearInterval(this.interval);
-			delete this.interval;
-		}
-	}
-
-	render() {
-
-		let city, timeZone;
-		if(this.tz.includes(':')) {
-
-			let parts = this.tz.split(':');
-			//console.log("TIMEZONE",this.tz,parts);
-			timeZone = parts.shift();
-			city = parts.shift();
-		} else {
-			city = this.city || this.tz.split('/').pop() || 'N/A';
-			timeZone = this.tz || 'UTC';
-		}
-
-		const tzTime = new Date().toLocaleString(this.locale,{timeZone});
-		const s = (new Date(tzTime)).toISOString();
-		const [time,ampm] = (new Date(tzTime)).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}).split(/\s/);
-		
-		return html`
-			<div col>
-				<div class='caption'>${city.replace(/_/g,' ')}</div>
-				<div row class='time-wrapper'>
-					<div class='time'>${time}</div>
-					${ampm?html`<div class="suffix"> ${ampm}</div>`:''}
-				</div>
-			</div>
-		
-		`;
-	}  
-}
-
-FlowClockWidget.Defaults = Defaults;
-
-/*
-class FlowClockWidgetChild extends FlowClockWidget{}
-class FlowClockWidgetChild2 extends FlowClockWidget{}
-FlowClockWidgetChild2.Defaults = [];
-console.log("FlowClockWidgetChild.Defaults", FlowClockWidgetChild.Defaults, FlowClockWidgetChild2.Defaults)
-*/
-
-FlowClockWidget.define('flow-clock-widget');
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_THEME_SELECT_404 : &'static str = r###"
-
-
-
-
-/**
- * @export
- * @class FlowThemeSelect
- * @extends {FlowSelect}
- *
- *
- * 
- * @example
- * <flow-theme-select items="light,dark"></flow-dropdown>
- *
- */
-export class FlowThemeSelect extends FlowSelect {
-	static get properties() {
-		return {
-			items:{type:String}
-		}
-	}
-
-	static get styles() {
-		return [FlowSelect.styles, css`
-			.selected{
-				min-width: var(--flow-theme-select-selected-min-width, 150px);
-			}
-		`];
-	}
-
-	constructor(){
-		super();
-		this.items = "dark,light";
-		this.label = "Theme"
-		this.selected = this.getTheme("dark");
-		/*this.hidefilter = true;*/
-	}
-
-	renderItems(){
-		return this.items.split(",").map(item=>{
-			let name = this.buildItemName(item);
-			return html`<div class="menu-item" value="${item}">${name}</div>`
-		})
-	}
-	get list(){
-		if(!this.renderRoot){
-			return [];
-		}
-		return [...this.renderRoot.querySelectorAll(".menu-item")]
-	}
-	buildItemName(name){
-		name = name.toLowerCase()
-					.replace(/[_-]+/g, ' ')
-					.replace(/\s{2,}/g, ' ').trim();
-		return name.charAt(0).toUpperCase() + name.slice(1);
-	}
-	selectionChanged(){
-		super.selectionChanged();
-		let value = this.value;
-		if(value)
-			this.setTheme(value);
-	}
-
-	onThemeChange(){
-		//this.log("onThemeChange", getTheme())
-		this.selected = this.getTheme();
-		this.requestUpdate("selected")
-	}
-
-	connectedCallback(){
-		super.connectedCallback();
-		this._onThemeChange = this._onThemeChange || this.onThemeChange.bind(this);
-		document.body.addEventListener("flow-theme-changed", this._onThemeChange)
-	}
-	disconnectedCallback(){
-		super.disconnectedCallback();
-		document.body.removeEventListener("flow-theme-changed", this._onThemeChange)
-	}
-
-	getTheme(defaultTheme){
-		return getTheme(defaultTheme)
-	}
-
-	setTheme(theme){
-		setTheme(theme);
-	}
-}
-
-FlowThemeSelect.define('flow-theme-select');
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_DROPZONE_FIELD_369 : &'static str = r###"
-
-import '../resources/extern/dz/min/dropzone.min.js';
-
-
-/**
-* @class FlowDropzoneField
-* @extends BaseElement
-
-* @property {Boolean} [disabled]
-* @property {String} [btnText]
-* @property {String} [value]
-* @property {String} [label]
-* @property {String} [type]
-* @property {String} [pattern]
-* @property {Function} [validator]
-* @property {String} [placeholder]
-* @property {Boolean} [readonly]
-* @property {Object} [postData]
-* @property {String} [uploadUrl]
-*
-*
-* @cssvar {font-family} [--flow-font-family="Julius Sans One"]
-* @cssvar {font-weight} [--flow-font-weight=bold]
-* @cssvar {font-weight} [--flow-input-font-weight=400]
-* @cssvar {font-size} [--flow-input-font-size-label=0.7rem]
-* @cssvar {font-size} [--flow-input-font-size=1rem]
-* @cssvar {width} [--flow-input-width=100%]
-* @cssvar {min-width} [--flow-input-min-width=100px]
-* @cssvar {max-width} [--flow-input-max-width=500px]
-* @cssvar {height} [--flow-input-height]
-* @cssvar {line-height} [--flow-input-line-height=1.2]
-* @cssvar {background-color} [--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1))]
-* @cssvar {background-color} [--flow-border-hover-color, var(--flow-primary-color, rgba(0,151,115,1))]
-* @cssvar {background-color} [--flow-input-bg=inherit]
-* @cssvar {background-color} [--flow-input-bg=inherit]
-* @cssvar {border} [--flow-input-label-border=2px solid  var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)))]
-* @cssvar {border} [--flow-input-border=2px solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1))]
-* @cssvar {border-top-left-radius} [--flow-input-btn-tlbr=0px]
-* @cssvar {border-bottom-left-radius} [--flow-input-btn-blbr=0px]
-* @cssvar {border-color} [--flow-border-hover-color, var(--flow-primary-color, rgba(0,151,115,1)]
-* @cssvar {color} [--flow-border-invert-color, var(--flow-primary-invert-color, #FFF)]
-* @cssvar {color} [--flow-input-color=inherit]
-* @cssvar {color} [--flow-input-placeholder=#888]
-* @cssvar {color} [--flow-input-invalid-color=red]
-* @cssvar {color} [--flow-dz-field-remove-icon-color=var(--flow-color,#000)]
-* @cssvar {padding} [--flow-input-label-padding=2px 5px]
-* @cssvar {margin} [--flow-input-margin=5px 0px]
-* @cssvar {margin-top} [--flow-input-wrapper-margin-top=-0.5rem]
-* @cssvar {margin-left} [--flow-input-label-margin-left=10px]
-* @cssvar {z-index} [--flow-input-label-z-index=1]
-* @cssvar {position} [--flow-input-label-position=relative]
-* @cssvar {background} [--flow-dz-field-remove-icon-bg=#FFF]
-* @cssvar {box-shadow} [--flow-dz-field-remove-icon-box-shadow=0px 0px 4px #ccc]
-* @example
-*   <flow-dz-field></flow-dz-field>
-*
-*/
-export class FlowDropzoneField extends BaseElement {
-	static get properties() {
-		return {
-			btnText:{type: String},
-            value:{type:String},
-            type:{type:String},
-			disabled:{type:Boolean},
-			pattern:{type:String},
-			validator:{type:Function},
-			placeholder:{type:String},
-			label:{type:String},
-			readonly:{type:Boolean},
-			postData:{type:Object},
-			uploadUrl:{type:String}
-		}
-	}
-
-	static get styles(){
-		return css`
-			:host{
-				display:inline-block;vertical-align:middle;
-				font-family:var(--flow-font-family, "Julius Sans One");
-				font-weight:var(--flow-font-weight, bold);
-				width:var(--flow-input-width, 100%);
-				min-width:var(--flow-input-min-width, 100px);
-				max-width:var(--flow-input-max-width, 500px);
-				margin:var(--flow-input-margin, 5px 0px);
-				font-size:0px;
-			}
-			:host(:not([disabled])) .btn,
-			:host(:not([disabled])) .input{
-				cursor:pointer;
-			}
-			
-			:host(:not([apply-btn])) .btn{
-				display: none;
-			}
-			
-			.wrapper{
-				display:flex;
-				align-items:stretch;
-				min-width_:50px;
-				text-align:center;
-				justify-content:center;
-				margin-top:var(--flow-input-wrapper-margin-top,-0.5rem);
-				height:var(--flow-input-wrapper-height);
-			}
-			label{
-				font-size:var(--flow-input-label-font-size, 0.7rem);
-				padding:var(--flow-input-label-padding,2px 5px);
-				border: var(--flow-input-label-border, 2px) solid  var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border-radius:var(--flow-input-label-border-radius, 8px);
-				margin-left: var(--flow-input-label-margin-left,10px);
-				z-index: var(--flow-input-label-z-index, 1);
-				position: var(--flow-input-label-position, relative);
-				background-color:var(--flow-input-bg, inherit);
-			}
-			.btn{
-				position:relative;
-				padding:5px;
-				background-color:var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border: 2px solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				overflow:hidden;
-				border-radius:8px;
-				border-top-left-radius: var(--flow-input-btn-tlbr, 0px);
-    			border-bottom-left-radius: var(--flow-input-btn-blbr, 0px);
-    			color:var(--flow-border-invert-color, var(--flow-primary-invert-color, #FFF));
-    			display: flex;
-			    justify-content: center;
-			    align-items: center;
-			}
-			:host(:not([disabled])) .btn:hover{
-				background-color:var(--flow-border-hover-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border-color:var(--flow-border-hover-color, var(--flow-primary-color, rgba(0,151,115,1)))
-			}
-			.input{
-				width:100px;flex:1;box-sizing:border-box;
-				min-height:var(--flow-input-height);
-				border: var(--flow-input-border, 2px) solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border-radius:var(--flow-input-border-radius, 8px);
-    			margin:0px;
-    			padding:16px 30px 10px 10px;
-				background-color:var(--flow-input-bg, inherit);
-				color:var(--flow-input-color, inherit);
-				font-size:var(--flow-input-font-size, 1rem);
-				font-weight:var(--flow-input-font-weight, 400);
-				line-height:var(--flow-input-line-height, 1.2);
-				box-shadow:var(--flow-input-box-shadow);
-			}
-
-			:host([apply-btn]) .input{
-			    border-right-width:0px;
-				border-top-right-radius: 0px;
-				border-bottom-right-radius: 0px;
-			}
-
-
-			.input:focus{outline:none}
-			.input::-webkit-input-placeholder { color: var(--flow-input-placeholder, #888 ); }
-			:host([disabled]) .value{
-				padding-right:10px;
-			}
-			.clear-btn{
-				font-style: normal;
-			    font-size: 25px;
-			    padding: 0px 10px 0px 10px;
-			    cursor: pointer;
-			    display:none;
-			    position: absolute;
-			    right: 0px;
-			    z-index: 1;
-			}
-			:host(:not([disabled])) [has-value] .clear-btn{display:block;}
-			:host(.invalid) .input{color:var(--flow-input-invalid-color, red)}
-
-			.dz-preview{
-				position:relative;display:block;
-			}
-			.dz-preview .dz-progress{display:block;height:2px;}
-			.dz-preview .dz-progress .dz-upload{
-				display:block;height:100%;width:0;background:green
-			}
-			.dz-preview .dz-details{line-height:1.2;margin:2px;}
-			.dz-preview .dz-error-message{color:red;display:none}
-			.dz-preview.dz-error .dz-error-message,
-			.dz-preview.dz-error .dz-error-mark{display:block}
-			.dz-preview.dz-success .dz-success-mark{display:block}
-			.dz-preview .dz-error-mark,
-			.dz-preview .dz-success-mark{
-				position:absolute;display:none;left:30px;top:30px;width:54px;height:58px;
-				left:50%;margin-left:-27px
-			}
-			.dz-preview .dz-remove{
-				position: absolute;
-			    right:-15px;
-			    top:-15px;
-			    font-size:27px;
-			    cursor: pointer;
-			    color:var(--flow-dz-field-remove-icon-color, var(--flow-color,#000));
-			    background:var(--flow-dz-field-remove-icon-bg, #FFF);
-			    z-index:1;
-			    box-shadow:var(--flow-dz-field-remove-icon-box-shadow, 0px 0px 4px #ccc);
-			    padding: 5px;
-			    border-radius:50%;
-			    width: 20px;
-			    height: 20px;
-			    line-height:20px;
-			}
-			.dz-image-holder{
-				position:relative;
-				height:100px;
-				background:var(--flow-dz-field-mage-holder-bg, rgba(0,0,0,0.1));
-			}
-			.dz-image-holder img{
-				max-width:100%;
-				max-height:100%;
-			}
-		`;
-    }
-    constructor() {
-        super();
-        this.type = 'text';
-        this.value = '';
-        this.postData = {};
-    }
-	render() {
-		return html`<label ?hidden=${!this.label}>${this.label||""}</label>
-		<div class="wrapper" @click=${this.onClick} ?has-value=${!!this.value}>
-			<slot name="prefix"></slot>
-			<div class="input"
-				?disabled=${this.disabled} 
-				@change=${this.onChange}>
-			</div>
-			<div class="btn">
-				<div class="text"><flow-i18n text="${this.btnText || 'Select'}"></flow-i18n></div>
-			</div>
-			<slot name="sufix"></slot>
-		</div>
-		`;
-	}
-
-	firstUpdated(){
-		super.firstUpdated();
-		this.inputEl = this.renderRoot.querySelector(".input");
-		let url = this.uploadUrl || "upload-file";
-		this.dropzone = new Dropzone(this.inputEl, {
-			url,
-			acceptedFiles: this.acceptedFiles,
-			withCredentials:true,
-			paramName:this.paramName || "file",
-			autoProcessQueue:this.autoProcessQueue || false,
-			maxFiles:this.maxFiles || 1,
-			uploadMultiple: false,
-			maxFilesize : 500,
-			//addRemoveLinks: true,
-			previewTemplate:`<div class="dz-preview dz-file-preview">
-			  <div class="dz-details">
-			    <div class="dz-filename"><span data-dz-name></span></div>
-			    <div class="dz-size" data-dz-size></div>
-			    <div class="dz-image-holder">
-			    	<img data-dz-thumbnail /> <div class="dz-remove" data-dz-remove>&times;</div>
-			    </div>
-			  </div>
-			  <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
-			  <!--div class="dz-success-mark"><span>✔</span></div>
-			  <div class="dz-error-mark"><span>✘</span></div-->
-			  <div class="dz-error-message"><span data-dz-errormessage></span></div>
-			</div>`,
-			maxfilesexceeded:(file)=>{
-				this.dropzone.removeFile(file);
-			}
-		});
-		this.dropzone.on("addedfile", (file)=>{
-			if (this._oldFile) {
-				this.dropzone.removeFile(this._oldFile);
-			};
-			this._oldFile = file;
-			//this.set('hasOfflinePreview', true);
-			this.classList.toggle('offline-preview', true);
-			this.msg = 'Offline preview';
-		});
-		this.dropzone.on("reset", (file)=>{
-			this.classList.toggle('offline-preview', false);
-			//this.set('hasOfflinePreview', false);
-			//this.srcChanged();
-			this._oldFile = false;
-		});
-
-		this.dropzone.on("sending", (file, xhr, formData)=>{
-			Object.keys(this.postData).forEach(k=>{
-				formData.append(k, this.postData[k]);
-			})
-		});
-		this.dropzone.on("success", (file, xhr)=>{
-			this.cancelFiles();
-			this.fire('upload-success')
-			//this.msg = "Online preview";
-		});
-		this.dropzone.on("error", (file, xhr)=>{
-			this.cancelFiles();
-			this.fire('upload-error')
-			//this.msg = "Online preview";
-		});
-		
-	}
-
-	uploadFile(){
-		this.dropzone?.processQueue();
-	}
-	cancelFiles(){
-		this.dropzone?.removeAllFiles(true);
-	}
-
-	setClear(){
-		this.setValue("");
-	}
-
-	onClick() {
-		this.fire("flow-dz-click", {el:this})
-	}
-
-	validate(value){
-		let {pattern} = this;
-		if(pattern){
-			try{
-				pattern = new RegExp(pattern)
-			}catch(e){
-				this.log("pattern error:", e)
-				return false;
-			}
-			if(!pattern.test(value))
-				return false;
-		}
-		if(typeof this.validator == 'function'){
-			return this.validator(value, this);
-		}
-		return true;
-	}
-
-	onChange(e) {
-		let value = this.shadowRoot.querySelector("input").value;
-		if(!this.validate(value)){
-			this.classList.add("invalid")
-			return
-		}
-		this.classList.remove("invalid")
-		//this.log("value", value)
-
-		this.value = value;
-		this.fire("changed", {el:this, value})
-	}
-
-	setValue(value){
-		this.value = value;
-		this.shadowRoot.querySelector("input").value = "";
-		this.fire("changed", {el:this, value:this.value})
-	}
-}
-
-FlowDropzoneField.define('flow-dz-field');
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_MARKDOWN_383 : &'static str = r###"
-
-
-
-const escapeHtml = (unsafe) => {
-    return unsafe
-         .replace(/&/g, "&amp;")
-         .replace(/</g, "&lt;")
-         .replace(/>/g, "&gt;")
-         .replace(/"/g, "&quot;")
-         .replace(/'/g, "&#039;")
-         .replace(/&amp;lt;/g, "&lt;")
-         .replace(/&amp;gt;/g, "&gt;")
- }
-
-export const markerdRenderer = {
-    buildAnchorHref(text){
-        return text.toLowerCase().replace(/[^\w]+/g, '-')
-            .replace(/\-code\-/g, "").replace(/^[\-]+|[\-]+$/g, '')
-    },
-	heading(text, level) {
-		const href = this.buildAnchorHref(text);
-
-		return `
-			<h${level} class="h-anchor">
-			<a name="${href}" class="anchor" href="#${href}">
-				<span class="anchor-icon" part="anchor-icon"></span>
-			</a>
-			${text}
-			</h${level}>`;
-    },
-    
-    code(text, info, escaped) {
-        //console.log('code:',text);
-        return `<flow-code lang="${info}"><textarea>${text.replace(/\t/g,'    ')}</textarea></flow-code>`;
-    },
-
-    html(text) {
-        //console.log('html:',text);
-        return escapeHtml(text);
-    },
-
-    codespan(text) {
-        //console.log('codespan:',text);
-        text = text.replace(/&amp;lt;/g, "&lt;").replace(/&amp;gt;/g, "&gt;");
-        return `<code>${text}</code>`;
-    },
-
-    link(href, title, text) {
-        return`<flow-link href="${href}" ${title?`title="${title}"`:''}>${text}</flow-link>`;
-    }
-}
-
-/**
-* @class FlowMarkdown
-* @extends BaseElement
-* @property {Boolean} [skipTrimming]
-* @property {Boolean} [achorScroll]
-* @property {Boolean} [sanitize]
-* @property {Boolean} [toc]
-* @property {Boolean} [full_height_toc]
-* @cssvar {font-size} [--flow-markdown-anchor-icon-font-size=1rem]
-* @cssvar {display} [--flow-markdown-anchor-icon-display=inline-block]
-* @cssvar {width} [--flow-markdown-anchor-icon-width=15px]
-* @cssvar {height} [--flow-markdown-anchor-icon-height=15px]
-* @cssvar {margin} [--flow-markdown-anchor-icon-margin=0px 2px]
-* @cssvar {opacity} [--flow-markdown-anchor-icon-opacity=0]
-* @cssvar {opacity} [--flow-markdown-anchor-icon-opacity-hover=1]
-* @cssvar {background-image} [--flow-markdown-icon]
-* @cssvar {font-family} [--flow-markdown-code-font-family=monospace]
-* @cssvar {font-size} [--flow-markdown-code-font-size=1rem]
-* @cssvar {background-color} [--flow-markdown-code-background-color=#f3f3f3]
-* @cssvar {padding} [--flow-markdown-code-padding=1px 3px]
-* @cssvar {margin} [--flow-markdown-code-margin=1px 1px]
-* @cssvar {border} [--flow-markdown-code-border=1px solid #ddd]
-* @cssvar {min-width} [--flow-markdown-toc-width=200px]
-* @cssvar {width} [--flow-markdown-toc-width=200px]
-* @cssvar {top} [--flow-markdown-toc-top=0]
-* @cssvar {padding} [--flow-markdown-toc-padding=10px]
-* @cssvar {background-color} [--flow-markdown-toc-li-hover-bg=var(--flow-menu-item-hover-bg, #DDD)]
-* @cssvar {color} [--flow-markdown-toc-li-hover-color=var(--flow-menu-item-hover-color, #000)]
-* @cssvar {padding-left} [--flow-markdown-toc-level0-padding=4px]
-* @cssvar {font-size} [--flow-markdown-toc-level0-font-size=0.96rem]
-* @cssvar {font-weight} [--flow-markdown-toc-level0-font-weight=bold]
-* @cssvar {padding-left} [--flow-markdown-toc-level1-padding=4px]
-* @cssvar {font-size} [--flow-markdown-toc-level1-font-size=0.92rem]
-* @cssvar {padding-left} [--flow-markdown-toc-level2-padding=18px]
-* @cssvar {font-size} [--flow-markdown-toc-level2-font-size=0.86rem]
-* @cssvar {padding-left} [--flow-markdown-toc-level3-padding=30px]
-* @cssvar {font-size} [--flow-markdown-toc-level3-font-size=0.82rem]
-* @cssvar {padding-left} [--flow-markdown-toc-level4-padding=45px]
-* @cssvar {font-size} [--flow-markdown-toc-level4-font-size=0.76rem]
-* @cssvar {padding-left} [--flow-markdown-toc-level5-padding=60px]
-* @cssvar {font-size} [--flow-markdown-toc-level5-font-size=0.72rem]
-* @cssvar {padding-left} [--flow-markdown-toc-level6-padding=75px]
-* @cssvar {font-size} [--flow-markdown-toc-level6-font-size=0.66rem]
-* @cssvar {padding-left} [--flow-markdown-toc-level7-padding=90px]
-* @cssvar {font-size} [--flow-markdown-toc-level7-font-size=0.625rem]
-* @example
-*   <flow-markdown>fn()</flow-markdown>
-*
-*
-*/
-
-/*
-... @ cssvar {--flow-code-font-family} [--flow-markdown-code-font-family]
-... @ cssvar {--flow-code-font-size} [--flow-markdown-code-font-size]
-... @ cssvar {--flow-code-border} [--flow-markdown-code-border=1px solid #ddd]
-*/
-
-export class FlowMarkdown extends BaseElement {
-	static get properties() {
-		return {
-			skipTrimming:{type:Boolean},
-            anchorScroll:{type:Boolean},
-            sanitize : {type:Boolean},
-            toc : {type:Boolean},
-            'full-height-toc':{type:Boolean, reflect:true}
-		}
-	}
-
-	static get styles() {
-		return css`
-			:host{display:block;}
-			.md{display:none;}
-			.anchor{font-size:0px;}
-			.anchor-icon{
-				font-size:var(--flow-markdown-anchor-icon-font-size, 1rem);
-				display:var(--flow-markdown-anchor-icon-display, inline-block);
-				width:var(--flow-markdown-anchor-icon-width, 15px);
-				height:var(--flow-markdown-anchor-icon-height, 15px);
-				margin:var(--flow-markdown-anchor-icon-margin, 0px 2px);
-				opacity:var(--flow-markdown-anchor-icon-opacity, 0);
-				border:0px solid #F00;cursor:pointer;
-				background: center / contain;
-				background-image:var(--flow-markdown-icon);
-			}
-			.h-anchor:hover>a.anchor .anchor-icon{
-				opacity:var(--flow-markdown-anchor-icon-opacity-hover, 1);
-            }
-            
-            #output > * {margin-left: 19px;}
-            #output > h1, #output > h2, #output > h3, #output > h4, #output > h5 {
-                margin-left: 0px;
-            }
-
-            td { vertical-align: top; }
-
-            code, table tbody tr td code {
-                display: inline-block;
-                font-family: var(--flow-markdown-code-font-family, monospace);
-                font-size: var(--flow-markdown-code-font-size, 1rem);
-                background-color: var(--flow-markdown-code-background-color, #f3f3f3);
-                padding: var(--flow-markdown-code-padding, 1px 3px);
-                margin: var(--flow-markdown-code-margin, 1px 1px);
-                border:var(--flow-markdown-code-border, 1px solid #ddd);
-            }
-
-            flow-code {
-                --flow-code-white-space: pre;
-                --flow-code-font-family: var(--flow-markdown-code-font-family);
-                --flow-code-font-size: var(--flow-markdown-code-font-size);
-                --flow-code-border: var(--flow-markdown-code-border,1px solid #ddd);
-                /*color: var(--flow-markdown-code-color, --flow-code-color, --flow-background-inverse);*/
-                /*background-color: var(--flow-markdown-code-background-color, #f3f3f3);
-                color: var(--flow-markdown-code-color, #000);*/
-                padding: 16px;
-            }
-
-            a, a:visited { 
-                text-decoration: none; 
-                color: var(--flow-link-color, #202169);
-            }
-
-            a:hover { 
-                text-decoration: underline; 
-                color: var(--flow-link-hover-color, #161649);
-            }
-            #wrapper {
-                position:relative;
-                display: flex;
-                flex-direction:row;
-            }
-            :host([full-height-toc]) #wrapper{
-                height:100%;
-            }
-            :host([full-height-toc]) .toc-outer,
-            :host([full-height-toc]) #output{
-                height:100%;
-                overflow-y:auto;
-                overflow-x:hidden;
-            }
-            :host([full-height-toc]) .toc-outer{
-                min-width:var(--flow-markdown-toc-width, 200px);
-            }
-            #toc {
-                border:0px solid red;
-                width:var(--flow-markdown-toc-width, 200px);
-                position: -webkit-sticky;
-                position: sticky;
-                top:var(--flow-markdown-toc-top, 0);
-                list-style:none;
-                padding:var(--flow-markdown-toc-padding, 10px);
-                margin:0px;
-            }
-            :host([full-height-toc]) #toc{
-                position:relative;
-            }
-
-            #toc li{
-                cursor:pointer;
-                padding: 1px;
-            }
-            #toc li:hover{
-                background-color:var(--flow-markdown-toc-li-hover-bg, var(--flow-menu-item-hover-bg, #DDD));
-                color:var(--flow-markdown-toc-li-hover-color, var(--flow-menu-item-hover-color, #000));
-            }
-            #toc [level="0"]{
-                padding-left:var(--flow-markdown-toc-level0-padding, 4px);
-                font-size:var(--flow-markdown-toc-level0-font-size, 0.96rem);
-                font-weight:var(--flow-markdown-toc-level0-font-weight, bold);
-            }
-            #toc [level="1"]{
-                padding-left:var(--flow-markdown-toc-level1-padding, 4px);
-                font-size:var(--flow-markdown-toc-level1-font-size, 0.92rem);
-            }
-            #toc [level="2"]{
-                padding-left:var(--flow-markdown-toc-level2-padding, 18px);
-                font-size:var(--flow-markdown-toc-level2-font-size, 0.86rem);
-            }
-            #toc [level="3"]{
-                padding-left:var(--flow-markdown-toc-level3-padding, 30px);
-                font-size:var(--flow-markdown-toc-level3-font-size, 0.82rem);
-            }
-            #toc [level="4"]{
-                padding-left:var(--flow-markdown-toc-level4-padding, 45px);
-                font-size:var(--flow-markdown-toc-level4-font-size, 0.76rem);
-            }
-            #toc [level="5"]{
-                padding-left:var(--flow-markdown-toc-level5-padding, 60px);
-                font-size:var(--flow-markdown-toc-level5-font-size, 0.72rem);
-            }
-            #toc [level="6"]{
-                padding-left:var(--flow-markdown-toc-level6-padding, 75px);
-                font-size:var(--flow-markdown-toc-level6-font-size, 0.66rem);
-            }
-            #toc [level="7"]{
-                padding-left:var(--flow-markdown-toc-level7-padding, 90px);
-                font-size:var(--flow-markdown-toc-level7-font-size, 0.625rem);
-            }
-		`;
-	}
-	render() {
-        let i = 1;
-        let {level:firstLevel=0} = (this.toc_||[])[0]||{};
-        let length = 10, num;
-        (this.toc_||[]).forEach(o=>{
-            if(length<o.level)
-                length = o.level;
-        })
-        length = (length+"").length;
-
-		return html`<div id="wrapper">
-        ${
-            this.toc ? 
-            html`<div class="toc-outer"><ul id='toc' @click="${this.onTOCClick}">${
-                this.toc_.map(t=> {
-                    /*if(firstLevel == t.level){
-                        num = (i++)+").";
-                    }else{
-                        num = "";
-                    }*/
-                    /*<span>${num.padStart(length, " ")}</span>*/
-                    return html`<li level="${t.level}" 
-                        data-scroll-to="${t.href}">${t.caption}</li>`;
-                })
-            }</ul></div>`:''
-        }
-        <div class="md"><slot></slot></div>
-        <div id="output" @click="${this.onOutputClick}"></div>
-        </div>`;
-	}
-
-	constructor() {
-        super();
-        this.sanitize = false;
-        this.toc = false;
-        this.toc_ = [];
-    }
-    
-    firstUpdated() {
-    	// TODO https://github.com/markedjs/marked
-        const slot = this.renderRoot.querySelector('slot');
-        this.outputEl = this.renderRoot.querySelector('#output');
-       	this.slotEl = slot;
-       	this.updateHtml();
-		slot.addEventListener('slotchange', e=>{
-			this.updateHtml();
-		});
-    }
-
-    updateHtml(text=""){
-    	if(!text.length){
-	    	let nodes = this.slotEl.assignedNodes();
-	    	let texts = [];
-	    	nodes.forEach(el=>{
-	    		if(el.nodeType==3){
-	    			texts.push(el.textContent)
-	    			return;
-	    		}
-	    		texts.push(el.innerHTML);
-	    		//texts.push(el.innerText);
-	    	})
-            text = texts.join("\n\n");
-            /*
-	    	let line2 = text.trim().split("\n")[1];
-	    	this.log("line2line2", line2)
-	    	if(!this.skipTrimming && line2){
-	    		let num = 0;
-	    		let i = 0;
-	    		let c = line2[i];
-	    		let regExp = null;
-	    		this.log("cccc:"+c, c=="\t")
-	    		if(c == "\t"){
-	    			while(c == "\t"){
-	    				num++;
-	    				c = line2[i++];
-	    			}
-	    			regExp = `^[\t]{1,${num}}`;
-    			}else if(c == " "){
-    				while(c == " "){
-	    				num++;
-	    				c = line2[i++];
-	    			}
-	    			regExp = `^[ ]{1,${num}}`;
-    			}
-
-    			if(regExp){
-    				//this.log("regExp:"+regExp)
-	    			regExp = new RegExp(regExp, "g");
-	    			
-	    			text = text.split("\n").map(line=>{
-	    				//this.log("first:"+line[0]+"::::", line)
-	    				return line.replace(regExp, "")
-	    			}).join("\n");
-
-	    			//this.log("tabs", regExp, tabs, text)
-    			}
-	    	}
-	    	*/
-        }
-
-        text = text.replace(/<!---->/g, '');
-
-        const tokens = window.marked.lexer(text);
-        this.log("tokens", tokens);
-
-        if(this.toc) {
-            /*
-            text.split('\n').forEach((line) => {
-                if(/^#+/.test(line)) {
-                    let level = -1;
-                    while(line.charAt(0) == '#') {
-                        level++;
-                        line = line.substring(1);
-                    }
-                    let caption = line.trim().replace("")
-                    this.toc_.push({
-                        caption, level, 
-                        href: markerdRenderer.buildAnchorHref(caption)
-                    });
-                }
-            })
-            */
-        
-            let tocList = tokens.filter(t=>t.type=="heading").map(t=>{
-                let caption = t.tokens[0].text;
-                return {
-                    caption,
-                    level:t.depth-1,
-                    href: markerdRenderer.buildAnchorHref(caption)
-                }
-            });
-
-            this.toc_ = tocList;
-
-            this.log("tocList", tocList);
-
-            this.requestUpdate();
-        }
-
-        const html = window.marked.parser(tokens);
-        this.log("html", html);
-
-    	//let html = window.marked(text);
-        //this.log("this.toc_", this.toc, this.toc_, html)
-    	//let html = window.marked(text);
-    	this.outputEl.innerHTML =  this.sanitize ? DOMPurify.sanitize(html) : html;
-    	if(this.anchorScroll){
-    		dpc(100, ()=>{
-    			this.scrollToLocationHash();
-    		})
-    	}
-
-    }
-    scrollToLocationHash(){
-    	let hash = window.location.hash.replace("#", "");
-    	this.scrollToElement(hash)
-    }
-    scrollToElement(id){
-    	let ele = id.scrollIntoView?id:this.outputEl.querySelector(`a[name="${id}"]`);
-    	if(ele){
-            let eleP = ele.parentNode?.matches(".h-anchor")?ele.parentNode:ele;
-            //this.log("eleP", eleP)
-    		eleP.scrollIntoView(Object.assign(this.scrollIntoViewConfig || {}, {
-    			behavior: "smooth",
-    			block: "start",
-    			inline: "nearest"
-    		}));
-        }
-
-    }
-
-    onTOCClick(e){
-        let el = e.target.closest("li[data-scroll-to]");
-        if(!el)
-            return
-
-        let id = el.getAttribute("data-scroll-to");
-        this.scrollToElement(id);
-    }
-
-    onOutputClick(e){
-    	let anchor = e.target.closest("a.anchor,a.scroll-to");
-    	if(!anchor)
-    		return
-    	let href = (anchor.getAttribute("href")+"")
-    	if(href.startsWith("#"))
-    		anchor = href.replace("#", "")
-
-    	this.scrollToElement(anchor);
-    }
-}
-
-
-let defined = false;
-let registerComponent =()=>{
-	if(defined)
-		return
-	defined = true;
-
-	marked.use({renderer: markerdRenderer})
-
-	FlowMarkdown.define('flow-markdown');
-}
-
-let check = ()=>{
-	loaded++;
-	if(loaded == 2)
-		registerComponent();
-}
-
-let loaded = 0;
-
-[
-	'extern/marked/marked.min.js',
-	'extern/dom-purify/purify.min.js'
-].forEach(file=>{
-	if(file.indexOf("marked/") > -1 && window.marked)
-		return check();
-
-	let s = document.createElement("script");
-	s.src = `${baseUrl}resources/${file}`;
-	document.head.appendChild(s);
-	s.onload = ()=>{
-		check();
-	}
-});
-
 "###;
 
 const ASPECTRON_FLOW_UX_SRC_FLOW_TOOLBAR_ITEM_406 : &'static str = r###"
@@ -23582,137 +26781,279 @@ FlowToolbarItem.define('flow-toolbar-item');
 
 "###;
 
-const ASPECTRON_FLOW_UX_SRC_FLOW_TOOLBAR_426 : &'static str = r###"
+const ASPECTRON_FLOW_UX_SRC_FLOW_GRIDSTACK_PANEL_361 : &'static str = r###"
 
-import './fa-icon.js';
 
 
 /**
-* @class FlowToolbar
+* @class FlowGridStackPanel
 * @extends BaseElement
+* @prop {String} heading
+* @prop {Boolean} opened
+*
+* @cssvar {background-color} [--flow-gridstack-panel-bg=#FFF]
+* @cssvar {color} [--flow-gridstack-panel-color=var(--flow-color)]
+* @cssvar {border-radius} [--flow-gridstack-panel-border-radius=4px]
+* @cssvar {border} [--flow-gridstack-panel-border=1px solid var(--flow-primary-color)]
+* @cssvar {padding} [--flow-gridstack-panel-heading-padding=5px]
+* @cssvar {background-color} [--flow-gridstack-panel-heading-bg=var(--flow-primary-color)]
+* @cssvar {color} [--flow-gridstack-panel-head-color=var(--flow-primary-invert-color)]
+* @cssvar {align-items} [--flow-gridstack-panel-heading-align-items=center]
+* @cssvar {overflow} [-flow-gridstack-panel-heading-overflow=hidden]
+* @cssvar {text-overflow} [--flow-gridstack-panel-heading-text-overflow=ellipses]
+* @cssvar {flex} [--flow-gridstack-panel-head-flex=1]
+* @cssvar {align-items} [--flow-gridstack-panel-head-align-items=center]
 * @example
-*   <flow-toolbar></flow-toolbar>
+*   <flow-gridstack-panel></flow-gridstack-panel>
 *
 */
 
-export class FlowToolbar extends BaseElement {
+/*
+the following causes jsdoc to fail:
+... @ cssvar {--fa-icon-color} [--flow-gridstack-panel-head-color=var(--flow-primary-invert-color)]
+
+*/
+
+export const FlowGridStackPanelMixin = (base)=>{
+class FlowGridStackPanelKlass extends base {
 	static get properties() {
 		return {
-			items:{type:Array, value:[]}
+			heading:{type:String, value:"Hello"},
+			//opened:{type:Boolean, value:false, reflect:true}
 		}
 	}
 
 	static get styles() {
 		return css`
-			:host{
-				padding:var(--flow-toolbar-padding, 0px 5px);
-				align-items:center;
-			}
-			:host,
-			.tools{
-				display:flex;
-			}
-			.tools{
-				padding:var(--flow-toolbar-tools-padding, 5px 0px);
-				min-height:var(--flow-toolbar-tools-min-height, 76px);
+			:host {
+				display:flex;flex-direction:column;
+				align-items:stretch;
+				justify-content:start;
+				background-color:var(--flow-gridstack-panel-bg, #FFF);
+				color:var(--flow-gridstack-panel-color, var(--flow-color));
+				border-radius:var(--flow-gridstack-panel-border-radius, 4px);
+				border:var(--flow-gridstack-panel-border, 1px solid var(--flow-primary-color));
 				box-sizing:border-box;
+				--flow-dropdown-content-right:2px;
+				--flow-dropdown-border:var(--flow-gridstack-dd-border, 1px solid var(--flow-primary-color));
 			}
-			/*.tool{
-				position:relative;
-				text-align:var(--flow-toolbar-item-text-align, center);
-				padding:var(--flow-toolbar-item-padding, 5px);
+			.heading{
+				text-overflow:elipsis;overflow:hidden;
+				padding:var(--flow-gridstack-panel-heading-padding, 5px);
+				background-color:var(--flow-gridstack-panel-heading-bg, var(--flow-primary-color));
+				color:var(--flow-gridstack-panel-head-color, var(--flow-primary-invert-color));
+				display:flex;flex-direction:row;
+				align-items:var(--flow-gridstack-panel-heading-align-items, center);
+				overflow:var(--flow-gridstack-panel-heading-overflow, hidden);
+				text-overflow:var(--flow-gridstack-panel-heading-text-overflow, ellipses);
+				--fa-icon-color:var(--flow-gridstack-panel-head-color, var(--flow-primary-invert-color));
 			}
-			.tool:before{
-				position: absolute;
-			    left: 0px;
-			    top: -2px;
-			    bottom: -2px;
-			    right: 0px;
-			    background:var(--flow-toolbar-item-shadow-bg, rgba(100,100,100, 0.2));
-			    border-radius: 100px;
-			    transform-origin: center center;
-			    transform: scale(0,0);
-			    transition: all 0.2s ease;
-			    content:"";z-index:-1;
+			.head{
+				display:flex;flex-direction:row;height:100%;
+				flex:var(--flow-gridstack-panel-head-flex, 1);
+				align-items:var(--flow-gridstack-panel-head-align-items, center);
 			}
-			.tool:not(.disabled){
-				cursor:pointer;
-			}
-			.tool:not(.disabled):hover:before{
-			    border-radius: 3px;
-			    transform: scale(1,1);
-			}
-			.icon{
-				display:block;
-				width:var(--flow-toolbar-item-icon-width, 28px);
-			    height:var(--flow-toolbar-item-icon-height, 28px);
-			    margin:var(--flow-toolbar-item-icon-margin, 0px auto);
-			    --fa-icon-size:var(--flow-toolbar-item-icon-width, 28px);
-			}
-			.text{
-				font-size:var(--flow-toolbar-item-text-font-size, 0.6rem);
-			}
-			.sub-text{
-				font-size:var(--flow-toolbar-item-sub-text-font-size, 0.5rem);
-			}
-			*/
+			.drag-region{cursor:move;}
+			.body{overflow:auto;flex:1}
+			/*:host(:not([opened])) .body{
+				display:none;
+			}*/
+			.heading fa-icon:not(.disabled){cursor:pointer}
 		`;
-	}
-
-
-
-	render() {
-		let items = this.items
-		return html`
-		<div class="tools">
-		<slot name="prefix"></slot>
-		${
-			items.map(o=>{
-				return html`<flow-toolbar-item 
-					data-code="${o.code||o.text}"
-					class="${o.cls||''}"
-					text="${o.text||''}"
-					subText="${o.subText||''}"
-					icon="${o.icon||''}"
-
-					pressedText="${o.pressedText||''}"
-					pressedSubText="${o.pressedSubText||''}"
-					pressedIcon="${o.pressedIcon||''}"
-					?togglable=${o.togglable||false}
-					?pressed=${o.pressed||false}>
-				</flow-toolbar-item>`
-			})
-		}
-		<slot></slot>
-		</div>`;
 	}
 	constructor(){
 		super();
 		this.initPropertiesDefaultValues();
 	}
 
-	firstUpdated(){
-		this.renderRoot.addEventListener("click", this.onToolClick.bind(this));
+	render() {
+		return html` 
+			<div class="heading" @click="${this.onHeadingClick}">
+				${this.renderHeadPrefix()}
+				<div class="head drag-region" 
+					@click="${this.onHeadClick}">${this.renderHead()}</div>
+				${this.renderHeadSuffix()}
+			</div>
+			<flow-dropdown id="settingDD" no-trigger right-align absolute>
+				${this.renderSettings()}
+			</flow-dropdown>
+			${this.renderExtraBody()}
+			<div class="body">${this.renderBody()}${this.renderBodySuffix()}</div>`;
+	}
+	renderExtraBody(){
+		return '';
+	}
+	renderBodySuffix(){
+		return '';
+	}
 
-		/////////////////////////////////////////////////////////////////
-		this.renderRoot.addEventListener("flow-toolbar-item-state", e=>{
-			this.fire("flow-toolbar-item-state", e.detail, {bubbles:true})
-		})
-		/// what the hell it is ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-		// bubbles event issue
-		/////////////////////////////////////////////////////////////////
+	update(changes){
+		super.update(changes);
+		this.bindDDTriggers();
+	}
+
+	renderHeadPrefix(){
+		return html `<fa-icon icon="window-maximize"></fa-icon>`
+	}
+	renderHeadSuffix(){
+		return html `
+		<fa-icon class="setting-trigger" data-trigger-for="settingDD" icon="cog"></fa-icon>
+		<fa-icon icon="times" @click="${this.onClosePanelClick}"></fa-icon>`
+	}
+	renderHead(){
+		return this.heading || ''
+	}
+	renderBody(){
+		return html`
+		<div>
+			PANEL : ${Math.random()*10000}
+			<div>contexts:${JSON.stringify(this.ctxworkspaces||[])}</div>
+		</div>
+		`
+	}
+
+	renderSettings(){
+		return html`
+		<div class="head">
+		<flow-btn @click="${this.onClosePanelClick}">
+			<fa-icon icon="times"></fa-icon>
+		</flow-btn>
+		</div>`
+	}
+
+	onHeadingClick(){
+		
+	}
+
+	acceptContext(ctx){
+		return super.acceptContext(ctx)
+	}
+
+	onContextsUpdate(){
 
 	}
 
-	onToolClick(e){
-		let tool = e.target.closest(".flow-toolbar-item, flow-toolbar-item");
-		if(!tool)
-			return
-		this.fire("tool-click", {tool:tool.dataset.code, btn:tool});
+	onHeadClick(){
+		this.opened = !this.opened;
+	}
+
+	serialize(){
+		let {opened} = this;
+		let data = Object.assign({}, super.serialize(), {
+			opened
+		});
+		return data;
+	}
+	deserialize(data){
+		super.deserialize(data);
+		let {opened} = data||{};
+		this.opened = !!opened;
+	}
+
+	getGridstackDragHandle(){
+		return this.renderRoot.querySelector('.heading .head')
+	}
+
+	toggleSettingDD(){
+		this.settingDD.toggle();
+	}
+
+	onClosePanelClick(){
+		return this.fire(
+			"remove-gridstack-panel-request", 
+			{panel:this},
+			{bubbles:true, cancelable:true},
+			null,
+			true
+		);
 	}
 }
 
-FlowToolbar.define('flow-toolbar');
+return FlowGridStackPanelKlass
+}
+
+export const FlowGridStackPanelImpl = FlowGridStackPanelMixin(BaseElement);
+export class FlowGridStackPanel extends FlowContextListenerMixin(FlowGridStackPanelImpl){};
+
+FlowGridStackPanel.define('flow-gridstack-panel');
+
+"###;
+
+const ASPECTRON_FLOW_UX_SRC_FLOW_CONTEXT_TEST_348 : &'static str = r###"
+
+
+
+
+export class FlowContextA extends FlowContextElement{
+	static get properties(){
+		return {
+			name:{type:String, value:"Context A"},
+			type:{type:String, value:"example"},
+			code:{type:String, value:"ctxa"}
+		}
+	}
+	static get styles(){
+		return [FlowContextElement.styles, css`
+			:host{display:block;padding:5px}
+		`]
+	}
+}
+FlowContextA.init();
+
+export class FlowContextB extends FlowContextElement{
+	static get properties(){
+		return {
+			name:{type:String, value:"Context B"},
+			type:{type:String, value:"example"},
+			code:{type:String, value:"ctxb"}
+		}
+	}
+}
+FlowContextB.init();
+
+export class FlowContextC extends FlowContextElement{
+	static get properties(){
+		return {
+			name:{type:String, value:"Context C"},
+			type:{type:String, value:"example"},
+			code:{type:String, value:"ctxc"}
+		}
+	}
+}
+FlowContextC.init();
+
+export class FlowContextD extends FlowContextElement{
+	static get properties(){
+		return {
+			name:{type:String, value:"Context D"},
+			type:{type:String, value:"example"},
+			code:{type:String, value:"ctxd"}
+		}
+	}
+}
+FlowContextD.init();
+
+export class FlowContextE extends FlowContextElement{
+	static get properties(){
+		return {
+			name:{type:String, value:"Context E"},
+			type:{type:String, value:"example"},
+			code:{type:String, value:"ctxe"}
+		}
+	}
+}
+FlowContextE.init();
+
+FlowContextWorkspace({
+	name:"Workspace A",
+	code:"group1",
+	contexts:[{
+		code:"ctxa"
+	},{
+		code:"ctxb"
+	}]
+})
+
 
 "###;
 
@@ -24752,1962 +28093,6 @@ export const SetFlowContextWorkspaceCreator = creator=>{
 
 "###;
 
-const ASPECTRON_FLOW_UX_SRC_FLOW_GRIDSTACK_PANEL_361 : &'static str = r###"
-
-
-
-/**
-* @class FlowGridStackPanel
-* @extends BaseElement
-* @prop {String} heading
-* @prop {Boolean} opened
-*
-* @cssvar {background-color} [--flow-gridstack-panel-bg=#FFF]
-* @cssvar {color} [--flow-gridstack-panel-color=var(--flow-color)]
-* @cssvar {border-radius} [--flow-gridstack-panel-border-radius=4px]
-* @cssvar {border} [--flow-gridstack-panel-border=1px solid var(--flow-primary-color)]
-* @cssvar {padding} [--flow-gridstack-panel-heading-padding=5px]
-* @cssvar {background-color} [--flow-gridstack-panel-heading-bg=var(--flow-primary-color)]
-* @cssvar {color} [--flow-gridstack-panel-head-color=var(--flow-primary-invert-color)]
-* @cssvar {align-items} [--flow-gridstack-panel-heading-align-items=center]
-* @cssvar {overflow} [-flow-gridstack-panel-heading-overflow=hidden]
-* @cssvar {text-overflow} [--flow-gridstack-panel-heading-text-overflow=ellipses]
-* @cssvar {flex} [--flow-gridstack-panel-head-flex=1]
-* @cssvar {align-items} [--flow-gridstack-panel-head-align-items=center]
-* @example
-*   <flow-gridstack-panel></flow-gridstack-panel>
-*
-*/
-
-/*
-the following causes jsdoc to fail:
-... @ cssvar {--fa-icon-color} [--flow-gridstack-panel-head-color=var(--flow-primary-invert-color)]
-
-*/
-
-export const FlowGridStackPanelMixin = (base)=>{
-class FlowGridStackPanelKlass extends base {
-	static get properties() {
-		return {
-			heading:{type:String, value:"Hello"},
-			//opened:{type:Boolean, value:false, reflect:true}
-		}
-	}
-
-	static get styles() {
-		return css`
-			:host {
-				display:flex;flex-direction:column;
-				align-items:stretch;
-				justify-content:start;
-				background-color:var(--flow-gridstack-panel-bg, #FFF);
-				color:var(--flow-gridstack-panel-color, var(--flow-color));
-				border-radius:var(--flow-gridstack-panel-border-radius, 4px);
-				border:var(--flow-gridstack-panel-border, 1px solid var(--flow-primary-color));
-				box-sizing:border-box;
-				--flow-dropdown-content-right:2px;
-				--flow-dropdown-border:var(--flow-gridstack-dd-border, 1px solid var(--flow-primary-color));
-			}
-			.heading{
-				text-overflow:elipsis;overflow:hidden;
-				padding:var(--flow-gridstack-panel-heading-padding, 5px);
-				background-color:var(--flow-gridstack-panel-heading-bg, var(--flow-primary-color));
-				color:var(--flow-gridstack-panel-head-color, var(--flow-primary-invert-color));
-				display:flex;flex-direction:row;
-				align-items:var(--flow-gridstack-panel-heading-align-items, center);
-				overflow:var(--flow-gridstack-panel-heading-overflow, hidden);
-				text-overflow:var(--flow-gridstack-panel-heading-text-overflow, ellipses);
-				--fa-icon-color:var(--flow-gridstack-panel-head-color, var(--flow-primary-invert-color));
-			}
-			.head{
-				display:flex;flex-direction:row;height:100%;
-				flex:var(--flow-gridstack-panel-head-flex, 1);
-				align-items:var(--flow-gridstack-panel-head-align-items, center);
-			}
-			.drag-region{cursor:move;}
-			.body{overflow:auto;flex:1}
-			/*:host(:not([opened])) .body{
-				display:none;
-			}*/
-			.heading fa-icon:not(.disabled){cursor:pointer}
-		`;
-	}
-	constructor(){
-		super();
-		this.initPropertiesDefaultValues();
-	}
-
-	render() {
-		return html` 
-			<div class="heading" @click="${this.onHeadingClick}">
-				${this.renderHeadPrefix()}
-				<div class="head drag-region" 
-					@click="${this.onHeadClick}">${this.renderHead()}</div>
-				${this.renderHeadSuffix()}
-			</div>
-			<flow-dropdown id="settingDD" no-trigger right-align absolute>
-				${this.renderSettings()}
-			</flow-dropdown>
-			${this.renderExtraBody()}
-			<div class="body">${this.renderBody()}${this.renderBodySuffix()}</div>`;
-	}
-	renderExtraBody(){
-		return '';
-	}
-	renderBodySuffix(){
-		return '';
-	}
-
-	update(changes){
-		super.update(changes);
-		this.bindDDTriggers();
-	}
-
-	renderHeadPrefix(){
-		return html `<fa-icon icon="window-maximize"></fa-icon>`
-	}
-	renderHeadSuffix(){
-		return html `
-		<fa-icon class="setting-trigger" data-trigger-for="settingDD" icon="cog"></fa-icon>
-		<fa-icon icon="times" @click="${this.onClosePanelClick}"></fa-icon>`
-	}
-	renderHead(){
-		return this.heading || ''
-	}
-	renderBody(){
-		return html`
-		<div>
-			PANEL : ${Math.random()*10000}
-			<div>contexts:${JSON.stringify(this.ctxworkspaces||[])}</div>
-		</div>
-		`
-	}
-
-	renderSettings(){
-		return html`
-		<div class="head">
-		<flow-btn @click="${this.onClosePanelClick}">
-			<fa-icon icon="times"></fa-icon>
-		</flow-btn>
-		</div>`
-	}
-
-	onHeadingClick(){
-		
-	}
-
-	acceptContext(ctx){
-		return super.acceptContext(ctx)
-	}
-
-	onContextsUpdate(){
-
-	}
-
-	onHeadClick(){
-		this.opened = !this.opened;
-	}
-
-	serialize(){
-		let {opened} = this;
-		let data = Object.assign({}, super.serialize(), {
-			opened
-		});
-		return data;
-	}
-	deserialize(data){
-		super.deserialize(data);
-		let {opened} = data||{};
-		this.opened = !!opened;
-	}
-
-	getGridstackDragHandle(){
-		return this.renderRoot.querySelector('.heading .head')
-	}
-
-	toggleSettingDD(){
-		this.settingDD.toggle();
-	}
-
-	onClosePanelClick(){
-		return this.fire(
-			"remove-gridstack-panel-request", 
-			{panel:this},
-			{bubbles:true, cancelable:true},
-			null,
-			true
-		);
-	}
-}
-
-return FlowGridStackPanelKlass
-}
-
-export const FlowGridStackPanelImpl = FlowGridStackPanelMixin(BaseElement);
-export class FlowGridStackPanel extends FlowContextListenerMixin(FlowGridStackPanelImpl){};
-
-FlowGridStackPanel.define('flow-gridstack-panel');
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_CONTEXT_TEST_348 : &'static str = r###"
-
-
-
-
-export class FlowContextA extends FlowContextElement{
-	static get properties(){
-		return {
-			name:{type:String, value:"Context A"},
-			type:{type:String, value:"example"},
-			code:{type:String, value:"ctxa"}
-		}
-	}
-	static get styles(){
-		return [FlowContextElement.styles, css`
-			:host{display:block;padding:5px}
-		`]
-	}
-}
-FlowContextA.init();
-
-export class FlowContextB extends FlowContextElement{
-	static get properties(){
-		return {
-			name:{type:String, value:"Context B"},
-			type:{type:String, value:"example"},
-			code:{type:String, value:"ctxb"}
-		}
-	}
-}
-FlowContextB.init();
-
-export class FlowContextC extends FlowContextElement{
-	static get properties(){
-		return {
-			name:{type:String, value:"Context C"},
-			type:{type:String, value:"example"},
-			code:{type:String, value:"ctxc"}
-		}
-	}
-}
-FlowContextC.init();
-
-export class FlowContextD extends FlowContextElement{
-	static get properties(){
-		return {
-			name:{type:String, value:"Context D"},
-			type:{type:String, value:"example"},
-			code:{type:String, value:"ctxd"}
-		}
-	}
-}
-FlowContextD.init();
-
-export class FlowContextE extends FlowContextElement{
-	static get properties(){
-		return {
-			name:{type:String, value:"Context E"},
-			type:{type:String, value:"example"},
-			code:{type:String, value:"ctxe"}
-		}
-	}
-}
-FlowContextE.init();
-
-FlowContextWorkspace({
-	name:"Workspace A",
-	code:"group1",
-	contexts:[{
-		code:"ctxa"
-	},{
-		code:"ctxb"
-	}]
-})
-
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_GRIDSTACK_370 : &'static str = r###"
-
-
-//
-
-
-export class FlowGridStackTest extends BaseElement{
-	render(){
-		return html`
-			<h1 slot="title">GridStack in SHADOW DOM</h1>
-			<flow-gridstack class="gs"></flow-gridstack>`;
-	}
-}
-
-FlowGridStackTest.define("flow-gridstack-test");
-
-
-export const FlowGridStackMixin = (base)=>{
-class FlowGridStackKlass extends base{
-	static get properties() {
-		return {
-			gridMargin:{type:Number, value:1},
-			column:{type:Number, value:30},
-			disableResize:{type:Boolean},
-			resizableHandles:{type:String, value:'e, s, w'},
-			cellHeight:{type:Number, value:100},
-			dragMode:{type:String, value:'header', reflect:true},
-			items:{type:Array, value:[]},
-			hidetools:{type:Boolean},
-			dragInOptions:{type:Object},
-			dragIn:{type:String},
-			minWidth:{type:Number, value:400},
-			removeTimeout:{type:Number, value:1000}
-		}
-	}
-
-	static define(name, deps){
-		if(deps){
-			BaseElement.define.call(this, name, deps)
-		}else{
-			this.defineElement(name);
-		}
-	}
-
-	static defineElement(name){
-		this.addGridStackHelpers();
-		BaseElement.defineElement.call(this, name);
-	}
-
-	static addGridStackHelpers(){
-
-		$.ui.draggable.prototype._getHandle = function( event ) {
-			let {handle, handleFn} = this.options;
-			let gridEl = this.element.closest('.grid-stack')[0];
-			if(gridEl && gridEl.gridstack){
-				handleFn = gridEl.gridstack.opts.draggable.handleFn;
-			}
-			if(typeof handleFn == 'function')
-				return handleFn(event, this);
-
-			return handle?!!$(event.target)
-				.closest(this.element.find(handle)).length:true;
-		}
-	}
-
-	constructor() {
-		var intersect = $.ui.intersect;
-		/*
-		let test = (droppable, draggable)=>{
-			 var x1 = ( draggable.positionAbs ||
-		        draggable.position.absolute ).left + draggable.margins.left,
-		      y1 = ( draggable.positionAbs ||
-		        draggable.position.absolute ).top + draggable.margins.top,
-		      x2 = x1 + draggable.helperProportions.width,
-		      y2 = y1 + draggable.helperProportions.height,
-		      l = droppable.offset.left,
-		      t = droppable.offset.top,
-		      r = l + droppable.proportions().width,
-		      b = t + droppable.proportions().height;
-
-	       console.log("sssssss", droppable.eventNamespace, [ 
-		       	l < x1 + ( draggable.helperProportions.width / 2 ) , // Right Half
-		        x2 - ( draggable.helperProportions.width / 2 ) < r , // Left Half
-		        t < y1 + ( draggable.helperProportions.height / 2 ) , // Bottom Half
-		        y2 - ( draggable.helperProportions.height / 2 ) < b
-	        ]); // Top Half
-		}
-		*/
-
-		$.ui.ddmanager.dragStart = function( draggable, event ) {
-
-		    // Listen for scrolling so that if the dragging causes scrolling the position of the
-		    // droppables can be recalculated (see #5003)
-		    draggable.element.parentsUntil( "body" ).on( "scroll.droppable", function() {
-		      if ( !draggable.options.refreshPositions ) {
-		        $.ui.ddmanager.prepareOffsets( draggable, event );
-		      }
-		    } );
-		    const {gridstack} = draggable.element.parent()[0];
-		    gridstack?._onResizeHandler();
-
-		    
-		    $.each( $.ui.ddmanager.droppables[ draggable.options.scope ] || [], function() {
-		    	//if(this.eventNamespace==".droppable1"){
-		    		this.isover = false;
-		    		this.isout = true;
-		    		this._out.call(this, event);
-		    	//}
-		    })
-		}
-		$.ui.ddmanager.drag = function( draggable, event ) {
-
-			//console.log("CCCCCC",  $.ui.ddmanager.droppables[ draggable.options.scope ])
-
-		    // If you have a highly dynamic page, you might try this option. It renders positions
-		    // every time you move the mouse.
-		    if ( draggable.options.refreshPositions ) {
-		      $.ui.ddmanager.prepareOffsets( draggable, event );
-		    }
-
-		    // Run through all droppables and check their positions based on specific tolerance options
-		    $.each( $.ui.ddmanager.droppables[ draggable.options.scope ] || [], function() {
-	    		if ( this.options.disabled || this.greedyChild || !this.visible || !this.element.width() ) {
-		        	return;
-		       	}
-
-		      var parentInstance, scope, parent;
-		      var intersects = intersect( draggable, this, this.options.tolerance, event );
-		      //if(!intersects && this.isover && this.options.tolerance=="intersect")
-		      //	intersects = intersect( draggable, this, "fit", event );
-		      //console.log("draggable.helperProportions", draggable.helperProportions)
-		      //test(this, draggable);
-
-		      var c = !intersects && this.isover ?
-		          "isout" :
-		          ( intersects && !this.isover ? "isover" : null );
-
-		     //console.log("CCCCCC", this.element.width(), this.eventNamespace, this.element[0], c, intersects)
-		      
-		      if ( !c ) {
-		        return;
-		      }
-
-		      if ( this.options.greedy ) {
-
-		        // find droppable parents with same scope
-		        scope = this.options.scope;
-		        parent = this.element.parents( ":data(ui-droppable)" ).filter( function() {
-		          return $( this ).droppable( "instance" ).options.scope === scope;
-		        } );
-
-		        if ( parent.length ) {
-		          parentInstance = $( parent[ 0 ] ).droppable( "instance" );
-		          parentInstance.greedyChild = ( c === "isover" );
-		        }
-		      }
-
-		      // We just moved into a greedy child
-		      if ( parentInstance && c === "isover" ) {
-		        parentInstance.isover = false;
-		        parentInstance.isout = true;
-		        parentInstance._out.call( parentInstance, event );
-		      }
-
-		      this[ c ] = true;
-		      this[ c === "isout" ? "isover" : "isout" ] = false;
-		      this[ c === "isover" ? "_over" : "_out" ].call( this, event );
-
-		      // We just moved out of a greedy child
-		      if ( parentInstance && c === "isout" ) {
-		        parentInstance.isout = false;
-		        parentInstance.isover = true;
-		        parentInstance._over.call( parentInstance, event );
-		      }
-		    });
-
-		};
-		super();
-		this.initPropertiesDefaultValues();
-		this.uid = 'flow-gs-'+(Math.random()*1000000).toFixed(0);
-		this.style.display = 'block';
-		//this.style.height = '1000px';
-	}
-
-	createRenderRoot(){
-		return this;
-	}
-
-	render() {
-		let {uid} = this;
-		return html`
-		<link rel="stylesheet" href="${baseUrl}resources/extern/gridstack/gridstack.min.css">
-		<link rel="stylesheet" href="${baseUrl}resources/extern/gridstack/gridstack-extra.css">
-		<style data-uid="${uid}"></style>
-		${this.renderGSTools(uid)}
-		<div class="grid-stack grid-stack-${this.column} ${uid} hide-w-opacity"
-			@remove-gridstack-panel-request=${this.onRemovePanelRequest}
-		></div>
-		<slot></slot>`;
-	}
-	renderGSTools(uid){
-		return html`
-		<textarea class="gridstack-json" data-uid="${uid}" ?hidden=${this.hidetools}></textarea>
-		<div class="buttons" ?hidden=${this.hidetools}>
-			<flow-btn @click="${this.saveGrid}">Save</flow-btn>
-			<flow-btn @click="${this.loadGrid}">Load</flow-btn>
-			<flow-btn @click="${this.saveGridLS}">Save to LStorage</flow-btn>
-			<flow-btn @click="${this.loadGridLS}">Load from LStorage</flow-btn>
-			<flow-btn @click="${this.toggleDragMode}">ToggleDragMode : ${this.dragMode}</flow-btn>
-		</div>`
-	}
-	firstUpdated(){
-		let {uid} = this;
-		this.gridEl = this.renderRoot.querySelector('.grid-stack');
-		this.styleEl = this.renderRoot.querySelector(`style[data-uid="${uid}"]`);
-		this.debugEl = this.renderRoot.querySelector(`textarea[data-uid="${uid}"]`);
-		this.styleEl.textContent = `
-			/*.${uid} .grid-stack-item-content{display:block}*/
-			.${uid}.grid-stack .grid-stack-placeholder{
-				background:var(--flow-gridstack-placeholder-bg, #1b202f);
-			}
-			.${uid}.grid-stack .grid-stack-placeholder .placeholder-content{
-				border:var(--flow-gridstack-placeholder-content-border, 0px);
-			}
-			.${uid}.grid-stack.hide-w-opacity{opacity:0}
-			.${uid} .grid-stack-item.ui-resizable-resizing:after{
-				content:"";position:absolute;top:0px;left:0px;right:0px;bottom:0px;
-				/*background:#F00;*/
-				z-index:89;
-			}
-			${this.customCss(uid)}
-		`
-		//console.log("this.resizableHandles", this.resizableHandles)
-		let options = {
-			alwaysShowResizeHandle:false,// /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
-			//ddPlugin:GridStackDDJQueryUI,
-			resizable:{
-			    handles: this.resizableHandles
-			},
-			minRow:1,
-			margin:this.gridMargin,
-			cellHeight:this.cellHeight,
-			column:this.column,
-			minWidth:this.minWidth,
-			removeTimeout:this.removeTimeout,
-			dragIn: this.dragIn ||'.sidebar .grid-stack-item',
-			acceptWidgets:this.acceptWidgets||function(el) {/*console.log("acceptWidgets", this, el);*/return true; },
-			dragInOptions:this.dragInOptions|| {
-				revert: 'invalid',
-				scroll: false,
-				appendTo: this,
-				helper: ()=>{
-					//console.log("ssssshelper:")
-					///let el = document.createElement("div");
-					//el.style.backgroundColor = "#F0F";
-					//return;// el;
-				}
-			}, // clone
-			draggable:{
-				handle:'.grid-stack-item-content .heading',
-				//refreshPositions:true,
-				helper___: ()=>{
-					let el = document.createElement("div");
-					el.style.backgroundColor = "#F0F";
-					return el;
-				},
-				handleFn:(event, uiDraggable)=>{
-					let {handle} = uiDraggable.options.handle;
-					if(this.dragMode=="panel"){
-						handle = '.grid-stack-item-content';
-					}else if(this.dragMode=='header'){
-						//console.log("event.target", event.originalEvent, handle, this.element.find( handle ))
-						let cmp = uiDraggable.element.find('.grid-stack-item-content')[0];
-						let handleEl;
-						if(cmp && cmp.getGridstackDragHandle){
-							handleEl = cmp.getGridstackDragHandle();
-						}
-
-						if(!handleEl)
-							return false;
-						return event.originalEvent.path?.includes(handleEl);
-					}
-
-					return handle?!!$(event.target)
-						.closest(uiDraggable.element.find(handle)).length:true;
-				}
-			}
-		};
-		dpc(()=>{
-			this.grid = GridStack.init(options, this.gridEl);
-			this.gridEl.classList.remove("hide-w-opacity");
-			this.grid.on('added removed change', (e, items)=>{
-				let str = '';
-				items.forEach(o=>{
-					str += `${o.id} => x: ${o.x}, y: ${o.y}, w: ${o.width}, h: ${o.height}\n`;
-				});
-				this.log(`${e.type} ${items.length} items\n${str}` );
-			});
-			//if(this.acceptWidgets != false){
-				//$(this.gridEl).droppable("option", "tolerance", "fit")
-				//let dropOptions = $(this.gridEl).droppable("option")
-				//dropOptions.tolerance = "fit";
-				//console.log("optionsoptions", dropOptions)
-			//}
-			//console.log("GridStack.prototype.getElement", GridStack.prototype.getElement)
-			this.initItems();
-		}, 100)
-	}
-	customCss(uid){
-		return '';
-	}
-
-	setLocalSetting(name, value){
-		if(typeof value != 'string')
-			value = JSON.stringify(value);
-		setLocalSetting('gridstack-${this.id || this.uid)}-${name}', value);
-	}
-
-	getLocalSetting(name, defaults){
-		let value = getLocalSetting('gridstack-${this.id || this.uid)}-${name}');
-		if(typeof value == 'undefined')
-			return defaults;
-
-		return value;
-	}
-
-	saveGridLS(){
-		this.setLocalSetting('grid', this.saveGrid())
-	}
-	loadGridLS(){
-		let grid = this.getLocalSetting('grid', '[]');
-		this.debugEl.value = grid;
-		try{
-			grid = JSON.parse(grid);
-			if(grid)
-				this.debugEl.value = JSON.stringify(grid, null, '  ');
-		}catch(e){
-			grid = [];
-		}
-		this.setGridItemsConfig(grid);
-	}
-
-	saveGrid(){
-		let data = this.getGridItemsConfig();
-		this.debugEl.value = JSON.stringify(data, null, '  ');
-		return data;
-	}
-	loadGrid(){
-		let data = [];
-		try{
-			data = JSON.parse(this.debugEl.value);
-		}catch(e){
-			//data;
-			this.log("JSON.parse:error", e)
-		}
-
-		//console.log("loadGrid", this.debugEl.value, data)
-
-		this.setGridItemsConfig(data);
-	}
-
-	updated(changes){
-		if(changes.has('items'))
-			this.setGridItemsConfig(this.items||[]);
-	}
-	initItems(){
-		let {items} = this;
-		if(items && items.length)
-			this.setGridItemsConfig(items);
-		this.fire("gridstack-ready", {grid:this})
-	}
-    getGridItemsConfig(){
-    	let data = [];
-		this.grid.engine.nodes.forEach(node=>{
-			let serializedData = null, nodeName = 'div';
-			let el = node.el.querySelector(".grid-stack-item-content");
-			if(el){
-				nodeName = el.nodeName;
-				if(typeof el.serialize == 'function')
-					serializedData = el.serialize();
-			}
-
-			data.push({
-				x: node.x,
-				y: node.y,
-				width: node.width,
-				height: node.height,
-				id: node.id||el.parentNode?.dataset.gsId||'node-'+(Math.random()*10000).toFixed(),
-				nodeName,
-				serializedData
-			});
-		});
-
-		return data;
-    }
-    setGridItemsConfig(config){
-		this.lastConfig = config
-		this.onResize();
-	}
-	activateGridItemsConfig(itemsConfig){
-		let items = GridStack.Utils.sort(itemsConfig);
-		let {grid} = this;
-		if(!grid)
-			return
-
-		grid.batchUpdate();
-		if (grid.engine.nodes.length === 0) {
-			// load from empty
-			items.forEach(item=>{
-				this.addWidget(item)
-			});
-		} else {
-			//console.log("items", items)
-			// else update existing nodes (instead of calling grid.removeAll())
-			let itemsIdMap = new Map();
-			items.forEach(item=>{
-				itemsIdMap.set(item.id, item);
-				let node = grid.engine.nodes.find(n=>n.id == item.id);
-				//console.log("node", node, item)
-				if(node){
-					//console.log("sending serializedData00", node.el, item.serializedData)
-					grid.update(node.el, item.x, item.y, item.width, item.height);
-					//console.log("sending serializedData11", node.el, item.serializedData)
-					this.sendSerializeDataToPanel(node.el, item.serializedData);
-				}else{
-					this.addWidget(item)
-				}
-			});
-			let nodes = [...grid.engine.nodes];
-			nodes.forEach(node=>{
-				if(!itemsIdMap.get(node.id))
-					this.grid.removeWidget(node.el, true, true)
-			})
-		}
-		grid.commit();
-	}
-	addWidget(item){
-		let nodeName = item.nodeName || 'div';
-		let el = this.grid.addWidget(`<div class="grid-stack-item" data-gs-id="${item.id}">
-			<${nodeName} class="grid-stack-item-content"></${nodeName}></div>`, item);
-		this.sendSerializeDataToPanel(el, item.serializedData);
-	}
-	sendSerializeDataToPanel(el, serializedData){
-		if(!serializedData)
-			return
-		el = el.querySelector(".grid-stack-item-content")
-		if(!el || typeof el.deserialize!='function')
-			return console.log("el.deserialize is missing", el&&el.deserialize)
-
-		//console.log("sending serializedData", el, serializedData)
-		el.deserialize(serializedData);
-	}
-	clearGrid(){
-		this.grid.removeAll();
-    }
-    onResize(){
-    	//console.log("onResize")
-    	let {grid} = this;
-    	if(!grid)
-    		return
-    	dpc(10, e=>{
-    		//console.log("onResize1")
-    		//grid._updateContainerHeight();
-    		//if(this.offsetHeight)
-    			grid._onResizeHandler();
-    			this.afterResize();
-    		//grid.commit();
-    		//grid.compact();
-    	})
-    }
-	afterResize(e){
-		//console.log("this.offsetWidth", this.offsetWidth, this.lastConfig)
-		if(this.offsetWidth && this.lastConfig){
-			let config = this.lastConfig;
-			this.lastConfig = null;
-			this.activateGridItemsConfig(config);
-		}
-	}
-    removePanel(panel, removeDOM=true, fireEvent=true){
-    	if(!panel.matches(".grid-stack-item"))
-    		panel = panel.closest(".grid-stack-item");
-    	if(!panel)
-    		return
-    	this.grid.removeWidget(panel, removeDOM, fireEvent)
-    }
-    toggleDragMode(){
-    	if(this.dragMode == 'panel'){
-			this.setDragMode('header');
-		}else{
-			this.setDragMode('panel');
-		}
-		return this.dragMode;
-    }
-    setDragMode(mode){
-    	let {uid} = this;
-    	//this.addCSSRule(`.${uid}.grid-stack`, 'background:#F00');
-    	if(['header', 'panel'].includes(mode)){
-    		this.dragMode = mode;
-    		return this.dragMode;
-    	}
-
-    	return false
-    }
-
-    onRemovePanelRequest(e){
-    	let {panel} = e.detail;
-    	if(!panel)
-    		return
-    	//console.log("onRemovePanelRequest:", panel)
-    	/*
-    	setTimeout(()=>{
-    		e.preventDefault();
-    	}, 100)
-    	*/
-
-    	this.removePanel(panel);
-    }
-
-    serialize(){
-    	let config = super.serialize()
-		config.items = this.getGridItemsConfig();
-		return config;
-	}
-
-	deserialize(config){
-		super.deserialize(config)
-		let {items} = config;
-		this.setGridItemsConfig(items);
-	}
-
-    connectedCallback(){
-		super.connectedCallback();
-		if(!this.resizeObserver){
-			this.resizeObserver = new ResizeObserver(()=>{
-				this.onResize();
-			});
-		}
-
-		this.resizeObserver.observe(this);
-	}
-	disconnectedCallback(){
-		super.disconnectedCallback();
-		this.resizeObserver.disconnect();
-	}
-}
-return FlowGridStackKlass;
-}
-
-/**
-* @class FlowGridStack
-* @extends BaseElement
-* @example
-*   <flow-gridstack></flow-gridstack>
-*
-*/
-
-export const FlowGridStackImp = FlowGridStackMixin(BaseElement);
-export class FlowGridStack extends FlowGridStackImp{}
-
-FlowGridStack.define('flow-gridstack',[baseUrl+'resources/extern/gridstack/gridstack.all.js']);
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_DOWNLOAD_BADGE_355 : &'static str = r###"
-
-
-/**
-* @class FlowDownloadBadge
-* @extends BaseElement
-* @property {String} [file]
-* @property {String} [icon]
-* @property {String} [title]
-* @property {String} [descr]
-* @property {String} [sha1]
-* @example
-*   <flow-download-badge icon="" title=""></flow-download-badge>
-*
-*
-*/
-export class FlowDownloadBadge extends BaseElement {
-	static get properties() {
-		return {
-			file:{type:String},
-			icon:{type:String},
-			title:{type:String},
-			descr:{type:String},
-			sha1:{type:String}
-		}
-	}
-
-	static get styles() {
-		return css`
-			:host{display:flex;flex-direction:row;align-items:center;}
-			.title{min-width:var(--flow-download-badge-title-min-width, 230px);}
-			.icon{
-			    min-width:var(--flow-download-badge-icon-size, 24px);
-			    min-height:var(--flow-download-badge-icon-size, 24px);
-			    background-position:center;
-			    background-repeat:no-repeat;background-size:contain;margin-bottom:-10px;
-			    margin:var(--flow-download-badge-icon-margin, 0px 14px 0px 0px);
-			}
-			.file-link{
-				display:flex;flex-direction:row;
-				align-items:var(--flow-download-badge-file-link-align-items, center);
-				padding:var(--flow-download-badge-file-link-padding, 6px);
-				font-size:var(--flow-download-badge-file-link-font-size, 16px);
-			}
-			[disable]{pointer-event:none}
-			a{color: var(--flow-link-color, #017b68);}
-			a:not([disable]):hover{
-				color: var(--flow-link-hover-color, #017b68);
-			}
-			[hide]{display:none}
-			[row]{display:flex;flex-direction:row;}
-			[col]{display:flex;flex-direction:column;}
-		`;
-	}
-
-	render() {
-		return html`
-			<div class="file-link" href="${this.file}">
-				<div class="icon" style="background-image:url(${this.icon})"></div>
-				<div col>
-					<div class="title">${this.title}</div>
-					<div class="descr">${this.descr}</div>
-				</div>
-            	<slot></slot>
-        	</div>
-        	<div class="sha-link" href="${this.sha1}" ?hide="${!this.sha1}">
-        		<div class="sha">SHA1</div>
-        	</div>
-    	</div>`;
-	}
-}
-
-FlowDownloadBadge.define('flow-download-badge');
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_COLOR_PICKER_385 : &'static str = r###"
-
-
-/**
-* @class FlowColorPicker
-* @extends BaseElement
-* @property {String} [color]
-* @example
-*   <flow-color-picker color="#F00"></flow-color-picker>
-*
-*
-*/
-export class FlowColorPicker extends BaseElement {
-	static get properties() {
-		return {
-			color:{type:String}
-		}
-	}
-
-	static get styles() {
-		return css`
-			:host{
-				display:inline-block;width:20px;height:20px;
-				position:relative;box-sizing:border-box;
-				border:var(--flow-color-picker-border, 1px solid var(--flow-border-color, var(--flow-primary-color, #FFF)));
-			}
-			.box{width:100%;height:100%}
-			:host(:not([disabled])) input{
-				cursor:pointer;
-			}
-			:host([disabled]) input{display:none}
-			input.color{
-				opacity:0;
-				position:absolute;left:0px;top:0px;width:100%;height:100%;
-				right:0px;buttom:0px;
-			}
-		`;
-	}
-
-	render() {
-		return html`<div class="box" style="background-color:${this.color}"></div><input 
-		class="color" type="color" .value="${this.color||""}"
-		@change="${this.onInputChange}" 
-		@input="${this.onInputChange}" />`;
-	}
-
-	onInputChange(e){
-		this.color = e.target.value;
-		this.fire("changed", {color:this.color}, {bubbles:true})
-	}
-}
-
-FlowColorPicker.define('flow-color-picker');
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_RSS_415 : &'static str = r###"
-
-
-
-/**
-* @class FlowRSS
-* @extends BaseElement
-
-* @property {String} [href]
-*
-* @cssvar {font-family} [--flow-font-family="Julius Sans One"]
-
-* @example
-*   <flow-rss href=""></flow-app-drawer>
-*
-*/
-export class FlowRSS extends BaseElement {
-	static get properties() {
-		return {
-			href:{type:String},
-			enablePictures:{type:Boolean}
-		}
-	}
-
-	static get styles(){
-		return css`
-			:host{display:block;}
-			img{max-width:100%;height:auto;}
-			a{
-				color: var(--flow-link-color, #017b68);
-			}
-
-			a:hover {
-				color: var(--flow-link-hover-color, #017b68);
-			}
-
-			.article-link{
-				margin: 5px 0px;
-			}
-
-			.article-content{
-				font-family: var(--flow-font-family, 'Sans Serif');
-				font-size: 14px;
-			}
-		`;
-    }
-	render() {
-		return html`${this.href} ${this.body}`;
-	}
-	updated(changes){
-		if((changes.has("href") || changes.has("enablePictures")) && this.href)
-			this.fetch(this.href);
-	}
-	fetch(href){
-		let opts = {method:"GET", mode:"cors", referrerPolicy: 'no-referrer'};
-		return fetch(href, Object.assign(opts, this.feedOpt||{}))
-	}
-	
-	setFeedData(data){
-		//this.feedData = data;
-		data = new window.DOMParser().parseFromString(data, "text/xml")
-		this.buildBody(data);
-		this.requestUpdate("body", null);
-	}
-	buildBody(xmlEl){
-		let items = [...xmlEl.querySelectorAll("item")]
-		this.body = html`
-		${items.map(el=>{
-			let link = el.querySelector("link");
-			let dsc = el.querySelector("description")||"";
-			if(dsc){
-				if(dsc.childNodes[0]?.nodeName=="#cdata-section"){
-					//console.log("dsc", dsc, dsc.childNodes[0].nodeValue)
-					dsc = dsc.childNodes[0].nodeValue;
-				}
-				else
-					dsc = dsc.innerHTML
-			}
-			return html`
-			<article>
-	          <img src="${link.innerHTML}/image/large.png" alt="">
-	          <div class="article-link">
-	            <flow-link href="${link.innerHTML}" target="_blank" rel="noopener">
-	              ${el.querySelector("title").innerHTML}
-	            </flow-link>
-	          </div>
-	          ${this.buildNode(dsc)}
-	        </article>`
-        })}
-		`
-	}
-	buildNode(htmlContent){
-		this._tpl = this._tpl || document.createElement("template");
-		this._tpl.innerHTML = `<div class="article-content">${htmlContent}</div>`;
-		let node = this._tpl.content.firstChild;
-		//console.log("htmlContent", htmlContent, this._tpl.innerHTML, node)
-		node.querySelectorAll("script"+(this.enablePictures?"":",img")).forEach(el=>{
-			//console.log("fetchFeed:script,img:el", el)
-			el.remove();
-		})
-		return node;
-	}
-}
-
-FlowRSS.define('flow-rss');
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_SUNBURST_GRAPH_430 : &'static str = r###"
-
-
-
-
-
-if(window.d3?.selection){
-	d3.selection.prototype.selectAppend = function(name) {
-	    let t = this.select(name);
-	    return t.size()?t:this.append(name);
-	}
-}
-
-let data = 
-{"name":"flare","children":[
-	{"name":"analytics", "children":[
-		{"name":"cluster","children":[
-			{"name":"AgglomerativeCluster","value":3938},
-			{"name":"CommunityStructure","value":3812},
-			{"name":"HierarchicalCluster","value":6714},
-			{"name":"MergeEdge","value":743}
-		]},
-		{"name":"graph","children":[
-			{"name":"BetweennessCentrality","value":3534},
-			{"name":"LinkDistance","value":5731},
-			{"name":"MaxFlowMinCut","value":7840}
-		]},
-		{"name":"optimization","children":[
-			{"name":"AspectRatioBanker","value":7074}
-		]}
-	]},
-	{"name":"animate","children":[
-		{"name":"Easing","value":17010},
-		{"name":"FunctionSequence","value":5842},
-		{"name":"interpolate","children":[
-			{"name":"ArrayInterpolator","value":1983},
-			{"name":"ColorInterpolator","value":2047},
-			{"name":"DateInterpolator","value":1375},
-			{"name":"Interpolator","value":8746},
-		]},
-		{"name":"ISchedulable","value":1041},
-		{"name":"Parallel","value":5176},
-		{"name":"Pause","value":449},
-	]},
-	{"name":"data","children":[
-		{"name":"converters","children":[
-			{"name":"Converters","value":721},
-			{"name":"DelimitedTextConverter","value":4294},
-			{"name":"GraphMLConverter","value":9800}
-		]},
-		{"name":"DataField","value":1759},
-		{"name":"DataSchema","value":2165},
-		{"name":"DataSet","value":586}
-	]},
-	{"name":"display","children":[
-		{"name":"DirtySprite","value":8833},
-		{"name":"LineSprite","value":1732}
-	]},
-	{"name":"flex","children":[
-		{"name":"FlareVis","value":4116}
-	]},
-	{"name":"physics","children":[
-		{"name":"DragForce","value":1082},
-		{"name":"GravityForce","value":1336},
-		{"name":"IForce","value":1319}
-	]},
-	{"name":"query","children":[
-		{"name":"AggregateExpression","value":1616},
-		{"name":"And","value":3027}
-	]}
-]}
-
-/**
-* @class FlowSunburstGraph
-* @extends Flowd3Element
-* @prop {Boolean} noZoom
-* @cssvar {color} [--flow-sunburst-graph-text-color="var(--flow-color, #000)"]
-* @example
-*   <flow-sunburst-graph></flow-sunburst-graph>
-*
-*/
-export class FlowSunburstGraph extends Flowd3Element {
-	static get properties() {
-		return {
-			noZoom:{type:Boolean},
-			data:{type:Object},
-			updatenum:{type:Number},
-			d3margin:{type:Number}
-		}
-	}
-
-	static get sampleData(){
-		return data;
-	}
-
-	static get styles(){
-		return [Flowd3Element.styles, ScrollbarStyle, css`
-			:host{
-				display:inline-flex;
-				font-weight:bold;
-				font-size:10px;
-				text-transform:uppercase;
-				font-family:var(--flow-data-field-font-family, "Julius Sans One");
-				font-weight:var(--flow-data-field-font-weight, bold);
-				border-radius: 10px;
-				overflow: hidden;
-				position:relative;
-				width:100%;
-				height:100%;
-			}
-			:host([disabled]){opacity:0.5;cursor:default;pointer-events:none;}
-			.container{white-space:nowrap;padding:2px 6px 6px 6px;height:100%;}
-			.container>div{padding:2px;}
-			.suffix{opacity:0.9;margin-left:3px;margin-top:3px; font-size: 10px;}
-			.col{display: flex; flex-direction: column; align-items: left;}
-			.row{display: flex; flex-direction: row; flex:0;}
-
-			.wrapper {
-				position:relative;flex:1;
-				margin:6px;overflow:hidden;
-				display: flex;
-			    align-items: stretch;
-			    justify-content: center;
-			}
-			
-			:host([border]) .wrapper {
-				border: 2px solid var(--flow-primary-color,#333);
-				box-shadow: 2px 2px 1px rgba(1, 123, 104, 0.1);
-				border-radius: 10px;
-
-			}
-
-			.wrapper > div:not(.tip,.legends) {
-				width:100%;height:100%;
-				position:relative;left:0px;top:0px;bottom:0px;right:0px;
-			}
-
-			.d3-holder{
-				min-height:10px;
-				min-width:10px;
-				opacity:1;
-				display:flex;
-				/*background-color:#F00;*/
-				align-items:center;
-			}
-			[flex] {
-				flex: 1;
-			}
-			/*#d3{background-color:#f0f}*/
-			text{fill:var(--flow-sunburst-graph-text-color, var(--flow-color, #000))}
-			path{cursor:default}
-			.tip{
-				position:absolute;border:1px solid var(--flow-primary-color,#333);
-				box-sizing:border-box;display:none;
-				width:var(--flow-sunburst-graph-tip-width, unset);
-				max-width:var(--flow-sunburst-graph-tip-width, 95%);
-				padding:var(--flow-sunburst-graph-tip-padding, 10px);
-				min-width:var(--flow-sunburst-graph-tip-min-width, 100px);
-				min-height:var(--flow-sunburst-graph-tip-min-height, unset);
-				border-radius:var(--flow-sunburst-graph-tip-border-radius, 4px);
-				background-color:var(--flow-sunburst-graph-tip-bg, var(--flow-background-color));
-				color:var(--flow-sunburst-graph-tip-color, var(--flow-color));
-			}
-			.legends{
-				margin:var(--flow-sunburst-graph-legends-margin, 0px 0px 0px 5px);
-				width:var(--flow-sunburst-graph-legends-width, 30%);
-				height:var(--flow-sunburst-graph-legends-height, initial);
-				background-color:var(--flow-sunburst-graph-legends-bg, initial);
-				max-width:var(--flow-sunburst-graph-legends-max-width, 300px);
-				max-height:var(--flow-sunburst-graph-legends-max-height, 100%);
-				overflow:var(--flow-sunburst-graph-legends-overflow, auto);
-				display:flex;align-items:center;
-				flex-direction:column;
-			}
-			.legends .items>div{
-				display:flex;align-items:center;
-			}
-			.color-box{
-				display:inline-block;
-				margin:var(--flow-sunburst-graph-color-box-margin, 2px 10px 2px 0px);
-				width:var(--flow-sunburst-graph-color-box-width, 20px);
-				min-width:var(--flow-sunburst-graph-color-box-width, 20px);
-				height:var(--flow-sunburst-graph-color-box-height, 20px);
-				opacity:var(--flow-sunburst-graph-color-box-opacity, 1);
-			}
-			.tip{opacity:0;zIndex:-1;transition:opacity 0.5s ease;display:inline-block}
-		`];
-	}
-
-	render() {
-
-		dpc(()=>{
-			this.draw();
-		})
-
-		return html`
-			<div class='wrapper'>
-				<div class="d3-holder">${super.render()}</div>
-				<div class="legends"></div>
-				<div class="tip"></div>
-			</div>
-			`;
-	}
-
-	constructor() {
-		super();
-		this.sampler = '';
-		this.svgPreserveAspectRatio = 'xMaxYMax meet';
-		this.d3margin = 10;
-	}
-
-	firstUpdated(){
-		super.firstUpdated();
-		this.el_wrapper = this.renderRoot.querySelector(".wrapper");
-		//this.el_d3Holder = this.renderRoot.querySelector(".d3-holder");
-		this.el_legends = this.el_legends||this.renderRoot.querySelector(".legends");
-		this.outerBox = this.el_wrapper.getBoundingClientRect();
-		this.updateD3Holder()
-	}
-
-	updateD3Holder(){
-		let {width, height} = this.el_wrapper.getBoundingClientRect();
-		let {width:lWidth} = this.el_legends.getBoundingClientRect();
-		width -= lWidth;
-		let size = width>height? height:width;
-		this.el_d3.style.width = (size-this.d3margin)+"px";
-		this.el_d3.style.height = (size-this.d3margin)+"px";
-		this.el_d3Rect = this.getBoundingClientRect.call(this.el_d3);
-	}
-
-	onElementResize(){
-		super.onElementResize();
-		this.outerBox = this.el_wrapper.getBoundingClientRect();
-		dpc(()=>{
-			this.outerBox = this.el_wrapper.getBoundingClientRect();
-			this.updateD3Holder();
-			this.requestUpdate("outerBox", null);
-		})
-	}
-
-	connectedCallback() {
-		super.connectedCallback();
-		if(this.sampler)
-			this.interval = setInterval(this.requestUpdate.bind(this), this.refresh);
-	}
-
-	disconnectedCallback() {
-		super.disconnectedCallback();
-
-		if(this.interval)
-			clearInterval(this.interval);
-	}
-
-	getMargin(){
-		if(this.axes){
-			return {
-				bottom:40,
-				top:30,
-				left:20,
-				right:20
-			}
-		}
-		return {
-			bottom:0,
-			top:0,
-			left:0,
-			right:0
-		}
-	}
-	draw(){
-		let margin = this.getMargin();
-		let data = this.data;
-		if(!data || !data.children)
-			return
-
-		const self = this;
-		const box = this.el_d3.getBoundingClientRect();
-
-		let {height:fullHeight, width:fullWidth} = box;
-		let width = fullWidth - margin.left - margin.right;
-    	let height = fullHeight - margin.top - margin.bottom;
-
-		const root = this.partition(data);
-  		root.each(d => d.current = d);
-
-
-		const { el } = this;
-		let t = `translate(${(width/2)+margin.left},${(height/2)+margin.top})`;
-		if(el.__t != t){
-			el.__t = t
-			el.attr("transform", t)
-		}
-
-		if(this.svg.__w != fullWidth){
-			this.svg.__w = fullWidth;
-			this.svg
-				.attr("width", fullWidth)
-		}
-		if(this.svg.__h != fullHeight){
-			this.svg.__h = fullHeight;
-			this.svg
-				.attr("height", fullHeight)
-		}
-
-		let length = this.getDataItemsCount(data);
-
-
-		let color = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, length + 1));
-		let format = d3.format(",d");
-		let radiusRef = width<height?width:height;
-		let radius = radiusRef / 10;
-		let offsetR = radius*2;
-		let arc = d3.arc()
-			.startAngle(d => d.x0)
-			.endAngle(d => d.x1)
-			.padAngle(d => Math.min((d.x1 - d.x0) / 2, 0.005))
-			.padRadius(radius * 5)
-			.innerRadius(d => d.y0 * radius + offsetR)
-			.outerRadius(d => Math.max(d.y0 * radius +offsetR, d.y1 * radius - 1 + offsetR))
-
-		
-		if(!this.rootPaths){
-			this.rootPaths = el.append("g")
-				.attr("class", "paths")
-
-			this.labels = el.append("g")
-				.attr("pointer-events", "none")
-				.attr("text-anchor", "middle")
-				.style("user-select", "none")
-
-			this.centerLabelHolder = el.append("g")
-				.attr("class", "center-label")
-			this.centerLabel1 = this.centerLabelHolder
-				.append("text")
-				.attr("dy", -10)
-				.attr("class", "center-label-top")
-				.attr("text-anchor", "middle")
-			this.centerLabel2 = this.centerLabelHolder
-				.append("text")
-				.attr("dy", 10)
-				.attr("class", "center-label-bottom")
-				.attr("text-anchor", "middle")
-			this.el_tip = this.renderRoot.querySelector("div.tip");
-			this.el_legends = this.el_legends||this.renderRoot.querySelector(".legends");
-		}
-		const {el_tip} = this;
-		const path = this.rootPaths
-		    .selectAll("path")
-		    .data(root.descendants().slice(1))
-		    .join("path")
-				.attr("fill", d => {
-					//c = d.data.color;
-					//while (d.depth > 1)
-					//	d = d.parent;
-					//console.log("d.datad.data", d.data)
-					return d.data.color || color(d.data.name);
-				})
-				//.attr("fill-opacity", d => self.arcVisible(d.current) ? (d.children ? 1 : 0.4) : 0)
-				.attr("d", d => arc(d.current));
-		
-		path.filter(d => d.children)
-			.style("cursor", "pointer")
-			.on("click", clicked)
-		path
-			.on("mouseenter", mouseenter)
-			.on("mousemove", mousemove)
-			.on("mouseleave", mouseleave);
-
-
-		//const title = path.selectAppend("title")
-      	//	.text(d => `${d.ancestors().map(d => d.data.name).reverse().join("/")}\n${this.format(d.value, d)}`);
-
-
-		let label;
-		if(this.useLabels)
-			label = this.labels
-			.selectAll("text")
-			.data(root.descendants().slice(1))
-			.join("text")
-				.attr("dy", "0.35em")
-				.attr("fill-opacity", d => +labelVisible(d.current))
-				.attr("transform", d => labelTransform(d.current))
-				.text(d => d.data.name);
-
-		this.centerLabel1.text(root.data.title||root.data.name)
-		if(root.data.subtitle)
-			this.centerLabel2.text(root.data.subtitle)
-
-		//console.log("root.descendants().slice(1)", root.descendants().slice(0))
-		this.buildLegends(root, color);
-
-		if(!this.circleEl)
-			this.circleEl = el.append("circle")
-
-	    const parent = this.circleEl
-			.datum(root)
-			.attr("r", radius+offsetR)
-			.attr("fill", "none")
-			.attr("pointer-events", "all")
-			.on("click", clicked);
-
-	    
-		const noZoom = this.noZoom;
-		function clicked(p, ...args) {
-			if(noZoom)
-				return
-			parent.datum(p.parent || root);
-			//console.log("p.depth", args, p, p.x0, p.x1, p.depth);
-			//return
-			el_tip.style.top = p.y0+"px";
-			el_tip.style.left = p.x0+"px";
-
-
-			root.each(d => d.target = {
-				x0: Math.max(0, Math.min(1, (d.x0 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI,
-				x1: Math.max(0, Math.min(1, (d.x1 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI,
-				y0: Math.max(0, d.y0 - p.depth),
-				y1: Math.max(0, d.y1 - p.depth)
-			});
-
-			const t = el.transition().duration(750);
-
-			// Transition the data on all arcs, even the ones that aren’t visible,
-			// so that if this transition is interrupted, entering arcs will start
-			// the next transition from the desired position.
-			let transition =  path.transition(t)
-				.tween("data", d => {
-					const i = d3.interpolate(d.current, d.target);
-					return t => d.current = i(t);
-				})
-				.filter(function(d) {
-					return +this.getAttribute("fill-opacity") || self.arcVisible(d.target);
-				})
-				.attr("fill-opacity", d => self.arcVisible(d.target) ? (d.children ? 0.6 : 0.4) : 0)
-				.attrTween("d", d => () => arc(d.current))
-			let size = transition.size();
-				transition
-				.on("end", (d)=>{
-					//console.log("endendendendend", d, --size)
-					if(!size)
-						self.buildLegends(p.parent || root, color)
-				})
-			
-
-			if(!label)
-				return
-			label.filter(function(d) {
-				return +this.getAttribute("fill-opacity") || labelVisible(d.target);
-			})
-			.transition(t)
-			.attr("fill-opacity", d => +labelVisible(d.target))
-			.attrTween("transform", d => () => labelTransform(d.current));
-		}
-
-		function hideTip(){
-			el_tip.style.opacity = "0";
-			el_tip.style.zIndex = "-1";
-		}
-		function mouseenter(...args) {
-			self.buildTip(...args);
-			self.showTip(...args);
-		}
-		function mouseleave(...args) {
-			hideTip(...args)
-		}
-		function mousemove(...args){
-			self.showTip(...args);
-		}
-
-		function labelVisible(d) {
-			return d.y1 <= 3 && d.y0 >= 1 && (d.y1 - d.y0) * (d.x1 - d.x0) > 0.03;
-		}
-
-		function labelTransform(d) {
-			//console.log("d.x0 + d.x1", d.x0 , d.x1)
-			const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
-			const y = ((d.y0 + d.y1) / 2 * radius)+offsetR;
-			return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
-		}
-	}
-
-	arcVisible(d) {
-		return d.y1 <= 3 && d.y0 >= 1 && d.x1 > d.x0;
-	}
-
-	buildLegends(root, color){
-		let shown = new Map();
-		let legendHtml = html`<div class="items">${
-			root.descendants().slice(1).map(d=>{
-				if(!this.arcVisible(d.current))
-					return false;
-				if(d.data.legendOnce){
-					if(shown.has(d.data.legendOnce))
-						return false;
-					shown.set(d.data.legendOnce, 1);
-				}
-				return html`
-				<div class="item">
-					<div class="color-box" style="background-color:${d.data.color||color(d.data.name)}"></div>
-					<div class="name">${d.data.name}</div>
-				</div>`
-			}).filter(a=>a)
-		}</div>`;
-		render(legendHtml, this.el_legends);
-	}
-
-	showTip(box, ...args){
-		let {pageX, pageY} = d3.event;
-		//if(!this.outerBox)
-			this.outerBox = this.el_wrapper.getBoundingClientRect();
-		let {left, top, right, width, height} = this.outerBox;
-		let x = pageX-left+15, y = pageY-top+15;
-		const {el_tip} = this;
-		
-		el_tip.style.opacity = "0";
-		el_tip.style.zIndex = "-1";
-		let r = x+el_tip.offsetWidth;
-		let b = y+el_tip.offsetHeight;
-		let tipLeft, tipTop;
-		//console.log("showTip",  {x, y}, el_tip.offsetWidth, right, width, r)
-		if(r>width){
-			tipLeft = width-el_tip.offsetWidth;
-		}else{
-			tipLeft = x;
-		}
-
-		if(b>height){
-			tipTop = height-el_tip.offsetHeight;
-		}else{
-			tipTop = y;
-		}
-
-		if(tipLeft<x && tipTop<y){
-			if(y > height/2){
-				tipTop = y - el_tip.offsetHeight - 20;
-			}
-		}
-
-		//console.log("this.outerBox", this.outerBox, tipLeft, tipTop)
-		el_tip.style.left = `${tipLeft}px`;
-		el_tip.style.top = `${tipTop}px`;
-		el_tip.style.opacity = "1";
-		el_tip.style.zIndex = "1";
-	}
-	buildTip(d, ...args){
-		//console.log("buildTip",  d, ...args)
-		let tpl = html`
-			<div class="name">${d.ancestors().slice(0, -1).map(d => d.data.name).reverse().join(" / ")}</div>
-			<div class="value">${this.format(d.value, d)}</div>`;
-		render(tpl, this.el_tip);
-	}
-	format(value, d){
-		if(!this.formatFn)
-			this.formatFn = d3.format(",d");
-		return this.formatFn(value);
-	}
-
-	getDataItemsCount(data){
-		let count = data.children?.length||0;
-		data.children?.forEach(child=>{
-			count+=this.getDataItemsCount(child)
-		});
-		return count;
-	}
-
-	partition(data){
-		const root = d3.hierarchy(data)
-			.sum(d => d.value)
-			.sort((a, b) => b.value - a.value);
-		return d3.partition()
-			.size([2 * Math.PI, root.height + 1])(root);
-	}
-}
-
-FlowSunburstGraph.define('flow-sunburst-graph');
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_SWIPEABLE_382 : &'static str = r###"
-
-
-export const swipeableStyle = css`
-.flow-swipeable-container { overflow: hidden }
-.flow-swipeable-row{
-	--swipeable-n: 1;
-	--swipeable-f: 1;
-	display: flex;
-	align-items: stretch;
-	overflow:hidden;
-	overflow-y: hidden;
-	width: 100%; /* fallback */
-	width: calc(var(--swipeable-n) * 100%);
-	/*max-height: 100vh;*/
-	--swipeable-transform-x: calc(var(--swipeable-tx, 0px) + var(--swipeable-i, 0) / var(--swipeable-n) * -100%);
-	transform: translateX(var(--swipeable-transform-x));
-}
-.flow-swipeable-row .flow-swipeable{
-	width: 100%; /* fallback */
-	height: 100%;
-	_width: calc(100% / var(--swipeable-n));
-	/*user-select: none;
-	pointer-events: none;
-	background: no-repeat;
-	background-size: cover;*/
-	
-}
-
-.flow-swipeable-smooth{ transition: transform  calc(var(--swipeable-f, 1) * .5s) ease }
-`
-
-export class FlowSwipeable{
-
-	constructor(container, options={}){
-		this.container = container;
-		let element = container.querySelector('.flow-swipeable-row');
-		this.element = element;
-		let defaultOptions = {
-			drag:true,
-			validateEvent(e){
-				return !e.target.closest('flow-dropdown,flow-select,flow-selector,flow-input,flow-checkbox,select,textarea, input,.not-swipeable')
-			}
-		};
-		this.options = {...defaultOptions, ...options}
-		this.count = element.children.length;
-		this.x = null;
-		this.locked = false;
-		this.i = 0;
-		this.onResize();
-		this.updateCount();
-		this.init();
-	}
-	updateCount(){
-		let el = this.element;
-		this.count = el.children.length;
-		el.style.setProperty("--swipeable-n", this.count);
-		this.updateFixedPositionsOffset();
-	}
-
-	init(){
-		let el = this.element;
-		//let onResize = this.onResize.bind(this);
-		let onTouchStart = this.onTouchStart.bind(this);
-		let onDrag = this.onDrag.bind(this);
-		let onTouchEnd = this.onTouchEnd.bind(this);
-
-		//el.addEventListener("resize", onResize, false);
-
-		el.addEventListener("mousedown", onTouchStart, false);
-		el.addEventListener("touchstart", onTouchStart, false);
-
-		el.addEventListener("mousemove", onDrag, false);
-		el.addEventListener("touchmove", onDrag, false);
-
-		el.addEventListener("mouseup", onTouchEnd, false);
-		el.addEventListener("touchend", onTouchEnd, false);
-
-		if (typeof MutationObserver != 'undefined'){
-			const observer = new MutationObserver(()=>{
-				this.updateCount();
-			});
-			observer.observe(el, {childList:true});
-		}
-
-		
-
-		this.startResizeListener();
-	}
-	updateFixedPositionsOffset(){
-		let {width, top} = this.container.getBoundingClientRect();
-		[...this.element.children].map((c, index)=>{
-			c.style.setProperty('--flow-transform-translate-x', `${index * width}px`);
-			c.style.setProperty('--flow-transform-translate-y', `${-top}px`)
-		})
-	}
-	setActive(index){
-		this.element.style.setProperty("--swipeable-i", index);
-		this.i = index;
-	}
-	startResizeListener(){
-		if(!this.resizeObserver){
-    		this.resizeObserver = new ResizeObserver(()=>{
-	    		this.onResize();
-			});
-			this.resizeObserver.observe(this.container);
-	    }
-	}
-	stopResizeListener(){
-		if(this.resizeObserver){
-			this.resizeObserver.unobserve(this.container);
-			this.resizeObserver.disconnect();
-			delete this.resizeObserver;
-		}
-	}
-
-	unifyEvent(e) {
-		return e.changedTouches ? e.changedTouches[0] : e;
-	}
-
-	isValidEvent(e){
-		return this.options.validateEvent(e);
-	}
-
-	onResize() {
-		this.width = this.container.getBoundingClientRect().width;
-		this.updateFixedPositionsOffset();
-	}
-
-	onTouchStart(e) {
-		if(!this.isValidEvent(e))
-			return
-		this.x = this.unifyEvent(e).clientX;
-		this.element.classList.toggle("flow-swipeable-smooth", !(this.locked = true));
-	}
-
-	onDrag(e) {
-		if (!this.locked)
-			return
-		if(this.options.drag){
-			e.preventDefault();
-			this.element.style.setProperty("--swipeable-tx", 
-				`${Math.round(this.unifyEvent(e).clientX - this.x)}px`);
-		}
-	}
-
-	onTouchEnd(e) {
-		//console.log("locked:"+this.locked)
-		if (!this.locked)
-			return
-
-		let el = this.element;
-		let {i, count, width, x} = this;
-		let lastIndex = i;
-		//console.log("i, count, width, x", {i, count, width, x})
-
-		let dx = this.unifyEvent(e).clientX - x,
-			s = Math.sign(dx),
-			f = +((s * dx) / width).toFixed(2);
-
-
-		//console.log("i, count, width, x", {dx, i, f, s})
-		if ((i > 0 || s < 0) && (i < count - 1 || s > 0) && f > 0.1) {
-			el.style.setProperty("--swipeable-i", (i -= s));
-			f = 1 - f;
-		}
-		this.i = i;
-		el.style.setProperty("--swipeable-tx", "0px");
-		el.style.setProperty("--swipeable-f", f);
-		el.classList.toggle("flow-swipeable-smooth", !(this.locked = false));
-		this.x = null;
-		if(lastIndex != i){
-			this.options.onSwipe?.({index:i, element:this.element.children[i]})
-		}
-	}
-}
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_T9_427 : &'static str = r###"
-
-
-
-/**
-* @class FlowT9
-* @extends BaseElement
-
-* @property {Boolean} [disabled]
-* @property {String} [value]
-*
-* @cssvar {font-family} [--flow-font-family="Julius Sans One"]
-* @cssvar {font-weight} [--flow-font-weight=bold]
-* @example
-*   <flow-t9 value="123.4"></flow-t9>
-*
-*/
-export class FlowT9 extends BaseElement {
-	static get properties() {
-		return {
-			value:{type:String},
-			disabled:{type:Boolean}
-		}
-	}
-
-	static get styles(){
-		return css`
-			:host{
-				display:inline-block;
-				font-family:var(--flow-font-family, "Julius Sans One");
-				font-weight:var(--flow-font-weight, bold);
-				width:var(--flow-t9-width, 100%);
-			}
-			.row{
-				display:flex;
-				align-items:stretch;
-				min-width:60px;
-				text-align:center;
-				justify-content:space-evenly;
-				margin-bottom:5px;
-			}
-			flow-btn{
-				margin:var(--flow-t9-btn-margin, 5px);
-				padding:var(--flow-t9-btn-padding, 0px);
-				box-size:border-box;
-				border-radius:var(--flow-t9-btn-border-radius, 50%);
-				--flow-btn-wrapper-min-width:10px;
-				width:var(--flow-t9-btn-width, 50px);
-				height:var(--flow-t9-btn-height, 50px);
-    			font-size:var(--flow-t9-btn-font-size, 1.5rem);
-			}
-		`;
-	}
-	render() {
-		let {value=""} = this;
-		return html`
-		<div class="wrapper" @click=${this.onClick}>
-			<div class="row">
-				<flow-btn full-height-wrapper data-v="1">1</flow-btn>
-				<flow-btn full-height-wrapper data-v="2">2</flow-btn>
-				<flow-btn full-height-wrapper data-v="3">3</flow-btn>
-			</div>
-			<div class="row">
-				<flow-btn full-height-wrapper data-v="4">4</flow-btn>
-				<flow-btn full-height-wrapper data-v="5">5</flow-btn>
-				<flow-btn full-height-wrapper data-v="6">6</flow-btn>
-			</div>
-			<div class="row">
-				<flow-btn full-height-wrapper data-v="7">7</flow-btn>
-				<flow-btn full-height-wrapper data-v="8">8</flow-btn>
-				<flow-btn full-height-wrapper data-v="9">9</flow-btn>
-			</div>
-			<div class="row">
-				<flow-btn full-height-wrapper data-v="." 
-					?disabled="${value.includes('.')}">.</flow-btn>
-				<flow-btn full-height-wrapper data-v="0">0</flow-btn>
-				<flow-btn full-height-wrapper data-v="backspace"
-					?disabled="${!value}">&lt;</flow-btn>
-			</div>
-		</div>
-		`;
-	}
-
-	setClear(){
-		this.setValue("");
-	}
-
-	onClick(e) {
-		let btnEl = e.target.closest("flow-btn")
-		if(!btnEl)
-			return
-		let btn = btnEl.dataset.v;
-		let {value=""} = this;
-		if(btn=="." && value.includes("."))
-			return
-
-		let result = this.fire("btn-click", {el:this, btn, btnEl}, {cancelable:true}, null, true)
-		if(result.defaultPrevented)
-			return
-		
-		if(btn=="backspace"){
-			value = value.substring(0, value.length-1);
-		}else{
-			if(btn=="." && value===""){
-				value = "0"
-			}
-			value += btn;
-		}
-
-		this.setValue(value);
-	}
-
-	setValue(value){
-		this.value = value;
-		this.fire("changed", {el:this, value:this.value})
-	}
-}
-
-FlowT9.define('flow-t9');
-"###;
-
 const ASPECTRON_FLOW_UX_RESOURCES_EXTERN_PROGRESSBAR_PROGRESSBAR_341 : &'static str = r###"
 let root = {};
 (function(f){
@@ -27628,1397 +29013,1065 @@ module.exports = {
 export const {ProgressBar} = root;
 "###;
 
-const ASPECTRON_FLOW_UX_SRC_COLORS_402 : &'static str = r###"
 
+        use std::collections::HashMap;
+        // use std::sync::Arc;
+        use std::sync::Mutex;
 
-export const buildColors = ({h, s, l}, opt={})=>{
-	let {
-		bg='hsl(var(--h), calc(var(--s) * 1%), calc(var(--l) * 1%))',
-		color='hsl(var(--h), calc(var(--s) * 1%), calc(calc((-2500 * (20 / 100 + 1)) / (var(--l) - 49.999) + var(--l)) * 1%))',
-	} = opt;
-
-	const n = `color${(Math.random()*100000).toFixed(0)}`;
-
-	bg = bg
-		.replace(/var\(--h\)/g, `var(--${n}-h)`)
-		.replace(/var\(--s\)/g, `var(--${n}-s)`)
-		.replace(/var\(--l\)/g, `var(--${n}-l)`);
-	color = color
-		.replace(/var\(--h\)/g, `var(--${n}-h)`)
-		.replace(/var\(--s\)/g, `var(--${n}-s)`)
-		.replace(/var\(--l\)/g, `var(--${n}-l)`);
-
-	let el = document.createElement("div");
-	el.style.setProperty(`--${n}-h`, h);
-	el.style.setProperty(`--${n}-s`, s)
-	el.style.setProperty(`--${n}-l`, l)
-	el.style.backgroundColor = bg
-	el.style.color = color;
-	el.style.display = 'none';
-	el.style.position = 'fixed';
-	document.body.appendChild(el);
-	let p = new Promise((resolve)=>{
-		dpc(200, e=>{
-			let style = getComputedStyle(el);
-			let backgroundColor = style.backgroundColor;
-			let color = style.color;
-			resolve({backgroundColor, color});
-			dpc(e=>{
-				el.remove();
-			})
-		})
-	});
-	p.element = el;
-	return p;
-}
-
-export const hexToRgb = (hex)=>{
-	if(hex[0]!="#")
-		hex = '#'+hex
-	let a;
-	if(hex.length < 7)
-		a = hex
-			.split('')
-			.reduce((rgb, val, idx) => `${rgb}${val}0,`, '')
-	else
-		a = hex
-			.split('')
-			.reduce((rgb, val, idx) => rgb + (idx % 2 ? val : val + ','), '')
-
-	let [r,g,b] = a.split(',').splice(1, 3).map(val => parseInt(val, 16))
-	return {r,g,b};
-}
-
-export const rgbToHsl = ({r, g, b})=>{
-	r /= 255, g /= 255, b /= 255
-	const max = Math.max(r, g, b), min = Math.min(r, g, b)
-	let h, s, l = (max + min) / 2
-
-	if(max == min){
-		h = s = 0;
-	} else {
-		let d = max - min
-		s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
-		h = ({
-			[r]: (g - b) / d,
-			[g]: 2 + ( (b - r) / d),
-			[b]: 4 + ( (r - g) / d),
-		})[max] * 60
-		if (h < 0) h +=360
-	}
-	s *= 100
-	l *= 100
-	return { h, s, l }
-}
-
-//colorChannelA and colorChannelB are ints ranging from 0 to 255
-export function colorChannelMixer(colorChannelA, colorChannelB, amountToMix){
-    var channelA = colorChannelA*amountToMix;
-    var channelB = colorChannelB*(1-amountToMix);
-    return parseInt(channelA+channelB);
-}
-//rgbA and rgbB are arrays, amountToMix ranges from 0.0 to 1.0
-//example (red): rgbA = [255,0,0]
-export function colorMixer(rgbA, rgbB, amountToMix=1){
-	rgbA = hexToRgb(rgbA)
-	rgbB = hexToRgb(rgbB)
-    var r = colorChannelMixer(rgbA.r,rgbB.r, amountToMix);
-    var g = colorChannelMixer(rgbA.g,rgbB.g, amountToMix);
-    var b = colorChannelMixer(rgbA.b,rgbB.b, amountToMix);
-    return "rgb("+r+","+g+","+b+")";
-}
-
-function mixCMYKS(...cmyks) {
-	let c = cmyks.map(cmyk => cmyk[0]).reduce((a, b) => a + b, 0) / cmyks.length;
-	let m = cmyks.map(cmyk => cmyk[1]).reduce((a, b) => a + b, 0) / cmyks.length;
-	let y = cmyks.map(cmyk => cmyk[2]).reduce((a, b) => a + b, 0) / cmyks.length;
-	let k = cmyks.map(cmyk => cmyk[3]).reduce((a, b) => a + b, 0) / cmyks.length;
-	return [c, m, y, k];
-}
-
-function mixHexs(...hexes) {
-	let rgbs = hexes.map(hex => hex2dec(hex)); 
-	let cmyks = rgbs.map(rgb => rgb2cmyk(...rgb));
-	let mixture_cmyk = mix_cmyks(...cmyks);
-	let mixture_rgb = cmyk2rgb(...mixture_cmyk);
-	let mixture_hex = rgb2hex(...mixture_rgb);
-	return mixture_hex;
-}
-
-export const rgb2cmyk = (r, g, b)=>{
-	let c = 1 - (r / 255);
-	let m = 1 - (g / 255);
-	let y = 1 - (b / 255);
-	let k = Math.min(c, m, y);
-	c = (c - k) / (1 - k);
-	m = (m - k) / (1 - k);
-	y = (y - k) / (1 - k);
-	return [c, m, y, k];
-}
-
-export const cmyk2rgb = (c, m, y, k)=>{
-	let r = c * (1 - k) + k;
-	let g = m * (1 - k) + k;
-	let b = y * (1 - k) + k;
-	r = (1 - r) * 255 + .5;
-	g = (1 - g) * 255 + .5;
-	b = (1 - b) * 255 + .5;
-	return [r, g, b];
-}
-
-export const parseRGBA = color=>{
-	let [r,g,b,a=100] = color.split("(")[1].split(")")[0].split(",");
-	return {r,g,b,a};
-}
-
-export const color2hsl = (color)=>{
-	if(color.h)
-		return color;
-	if(color.r)
-		return rgbToHsl(color);
-	if(color[0]=="#")
-		return rgbToHsl(hexToRgb(color));
-	color = color.toLowerCase();
-	if(color[0]=="r")
-		return rgbToHsl(parseRGBA(color));
-}
-
-export const hex2Colors = (color="#FF0000", opt={})=>{
-	const hsl = color2hsl(rgb);
-	return buildColors(hsl, opt);
-}
-export const rbg2Colors = (rgb={r:255, g:0, b:0}, opt={})=>{
-	const hsl = color2hsl(rgb);
-	return buildColors(hsl, opt);
-}
-export const hsl2Colors = (hsl={h:0, s:100, l:50}, opt={})=>{
-	return buildColors(hsl, opt);
-}
-
-export const testColor = async(color="#FF0000")=>{
-	const rgb = hexToRgb(color);
-	const hsl = rgbToHsl(rgb);
-	console.log("testColor::hexToRgb", rgb)
-	console.log("testColor::rgbToHsl", hsl)
-	let {backgroundColor, color:c} = await buildColors(hsl);
-	console.log("testColor::backgroundColor, color", backgroundColor, c)
-}
-
-//testColor();
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_PROGRESSBAR_388 : &'static str = r###"
-
-
-//
-/*
-window.colorMixer = (q=0.5)=>{
-	let color = colorMixer("#E0101B", "#28F003", q)
-	console.log("color####", color)
-	document.body.style.backgroundColor = color
-}
-*/
-
-
-
-/**
-* @class FlowProgressbar
-* @extends BaseElement
-* @property {String} [color]
-* @property {String} [easing]
-* @example
-*   <flow-progressbar color="#red" value="0.3"></flow-progressbar>
-*
-*
-*/
-export class FlowProgressbar extends BaseElement {
-	static get properties() {
-		return {
-			value:{type: Number},
-			strokeWidth:{type: Number},
-			trailWidth:{type: Number},
-			trailColor:{type: String},
-			color:{type: String},
-			easing:{type: String},
-			svgStyle:{type: String},
-			shape:{type:String},
-			opt:{type: Object},
-			text:{type:String}
-		}
-	}
-
-	static get styles() {
-		return css`
-			:host {
-				display:inline-block;
-				width:var(--flow-progressbar-width, 30px);
-				height:var(--flow-progressbar-height, 30px);
-				/*
-				--flow-progressbar-color:red;
-				--flow-progressbar-trail-color:green;
-				*/
-			}
-			.container{width:100%;height:100%;}
-			.progressbar-text{
-				font-size:var(--flow-progressbar-font-size, 0.9rem);
-				font-weight:var(--flow-progressbar-font-weight, normal);
-				font-family:var(--flow-progressbar-font-family, inhert);
-			}
-		`;
-	}
-
-	render() {
-		return html`<div class="container"></div>`;
-	}
-	updated(){
-		super.updated();
-		let {
-			value=0, opt={},
-			text='',
-			strokeWidth, color, easing,
-			duration, trailColor, trailWidth, svgStyle,
-			shape="Circle"
-		} = this;
-
-		let defaultOpt = {
-			strokeWidth: 6,
-			easing: 'easeInOut',
-			duration: 1400,
-			color: 'var(--flow-progressbar-color, #FF0000)',
-			trailColor: 'var(--flow-progressbar-trail-color, #efefef)',
-			trailWidth: 6,
-			svgStyle: null
-		}
-		let definedOpts = {color, easing, duration}
-		let entries = Object.entries(definedOpts).filter(([k, v])=>v!==undefined)
-		definedOpts = Object.fromEntries(entries)
-		//console.log("definedOpts", definedOpts)
-
-		let options = {...defaultOpt, ...opt, definedOpts};
-		this.el = this.el || this.renderRoot.querySelector(".container")
-		this.progress = this.progress || new ProgressBar[shape](this.el, options);
-		this.progress.stop();
-		this.progress.animate(value, {/*
-			from: { color: options.color },
-    		to: { color: options.color }
-		*/}, ()=>{
-			//this.progress.path.setAttribute('stroke', options.color);
-		});
-
-		this.progress.setText(text);
-	}
-}
-
-FlowProgressbar.define('flow-progressbar');
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_ADD_TO_HOME_371 : &'static str = r###"
-
-
-
-/**
-* @class FlowAddToHome
-* @extends BaseElement
-* @example
-*   <flow-add-to-home icon="logo.png"
-		message="Add App to Home screen"></flow-add-to-home>
-* @property {Boolean} [disabled] 
-* @cssvar {font-family} [--flow-add2home-font-family=var(--flow-font-family, initial)]
-*/
-export class FlowAddToHome extends BaseElement {
-	static get properties() {
-		return {
-			disabled:{type:Boolean, reflect: true},
-			icon:{type:String},
-			closeIcon:{type:String},
-			message:{type:String},
-			once:{type:Boolean}
-		}
-	}
-
-	static get styles(){
-		return css`
-			:host{
-				display:var(--flow-add2home-display, block);
-				margin: var(--flow-add2home-margin);
-				padding:var(--flow-add2home-padding, 10px);
-				border: var(--flow-add2home-border, 2px solid var(--flow-border-color, var(--flow-primary-color, rgba(0,151,115,1))));
-				border-radius:var(--flow-add2home-radius, 2px);
-				border-width:var(--flow-add2home-border-width, 2px);
-				font-family:var(--flow-add2home-font-family, var(--flow-font-family, initial));
-				font-weight:var(--flow-add2home-font-weight, var(--flow-font-weight, bold));
-				font-size:var(--flow-add2home-font-size, initial);
-				line-height:var(--flow-add2home-line-height, inherit);
-				text-transform:var(--flow-add2home-text-transform, inherit);
-				user-select: none;
-				background-color:var(--flow-add2home-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				border-color:var(--flow-add2home-border-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				color:var(--flow-add2home-invert-color, var(--flow-primary-invert-color, #FFF));
-				--fa-icon-color:var(--flow-add2home-invert-color, var(--flow-primary-invert-color, #FFF));
-				--fa-icon-size-temp:var(--fa-icon-size);
-				cursor:pointer;
-			}
-			.icon{
-				--fa-icon-size:var(--flow-add2home-icon-size, var(--fa-icon-size-temp, 20px));
-				--fa-icon-padding:var(--flow-add2home-icon-padding, var(--fa-icon-padding));
-				background-color:var(--flow-add2home-icon-bg);
-				margin:0px 10px;
-			}
-			:host(:hover){
-				background-color:var(--flow-add2home-hover-bg-color, var(--flow-primary-color, rgba(0,151,115,1)));
-				color: var(--flow-add2home-hover-color);
-			}
-			.message{flex:1;word-wrap:break-word;}
-			.close-icon{background-color:none}
-			.wrapper{
-				display:flex;
-				align-items:center;
-				margin:var(--flow-add2home-wrapper-margin, 0px);
-				min-width:var(--flow-add2home-wrapper-min-width, 50px);
-				text-align:center;
-				justify-content:center;
-				height:100%;
-				box-sizing:border-box;
-			}
-			:host(:not(.active)){
-				display:none;
-			}
-		`;
-	}
-	constructor(){
-		super()
-		
-		if(getLocalSetting('add-to-home-disabled')==1){
-			this.disabled = true;
-		}else{
-			//this.classList.add("active")
-		}
-		this.setAttribute('role', 'button');
-	}
-	render() {
-		let {icon='', closeIcon='times'} = this;
-		return html`
-		<div class="wrapper">
-			${icon?html`<fa-icon class="icon"
-				icon=${icon} @click="${this.onAddClick}"></fa-icon>`:''}
-			<div class="message" @click="${this.onAddClick}">
-				${this.message||''}
-				<slot></slot>
-			</div>
-			<fa-icon class="close-icon" icon=${closeIcon}
-				@click="${this.onCloseClick}"></fa-icon>
-		</div>`;
-	}
-	connectedCallback(){
-		super.connectedCallback();
-		if(!this.disabled)
-			this.init();
-	}
-	init(){
-		window.addEventListener('beforeinstallprompt', (e) => {
-			//alert("beforeinstallprompt:"+e)
-			// Prevent Chrome 67 and earlier from automatically showing the prompt
-			e.preventDefault();
-			// Stash the event so it can be triggered later.
-			this.deferredPrompt = e;
-			this.classList.add("active");
-		})
-	}
-
-	onAddClick() {
-		if(this.disabled || !this.deferredPrompt)
-			return
-		this.fire("add", {el:this})
-		this.deferredPrompt.prompt();
-		this.deferredPrompt.userChoice.then((choiceResult) => {
-			if (choiceResult.outcome === 'accepted') {
-				console.log('User accepted the A2HS prompt');
-			} else {
-				console.log('User dismissed the A2HS prompt');
-			}
-			this.deferredPrompt = null;
-			this.close(choiceResult.outcome);
-		});
-	}
-	onCloseClick(){
-		this.close('closed');
-	}
-	close(reason='closed'){
-		if(this.once){
-			setLocalSetting('add-to-home-disabled', 1)
-		}
-		this.classList.remove("active");
-		this.fire("closed", {el:this, reason})
-	}
-}
-
-FlowAddToHome.define('flow-add-to-home');
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_STATSD_407 : &'static str = r###"
-
-
-
-
-// /**
-// * @class FlowQRCode
-// * @extends BaseElement
-// * @property {String} [for]
-// * @property {String} [type]
-// * @example
-// *   <flow-qrcode></flow-qrcode>
-// *
-// */
-
-export class FlowStatsD extends BaseElement {
-	static get properties(){
-        return {
-        
-            url:{type:String},
-            target:{type:String},
-            from:{type:String},
-            prefix:{type:String}
+        pub type ModuleId = u64;
+        pub struct Module {
+            url : Mutex<Option<String>>,
+            ident : &'static str,
+            content: &'static str,
+            imports: &'static [(&'static str, ModuleId)],
+            exports: &'static [(&'static str, ModuleId)],
         }
-            
-    }
-	static get styles() {
-		return css`
-			:host {
-				display : block;
-                width:100%;
-                height:100%;
 
-			}
-			
-			:host(.left-img) img{
-				object-position:left;
-			}
-            img {
-                width:100%;
-                height: 100%
+        impl Module {
+
+            pub fn content(&self, modules: &ModuleMap) -> String {
+                let text = String::new();
+
+                let imports = self.imports.iter().map(|(what, id)| {
+                    let url = modules
+                        .get(id)
+                        .export(&format("unable to lookup module `{}`",self.ident))
+                        .url.as_str();
+                    format!("import {} from \"{}\";\n", what, url)
+                }).collect::<Vec<_>>().join("\n");
+
+                let exports = self.exports.iter().map(|(what, id)| {
+                    let url = modules
+                        .get(id)
+                        .export(&format("unable to lookup module `{}`",self.ident))
+                        .url.as_str();
+                    format!("export {} from \"{}\";\n", what, url)
+                }).collect::<Vec<_>>().join("\n");
+
+                text += &imports;
+                text += &self.content;
+                text += &exports;
+
+                text
             }
-		`;
-	}
 
-	constructor() {
-		super();
-
-		this.url = "https://metrics.aspectron.com";
-	}
-
-    onElementResize(){
-    	this.rect = this.getBoundingClientRect();
-        //console.log("RECT:", this.rect);
-        this.requestUpdate();
-    }
-
-    connectedCallback(){
-    	super.connectedCallback();
-    	//this._onWindowResize = this._onWindowResize || this.onWindowResize.bind(this);
-		//window.addEventListener("resize", this._onWindowResize)
-		if(!this.__resizeObserver){
-    		this.__resizeObserver = new ResizeObserver(()=>{
-	    		this.onElementResize();
-			});
-			this.__resizeObserver.observe(this);
-	    }
-        this.interval = setInterval(this.requestUpdate.bind(this),1000);
-    }
-
-    disconnectedCallback(){
-        super.disconnectedCallback();
-        clearInterval(this.interval);
-    }
-
-	render() {
-        const time = Date.now();
-        this.prefix = "stats.gauges."
-        const rect = this.rect || {width:64,height:64};
-        const {width, height} = rect;
-
-        const searchParams = new URLSearchParams();
-        searchParams.set("width", width || 64);
-        searchParams.set("height", height || 64);
-        searchParams.set("areaMode", "all");
-        searchParams.set("from", "-30minutes");
-        searchParams.set("areaAlpha", "0.5");
-        let targets = this.target.split("|");
-        targets.forEach(target=>{
-            target = this.prefix+target;
-            searchParams.append("target",target);
-
-        })
-        //searchParams.set("target", this.target);
-        searchParams.set("hideLegend", false);
-        searchParams.set("salt", time);
-        const url = `${this.url}/render/?`+searchParams.toString();
-
-
-
-        // const queryString = "http://192.168.1.168/render/?
-        // showTarget=stats.gauges.market.ETHBTC.orders_per_sec&
-        // showTarget=stats.gauges.a.b.c&
-        // showTarget=stats.gauges.statsd.timestamp_lag
-        // &width=586&
-        // height=308&
-        // from=-1minutes&
-        // areaMode=all&
-        // target=stats.gauges.generic.market.sys_mem_used&
-        // _salt=1620078647.885";
-		return html`<img style="width:${width}px;height:${height}px" src="${url}">`
-	}
-
-	
-
-}
-
-FlowStatsD.define('flow-statsd');
-
-//http://192.168.1.168/render/?showTarget=stats.gauges.market.ETHBTC.orders_per_sec&showTarget=stats.gauges.a.b.c&showTarget=stats.gauges.statsd.timestamp_lag&width=586&height=308&from=-1minutes&areaMode=all&target=stats.gauges.generic.market.sys_mem_used&_salt=1620078647.885
-"###;
-
-const ASPECTRON_FLOW_UX_FLOW_UX_434 : &'static str = r###"
-/*
-* Flow-UX: flow-ux.js
-* version: 1.0.0
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-"###;
-
-const ASPECTRON_FLOW_UX_SRC_FLOW_TERMINAL_431 : &'static str = r###"
-
-
-
-
-import '../resources/extern/colors/extend-string-prototypes.js';
-
-import '../resources/extern/xterm/lib/xterm.js';
-import '../resources/extern/xterm-addon-fit/lib/xterm-addon-fit.js';
-import '../resources/extern/xterm-addon-web-links/lib/xterm-addon-web-links.js';
-
-// import '/node_modules/xterm/lib/xterm.js';
-// import '/node_modules/xterm-addon-fit/lib/xterm-addon-fit.js';
-// import '/node_modules/xterm-addon-web-links/lib/xterm-addon-web-links.js';
-
-/**
-* @class FlowTerminal
-* @extends BaseElement
-*
-* @prop {String} [background=rgba(0,0,0,0.0)] background color
-* @prop {String} [foreground=#000000] foreground color
-* @prop {Number} [font-size=20] font size in number
-* @prop {String} [font-family=Consolas, 'Ubuntu Mono', courier-new, courier, monospace] text font-family 
-* @prop {Boolean} [noscroll=false] set true to make overflow as hidden 
-* @prop {Boolean} [fixed=false] set true to disable "`" and "Esc" keys which toggle terminal 
-* @prop {Boolean} [noinput=false] set true to make terminal readonly
-*
-* @cssvar {color} --flow-terminal-bg-color terminal background color
-* @cssvar {color} --flow-terminal-color terminal foreground color
-* @cssvar {color} --flow-terminal-cursor terminal cursor color
-* @cssvar {color} --flow-terminal-selection terminal selection color
-*
-* @example
-* <flow-terminal id="terminal" background="#000" foreground="#FFF"></flow-terminal>
-* @example
-* document.querySelector("#terminal").prompt();
-*/
-export class FlowTerminal extends BaseElement {
-	/**
-	* @member {String} [background=rgba(0,0,0,0.0)] background color
-	* @memberof XTerminal#
-	*/
-
-	/**
-	* @member {String} [foreground=#000000] foreground color
-	* @memberof XTerminal#
-	*/
-
-	/**
-	* @member {Number} [font-size=20] font size in number
-	* @memberof XTerminal#
-	*/
-
-	/**
-	* @member {String} [font-family=Consolas, 'Ubuntu Mono', courier-new, courier, monospace] text font-family 
-	* @memberof XTerminal#
-	*/
-
-	/**
-	* @member {Boolean} [noscroll=false] set true to make overflow as hidden 
-	* @memberof XTerminal#
-	*/
-
-	/**
-	* @member {Boolean} [fixed=false] set true to disable "`" and "Esc" keys which toggle terminal 
-	* @memberof XTerminal#
-	*/
-
-	/**
-	* @member {Boolean} [noinput=false] set true to make terminal readonly 
-	* @memberof XTerminal#
-	*/
-
-	static get properties() {
-		return {
-			background : { type : String },
-			foreground : { type : String },
-			'font-size' : { type : Number },
-			'font-family' : { type : String },
-			noscroll : { type : Boolean },
-			fixed : { type : Boolean },
-			noinput : { type : Boolean },
-			resident : { type : Number },
-			/*data: { type: Array }*/
-		};
-	}
-	static get styles() {
-		return [ScrollbarStyle, css`
-			:host {
-				/*background-color: rgba(0,0,0,0.0);*/
-				/*color: black;*/
-				min-height:100px;
-				min-width:100px;
-				display:flex;
-				flex-direction:column;
-				box-sizing:border-box;
-			}
-			:host(.hidden){visibility:hidden}
-			#terminal .terminal{height:100%;}
-			
-			#terminal{flex:1;height: 100%;overflow: hidden;}
-			/******* imported from xterm module **********/
-			.xterm {
-			    font-feature-settings: "liga" 0;
-			    position: relative;
-			    user-select: none;
-			    -ms-user-select: none;
-			    -webkit-user-select: none;
-			    font-size:20px;
-			    letter-spacing:0;
-			}
-			.xterm.focus,
-			.xterm:focus {
-			    outline: none;
-			}
-			.xterm .xterm-helpers {
-			    position: absolute;
-			    top: 0;
-			    /**
-			     * The z-index of the helpers must be higher than the canvases in order for
-			     * IMEs to appear on top.
-			     */
-			    z-index: 5;
-			}
-			.xterm .xterm-helper-textarea {
-			    /*
-			     * HACK: to fix IE's blinking cursor
-			     * Move textarea out of the screen to the far left, so that the cursor is not visible.
-			     */
-			    position: absolute;
-			    opacity: 0;
-			    left: -9999em;
-			    top: 0;
-			    width: 0;
-			    height: 0;
-			    z-index: -5;
-			    /** Prevent wrapping so the IME appears against the textarea at the correct position */
-			    white-space: nowrap;
-			    overflow: hidden;
-			    resize: none;
-			    font-size:20px;
-			    letter-spacing:0;
-			}
-			.xterm .composition-view {
-			    /* TODO: Composition position got messed up somewhere */
-			    background: #000;
-			    color: #FFF;
-			    display: none;
-			    position: absolute;
-			    white-space: nowrap;
-			    z-index: 1;
-			}
-			.xterm .composition-view.active {
-			    display: block;
-			}
-			.xterm .xterm-viewport {
-			    /* On OS X this is required in order for the scroll bar to appear fully opaque */
-			    background-color: #000;
-			    overflow-y: scroll;
-			    cursor: default;
-			    position: absolute;
-			    right: 0;
-			    left: 0;
-			    top: 0;
-			    bottom: 0;
-			}
-			.xterm .xterm-screen {
-			    position: relative;
-			}
-			.xterm .xterm-screen canvas {
-			    position: absolute;
-			    left: 0;
-			    top: 0;
-			}
-			.xterm .xterm-scroll-area {
-			    visibility: hidden;
-			}
-			.xterm-char-measure-element {
-			    display: inline-block;
-			    visibility: hidden;
-			    position: absolute;
-			    top: 0;
-			    left: -9999em;
-			    line-height: normal;
-			    letter-spacing:normal;
-			    _width:9px;
-			    overflow:hidden
-			}
-			.xterm {
-			    cursor: text;
-			}
-			.xterm.enable-mouse-events {
-			    /* When mouse events are enabled (eg. tmux), revert to the standard pointer cursor */
-			    cursor: default;
-			}
-			.xterm.xterm-cursor-pointer {
-			    cursor: pointer;
-			}
-			.xterm.column-select.focus {
-			    /* Column selection mode */
-			    cursor: crosshair;
-			}
-			.xterm .xterm-accessibility,
-			.xterm .xterm-message {
-			    position: absolute;
-			    left: 0;
-			    top: 0;
-			    bottom: 0;
-			    right: 0;
-			    z-index: 10;
-			    color: transparent;
-			}
-			.xterm .live-region {
-			    position: absolute;
-			    left: -9999px;
-			    width: 1px;
-			    height: 1px;
-			    overflow: hidden;
-			}
-			.xterm-dim {
-			    opacity: 0.5;
-			}
-			.xterm-underline {
-			    text-decoration: underline;
-			}
-		`];
-	}
-
-	constructor() {
-		// Must call superconstructor first.
-		super();
-
-		this.resident = 0;
-		this.residentBuffers = [];
-		this.residentBuffersLength = 0;
-	}
-
-	/**
-	* Define a template for the new element by implementing LitElement's
-	* `render` function. `render` must return a lit-html TemplateResult.
-	*/
-	render() {
-		return html`<div id="colorClc"></div><div id="terminal"></div><div id="clipboard"></div>`;
-	}
-
-	/**
-	* Initilize terminalHolder element then calls initTerminal(), initClipboard()
-	*/
-	firstUpdated() {
-		this.terminalHolder = this.renderRoot.getElementById('terminal');
-		this.colorClc = this.renderRoot.getElementById("colorClc");
-		this.initTerminal();
-		let clipboardHolder = this.renderRoot.getElementById('clipboard');
-		this.initClipboard(this.terminalHolder, clipboardHolder);
-		this._updateBGColorChange = this.updateBGColorChange.bind(this);
-		document.body.addEventListener("flow-theme-changed", this._updateBGColorChange)
-		this._updateBGColorChange();
-	}
-
-	getVarColor(varName, defaults, style){
-		style = style || getComputedStyle(this);
-		this.colorClc.style.color = style.getPropertyValue(varName) || defaults;
-		return getComputedStyle(this.colorClc).color;
-	}
-
-	updateBGColorChange(){
-		let style = getComputedStyle(this);
-		let theme = this.term.getOption("theme") || this.termTheme;
-		//console.log('%cOld Theme', `color:${theme.foreground};background-color:${theme.background}`, theme)
-		
-		let background = this.getVarColor('--flow-terminal-bg-color', theme.background, style);
-		let foreground = this.getVarColor('--flow-terminal-color', theme.foreground, style);
-		let cursor = this.getVarColor('--flow-terminal-cursor', theme.cursor || foreground, style);
-		let selection = this.getVarColor('--flow-terminal-selection', theme.selection || foreground, style);
-
-		theme.background = background;
-		theme.foreground = foreground;
-		theme.cursor = cursor;
-		theme.selection = selection;
-
-		//console.log('%cNew Theme', `color:${foreground};background-color:${background}`, theme)
-		this.term.setOption('theme', theme)
-		this.term._core._setTheme(theme)
-	}
-
-	removeBgColorListerner(){
-		if(!this._updateBGColorChange)
-			return
-		document.body.removeEventListener("flow-theme-changed", this._updateBGColorChange)
-	}
-
-	/**
-	* Initilize paste event handling process
-	* @param {HTMLElement} eventEl terminalHolder element
-	* @param {HTMLElement} holder textarea parent node, where new textarea will be created for paste event
-	*/
-	initClipboard(eventEl, holder){
-		this.term.attachCustomKeyEventHandler((e)=>{
-			if(e.type != 'keydown')
-				return;
-			this.onClipboardKeyDown(e);
-		});
-	}
-	onClipboardKeyDown(e){
-		if(e.key == "v" && (e.metaKey || e.ctrlKey)){
-			//e.preventDefault();
-			navigator.clipboard.readText().then((text) => {
-				this.onClipboardPaste(text);
-			})
-		}
-		else
-		if(e.key == "c" && (e.metaKey || e.ctrlKey)){
-			//e.preventDefault();
-			let text = this.term.getSelection();
-			if(text) {
-				console.log("copying text to clipboard:",text);
-				navigator.clipboard.writeText(text);
-			}
-		}
-	}
-	onClipboardPaste(value){
-		this.term.focus();
-		this.pasteText(value);
-	}
-	pasteText(text){
-		if(this.running) {
-			this.term.write(text);
-		} else {
-			let t = this.buffer.split('');
-			t.splice(this.cursorX,0,text);
-			this.buffer = t.join('');
-			this.trail(this.cursorX, { rewind : true, offset : text.length });
-			this.cursorX+=text.length;
-		}
-	}
-	updated(changedProperties) {
-		changedProperties.forEach((oldValue, propName) => {
-			//this.log(`${propName} changed. oldValue: ${oldValue}, new: ${this[propName]}`);
-			//if(propName == "data")
-			//	this.updateGraph(this.data);
-		});
-	}
-
-	trail (x, options) {
-		const { rewind, eraseLast, offset } = options;
-		let tail = this.buffer.substring(x)+(eraseLast?' ':'');
-		this.term.write(tail);
-		for(let i = 0; rewind && i < tail.length-(offset||0); i++)
-			this.term.write('\b');
-	}
-
-
-	initTerminal(){
-
-		/*
-		this.log("INIT TERMINAL:", {
-			fontSize: this['font-size'] || 20,
-			background: this.background || 'rgba(0,0,0,0.0)',
-			//background: 'rgba(255,255,255,0.75)',
-			foreground: this.foreground || '#000000',
-			noscroll : this.noscroll
-		});
-		*/
-
-		let term = new Terminal({
-			allowTransparency: true,
-			fontFamily: this['font-family'] || 'Consolas, Ubuntu Mono, courier-new, courier, monospace',
-			fontSize: this['font-size'] || 20,
-			cursorBlink : true,
-			theme: {
-				background: this.background || 'rgba(0,0,0,0.0)',
-				foreground: this.foreground || '#000000',
-				cursor: this.cursor || this.foreground || "#FFF"
-			}
-		});
-    	this.term = term;
-    	this.termTheme = term.getOption("theme") || {}
-
-    	window.terms = window.terms || [];
-    	window.terms.push(term);
-
-    	//this.log("termtermterm:theme", this.termTheme)
-    	this.addons = {
-	    	weblinks : new WebLinksAddon.WebLinksAddon((event,uri) => {
-				this.handleLink(event,uri);
-			}),
-	    	fit : new FitAddon.FitAddon()
-	    };
-
-		//$(this.terminalHolder).on("keydown", e=>{
-		this.terminalHolder.addEventListener("keydown", e=>{
-				//this.log("e.key", e.key)
-			if(e.ctrlKey || e.metaKey) {
-				if(e.key == "+" || e.key == "="){
-					this.setFontSizeDelta(1, e);
-				}else if(e.key == "-" || e.key == "_"){
-					this.setFontSizeDelta(-1, e);
-				}
-			}
-		});
-
-	    Object.entries(this.addons).forEach((e,i) => { 
-	    	let [k,addon] = e; term.loadAddon(addon); 
-	    	let instance = term._addonManager._addons[i];
-	    	this.addons[k] = instance;
-	    });
-		//	https://github.com/xtermjs/xterm.js/tree/master/addons/xterm-addon-fit	
-		//	https://github.com/xtermjs/xterm.js/tree/master/addons/xterm-addon-attach	
-		//	term.loadAddon(new AttachAddon.AttachAddon(websocket));
-
-		//term.open(document.getElementById("terminalx"));
-		term.open(this.terminalHolder)
-		this.buffer = '';
-		this.cursorX = 0;
-		this.history = [ ];
-		this.historyIdx = 0;
-		term.onResize(()=>{
-			var size = {rows: term.rows, cols:term.cols};
-			this.fire("terminal-resize", size);
-			this.log('terminal-resize', size)
-		})
-
-
-		const keys = {
-			Tab : (e, key) => {
-				// TODO - completion handler
-			},
-			Backspace : (e, key) => {
-				if(this.cursorX == 0)
-					return;
-				term.write('\b');
-				this.cursorX--;
-				let t = this.buffer.split('');
-				t.splice(this.cursorX,1);
-				this.buffer = t.join('');
-				this.trail(this.cursorX, { rewind : true, eraseLast : true });
-			},
-			Delete : (e, key) => {
-				let t = this.buffer.split('');
-				t.splice(this.cursorX,1);
-				this.buffer = t.join('');
-				this.trail(this.cursorX, { rewind : true, eraseLast : true });
-			},
-			Inject : (e,key) => {
-				let t = this.buffer.split('');
-				t.splice(this.cursorX,0,key);
-				this.buffer = t.join('');
-				this.trail(this.cursorX, { rewind : true, offset : 1 });
-				this.cursorX++;
-			},
-			Enter : async (e) => {
-				e.stopPropagation();
-				let { buffer, history } = this;
-				let { length } = history;
-
-				term.write('\r\n');
-				this.buffer = '';
-				this.cursorX = 0;
-
-				if(buffer) {
-					if(!length || history[length-1])
-						this.historyIdx = length;
-					else
-						this.historyIdx = length-1;
-					this.history[this.historyIdx] = buffer;
-					this.historyIdx++;
-
-					this.running = true;
-					await this.digest(buffer);
-					this.running = false;
-				}
-
-				this.prompt();
-			},
-			Escape : async (e) => { },
-			PageDown : async (e) => { },
-			PageUp : async (e) => { },
-			Home : async (e) => { 
-				let l = this.cursorX;
-				term.write(`\x1B[${l}D`);
-				this.cursorX = 0;
-			},
-			End : async (e) => { 
-				let l = this.buffer.length - this.cursorX;
-				term.write(`\x1B[${l}C`);
-				this.cursorX = this.buffer.length;
-			},
-			ArrowLeft : (e, key) => {
-				if(this.cursorX == 0)
-					return;
-				this.cursorX--;
-				term.write(key);
-			},
-			ArrowRight : (e, key) => {
-				if(this.cursorX < this.buffer.length) {
-					this.cursorX++;
-					term.write(key);
-				}
-			},
-			ArrowUp : () => {
-				if(this.historyIdx == 0)
-					return;
-				this.history[this.historyIdx] = this.buffer;
-				this.historyIdx--;
-				this.buffer = this.history[this.historyIdx] || '';
-				this.term.write(`\x1B[2K\r${this.prompt_}${this.buffer}`);
-				this.cursorX = this.buffer.length;
-			},
-			ArrowDown : () => {
-				if(this.historyIdx >= this.history.length)
-					return;
-
-				this.history[this.historyIdx] = this.buffer;
-				this.historyIdx++;
-				this.buffer = this.history[this.historyIdx] || '';
-				this.term.write(`\x1B[2K\r${this.prompt_}${this.buffer}`);
-				this.cursorX = this.buffer.length;
-			},
-		}
-
-		term.onKey((e_) => {
-
-			if(this.noinput)
-				return;
-
-			const e = e_.domEvent;
-			const termKey = e_.key;
-			const { key, keyCode } = e;
-			if(!this.fixed && (key == "`" || key == "Escape"))
-				return this.toggleTerminal();
-
-			if(this.stdinSink)
-				return this.stdinSink({termKey,key,keyCode});
-
-			const printable = !e.altKey && !e.ctrlKey && !e.metaKey && !key.match(/^F\d+$/);
-
-			if(keys[key]) {
-				keys[key](e,termKey);
-			} else 
-			if (printable) {
-				keys.Inject(e,termKey);
-			}
-
-			//console.log('cursorX:',this.cursorX,'buffer:',this.buffer,'key:',key,'tk:',termKey);
-			//console.log('x:',term._core.buffer.x,'plen:',this.promptLength);
-			//console.log('keys:',key,keyCode,term._core.buffer);
-			//console.log(this.buffer);
-		});
-		if(window.ResizeObserver){
-			this.resizeObserver = new ResizeObserver(e => {
-				this.updateTerminalSize();
-			});
-			this.resizeObserver.observe(this.terminalHolder);
-		}
-		this.setFontSize(this['font-size'] || this.getFontSize());
-
-		if(this.noscroll) {
-			let xtv = this.shadowRoot.querySelector(".xterm-viewport");
-			xtv.style.overflow = 'hidden';
-		}
-	}
-	get prompt_() {
-		return `${this.promptPrefix?this.promptPrefix()+' ':''}$ `;
-	}
-	/**
-	* prompt the terminal
-	*/
-	prompt(){
-		this.cursorX = 0;
-		this.buffer = '';
-
-		let prompt = this.prompt_;
-		this.term.write("\r\n"+prompt);
-		this.promptLength = ("\r\n"+prompt).length;
-	}
-
-	enableResidentMode(length) {
-		this.resident = length;
-	}
-
-	flushResidentBuffers() {
-		while(this.residentBuffers.length)
-			this.term.write(this.residentBuffers.shift());
-	}
-
-	writeToResidentBuffers(text) {
-		if(!this.resident)
-			return this.term.write(text);
-
-		this.residentBuffers.push(text);
-		this.residentBuffersLength += text.length;
-		while(this.residentBuffersLength > this.resident && this.residentBuffers.length > 1) {
-			let tip = this.residentBuffers.shift();
-			this.residentBuffersLength -= tip.length;
-		}
-	}
-
-	writeln(...args) {
-
-		if(!args.length)
-			args = [''];
-
-		if(this.running) {
-			this.term.write(args.join(' ')+'\r\n');
-		}
-		else {
-			this.term.write(`\x1B[2K\r`+args.join(' ')+'\r\n');
-			let prompt = `${this.prompt_}${this.buffer}`;
-			this.term.write(prompt);
-			let l = this.buffer.length-this.cursorX;
-			while(l--)
-				this.term.write('\b');
-		}
-	}
-	write(...args){
-		this.writeln(...args)
-	}
-	updateTerminalSize() {
-		let term = this.term;
-		//this.log("updateTerminalSize", this, this.term)
-		//if(!$(this).width() || !term)
-		if(!this.offsetWidth || !term)
-			return
-		let charSizeService = term._core._charSizeService
-		if(charSizeService && !charSizeService.hasValidSize){
-			charSizeService.measure()
-			//if(term._core._renderService)
-			//	term._core._renderService._updateDimensions();
-		}
-		let addon = this.addons.fit.instance;
-		let dimensions = addon.proposeDimensions()
-		addon.fit();
-		//this.addons.fit.instance.fit();
-	}
-	/**
-	* toggle terminal css class `hidden`
-	*/
-	toggleTerminal(){
-		this.classList.toggle("hidden");
-	}
-	async digest(cmd) {
-		return new Promise( async (resolve, reject) => {
-			if(!cmd) {
-				resolve();
-				return;
-			}
-
-			if(cmd == 'history') {
-				[...new Set(this.history)].forEach(t => this.write(t));
-				resolve();
-				return;
-			}
-
-			if(cmd == 'history reset') {
-				this.history.forEach(t => this.write(t));
-				resolve();
-				return;
-			}
-			if(!this.sink)
-				return resolve();
-
-			this.sink.digest(cmd).then((resp)=>{
-				if(resp && typeof(resp) == 'string')
-					this.write(resp);
-				resolve();
-			},(err)=>{
-				this.write((err||'unknown digest error').toString().brightRed);
-				resolve();
-			})
-		})
-	}
-	registerSink(sink) {
-		if(!sink.digest || !sink.complete)
-			throw new Error("Missing digest() or complete() in the terminal sink");
-		this.sink = sink;
-	}
-
-	captureStdin(sink) {
-		this.stdinSink = sink;
-	}
-
-	releaseStdin(sink) {
-		delete this.stdinSink;
-	}
-
-	isCaptured() {
-		return !!this.stdinSink;
-	}
-
-	getSize() {
-		return { rows: this.term.rows, cols: this.term.cols };
-	}
-
-	setFontSizeDelta(delta, e){
-		this.setFontSize(this.getFontSize()+delta);
-		if(e && e.preventDefault){
-			e.preventDefault();
-			e.stopPropagation();
-		}
-	}
-	/**
-	* Set font size and update terminal size
-	* @param {number} [size=20] font size should be >= 7
-	*/
-	setFontSize(size){
-		if(!size)
-			size = 20;
-		else
-		if(size < 7)
-			size = 7;
-		this.setSetting("fontSize", size);
-		this.term.setOption("fontSize", size)
-		this.updateTerminalSize();
-	}
-	getFontSize(size){
-		return parseFloat(this.getSetting("fontSize", size || 20));
-	}
-	increaseFontSize(){
-		this.setFontSizeDelta(1);
-	}
-	decreaseFontSize(){
-		this.setFontSizeDelta(-1);
-	}
-	getStorageKeyPrefix(){
-		return (this.id || this.dataKey || "xterm")+"_";
-	}
-	getSetting(name, defaults){
-		let key = this.getStorageKeyPrefix();
-		let ls = window.localStorage || {};
-		return ls[key+name] || defaults;
-	}
-	setSetting(name, value){
-		let key = this.getStorageKeyPrefix();
-		let ls = window.localStorage || {};
-		ls[key+name] = value;
-	}
-	clear() {
-		this.term.write(`\x1B[2J\x1B[H`);
-	}
-	handleLink(event, link) {
-		this.linkHandler?.(event,link);
-	}
-	registerLinkHandler(fn) {
-		this.linkHandler = fn;
-	}
-}
-
-FlowTerminal.define("flow-terminal")
-
-"###;
-
-const FLOW_UX_675 : &'static str = r###"
-
-
-
-window.LitElement = LitElement;
-
-
-"###;
-
+            pub async fn load(&self, modules: &ModuleMap) {
+
+                let content = self.content(modules);
+                let args = Array::new_with_length(1);
+                args.set(0, unsafe { Uint8Array::view(content.as_bytes()).into() });
+                let mut options = web_sys::BlobPropertyBag::new();
+                options.type_("application/javascript");
+                let blob = Blob::new_with_u8_array_sequence_and_options(&args, &options)?;
+                let url = Url::create_object_url_with_blob(&blob)?;
+                self.url.lock().unwrap().replace(url.clone());
+
+                // TODO load
+            }
+        }
+
+        pub type ModuleMap = HashMap<ModuleId, &Module>;
+
+        pub async fn load() -> Result<Context> {
+
+            // let modules : HashMap<ModuleId, &Module> = MODULES.into_iter().collect();
+            let modules : ModuleMap = MODULES.into_iter().collect();
+
+            for ids in DEPENDENCIES.iter() {
+                let futures = ids
+                    .iter()
+                    .map(|id| {
+                        let module = modules.get(id).unwrap();
+                        module.load(&modules);
+                    })
+                    .collect::<Vec<_>>();
+                
+                for future in futures {
+                    future.await?;
+                }
+            }
+
+        }
+        
+			const MODULE_434: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_flow_ux_434",
+				content : ASPECTRON_FLOW_UX_FLOW_UX_434,
+				imports : &[],
+				exports : &[("*",414),("*",362),("*",396),("*",399),("*",425),("*",364),("*",424),("*",394),("*",356),("*",373),("*",372),("*",412),("*",397),("*",429),("*",433),("*",347),("*",421),("*",393),("*",354),("*",363),("*",376),("*",390),("*",428),("*",375),("*",377),("*",384),("*",420),("*",380),("*",403),("*",405),("*",349),("*",418),("*",386),("*",366),("*",360),("*",416),("*",379),("*",408),("*",423),("*",350),("*",432),("*",391),("*",351),("*",401),("*",410),("*",417),("*",400),("*",359),("*",381),("*",368),("*",352),("*",374),("*",413),("*",387),("*",419),("*",395),("*",378),("*",353),("*",404),("*",369),("*",383),("*",426),("*",370),("*",355),("*",385),("*",415),("*",430),("*",382),("*",427),("*",388),("*",371),("*",402),("*",407)],
+			};
+
+			const MODULE_431: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_terminal_431",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_TERMINAL_431,
+				imports : &[("{BaseElement, html, css, ScrollbarStyle}",410)],
+				exports : &[],
+			};
+
+			const MODULE_414: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_svg_414",
+				content : ASPECTRON_FLOW_UX_SRC_SVG_414,
+				imports : &[],
+				exports : &[],
+			};
+
+			const MODULE_362: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_anchor_362",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_ANCHOR_362,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_396: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_async_396",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_ASYNC_396,
+				imports : &[("{ dpc, UID }",409)],
+				exports : &[],
+			};
+
+			const MODULE_399: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_caption_bar_399",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_CAPTION_BAR_399,
+				imports : &[("{BaseElement, html, css}",410),("{FlowI18nDialog}",379)],
+				exports : &[],
+			};
+
+			const MODULE_425: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_checkbox_styled_425",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_CHECKBOX_STYLED_425,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_364: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_checkbox_364",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_CHECKBOX_364,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_424: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_radio_424",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_RADIO_424,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_394: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_radio_btn_394",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_RADIO_BTN_394,
+				imports : &[("{FlowToggleBtn}",372)],
+				exports : &[],
+			};
+
+			const MODULE_356: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_radio_btns_356",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_RADIO_BTNS_356,
+				imports : &[("{ FlowMenu }",374)],
+				exports : &[],
+			};
+
+			const MODULE_373: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_radios_373",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_RADIOS_373,
+				imports : &[("{ FlowMenu }",374)],
+				exports : &[],
+			};
+
+			const MODULE_372: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_toggle_btn_372",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_TOGGLE_BTN_372,
+				imports : &[("{css}",410),("{FlowBtn}",380)],
+				exports : &[],
+			};
+
+			const MODULE_412: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_btn_group_412",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_BTN_GROUP_412,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_397: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_circular_shapes_397",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_CIRCULAR_SHAPES_397,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_429: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_form_region_429",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_FORM_REGION_429,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_433: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_svg_test_433",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_SVG_TEST_433,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_347: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_tab_347",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_TAB_347,
+				imports : &[("{BaseElement, html, css, svg/*, parts*/}",410)],
+				exports : &[],
+			};
+
+			const MODULE_421: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_tabs_421",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_TABS_421,
+				imports : &[("{BaseElement, html, css}",410),("{repeat}",505),("{i18n, T}",379)],
+				exports : &[],
+			};
+
+			const MODULE_393: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_test_element_393",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_TEST_ELEMENT_393,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_354: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_text_area_354",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_TEXT_AREA_354,
+				imports : &[("{BaseElement, html, css}",410),("{ifDefined}",501),("{T}",379)],
+				exports : &[],
+			};
+
+			const MODULE_363: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_form_control_363",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_FORM_CONTROL_363,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_376: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_form_mixin_376",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_FORM_MIXIN_376,
+				imports : &[],
+				exports : &[],
+			};
+
+			const MODULE_390: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_folder_input_390",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_FOLDER_INPUT_390,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_428: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_input_428",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_INPUT_428,
+				imports : &[("{BaseElement, html, css}",410),("{ifDefined}",501)],
+				exports : &[],
+			};
+
+			const MODULE_375: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_core_input_375",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_CORE_INPUT_375,
+				imports : &[],
+				exports : &[],
+			};
+
+			const MODULE_377: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_expandable_377",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_EXPANDABLE_377,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_384: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_qrcode_384",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_QRCODE_384,
+				imports : &[("{BaseElement, svg, html, css, baseUrl}",410),("{ dpc }",409)],
+				exports : &[],
+			};
+
+			const MODULE_420: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_qrcode_scanner_420",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_QRCODE_SCANNER_420,
+				imports : &[("{BaseElement, html, css, baseUrl}",410),("{ dpc, contain}",409),("{jsQR}",265),("{T}",379)],
+				exports : &[],
+			};
+
+			const MODULE_380: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_btn_380",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_BTN_380,
+				imports : &[("{BaseElement, html, css}",410),("{i18nElementsMap, i18n}",379)],
+				exports : &[],
+			};
+
+			const MODULE_403: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_group_btns_403",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_GROUP_BTNS_403,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_405: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_shell_link_405",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_SHELL_LINK_405,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_349: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_window_link_349",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_WINDOW_LINK_349,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_418: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_fa_icon_418",
+				content : ASPECTRON_FLOW_UX_SRC_FA_ICON_418,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_386: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_data_badge_386",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_DATA_BADGE_386,
+				imports : &[("{BaseElement, html, css, dpc}",410),("{Flowd3Element}",391),("{FlowSampler}",401)],
+				exports : &[],
+			};
+
+			const MODULE_366: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_data_badge_graph_366",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_DATA_BADGE_GRAPH_366,
+				imports : &[("{BaseElement, html, css, dpc}",410),("{Flowd3Element}",391),("{FlowSampler}",401)],
+				exports : &[],
+			};
+
+			const MODULE_360: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_dialog_360",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_DIALOG_360,
+				imports : &[("{BaseElement, html, css, baseUrl}",410)],
+				exports : &[],
+			};
+
+			const MODULE_416: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_pages_416",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_PAGES_416,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_379: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_i18n_379",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_I18N_379,
+				imports : &[("{BaseElement, html, css, /*directive,*/ LitElement/*, parts as _parts*/}",410),("{directive, AsyncDirective}",410)],
+				exports : &[],
+			};
+
+			const MODULE_408: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_code_408",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_CODE_408,
+				imports : &[("{ BaseElement, html, css, baseUrl }",410)],
+				exports : &[],
+			};
+
+			const MODULE_423: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_color_selector_423",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_COLOR_SELECTOR_423,
+				imports : &[("{BaseElement, html, css}",410),("{FlowCanvasElement}",432)],
+				exports : &[],
+			};
+
+			const MODULE_350: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_reference_350",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_REFERENCE_350,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_432: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_canvas_432",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_CANVAS_432,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_391: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_d3_391",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_D3_391,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_351: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_graph_351",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_GRAPH_351,
+				imports : &[("{BaseElement, html, css, flow, dpc}",410),("{Flowd3Element}",391),("{FlowSampler}",401),("{FlowFormat}",378)],
+				exports : &[],
+			};
+
+			const MODULE_401: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_sampler_401",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_SAMPLER_401,
+				imports : &[("{flow, dpc}",410)],
+				exports : &[],
+			};
+
+			const MODULE_410: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_base_element_410",
+				content : ASPECTRON_FLOW_UX_SRC_BASE_ELEMENT_410,
+				imports : &[("{LitElement, html, css}",673),("{ AsyncQueueSubscriber }",396),("{ 	baseUrl, debug, FlowIconPath, FlowIcons, resolveIcon, 	FlowStates, DeferComponent, flow }",409),("{styleAppendTo, sizeClsMap}",409)],
+				exports : &[("*",611),("*",550),("*",673),("*",613),("*",409),("*",389),("*",398)],
+			};
+
+			const MODULE_417: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_socket_417",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_SOCKET_417,
+				imports : &[("{FlowEvents}",367),("{dpc, UID}",409)],
+				exports : &[("*",367)],
+			};
+
+			const MODULE_400: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_socket_rpc_400",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_SOCKET_RPC_400,
+				imports : &[("{FlowSocket}",417),("{dpc, UID}",409),("{AsyncQueueSubscriberMap}",396)],
+				exports : &[],
+			};
+
+			const MODULE_359: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_socket_nats_359",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_SOCKET_NATS_359,
+				imports : &[("{FlowSocket}",417),("{dpc, UID}",409),("{AsyncQueueSubscriberMap}",396)],
+				exports : &[],
+			};
+
+			const MODULE_381: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_app_381",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_APP_381,
+				imports : &[("{dpc, UID, setTheme, getTheme, flow}",409),("{FlowSocketRPC}",400),("{FlowSocketNATS}",359),("{BaseElement, ScrollbarStyle, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_368: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_app_drawer_368",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_APP_DRAWER_368,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_352: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_dropdown_352",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_DROPDOWN_352,
+				imports : &[("{ 	BaseElement, html, css, dpc, 	ScrollbarStyle, 	isSmallScreen }",410)],
+				exports : &[],
+			};
+
+			const MODULE_374: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_menu_374",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_MENU_374,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_413: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_select_413",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_SELECT_413,
+				imports : &[("{BaseElement, html, css, dpc}",410),("{FlowMenu}",374)],
+				exports : &[],
+			};
+
+			const MODULE_387: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_table_mixin_387",
+				content : ASPECTRON_FLOW_UX_SRC_TABLE_MIXIN_387,
+				imports : &[("{buildPagination}",398)],
+				exports : &[],
+			};
+
+			const MODULE_419: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_link_419",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_LINK_419,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_395: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_selector_395",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_SELECTOR_395,
+				imports : &[("{FlowSelect}",413),("{css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_378: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_format_378",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_FORMAT_378,
+				imports : &[("{flow, dpc}",410)],
+				exports : &[],
+			};
+
+			const MODULE_353: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_clock_widget_353",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_CLOCK_WIDGET_353,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_404: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_theme_select_404",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_THEME_SELECT_404,
+				imports : &[("{html, css, dpc}",410),("{FlowSelect}",413),("{setTheme, getTheme}",409)],
+				exports : &[],
+			};
+
+			const MODULE_369: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_dropzone_field_369",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_DROPZONE_FIELD_369,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_383: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_markdown_383",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_MARKDOWN_383,
+				imports : &[("{BaseElement, html, css, baseUrl, dpc}",410),("{ FlowCode }",408)],
+				exports : &[],
+			};
+
+			const MODULE_426: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_toolbar_426",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_TOOLBAR_426,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[("*",406)],
+			};
+
+			const MODULE_370: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_gridstack_370",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_GRIDSTACK_370,
+				imports : &[("{BaseElement, html, css, baseUrl, dpc, getLocalSetting, setLocalSetting}",410)],
+				exports : &[("*",361),("*",348),("*",422)],
+			};
+
+			const MODULE_355: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_download_badge_355",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_DOWNLOAD_BADGE_355,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_385: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_color_picker_385",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_COLOR_PICKER_385,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_415: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_rss_415",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_RSS_415,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_430: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_sunburst_graph_430",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_SUNBURST_GRAPH_430,
+				imports : &[("{BaseElement, ScrollbarStyle, html, css, flow, dpc, render}",410),("{Flowd3Element}",391),("{FlowSampler}",401),("{FlowFormat}",378)],
+				exports : &[],
+			};
+
+			const MODULE_382: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_swipeable_382",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_SWIPEABLE_382,
+				imports : &[("{css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_427: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_t9_427",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_T9_427,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_388: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_progressbar_388",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_PROGRESSBAR_388,
+				imports : &[("{BaseElement, html, css}",410),("{ProgressBar}",341),("{colorMixer}",402)],
+				exports : &[],
+			};
+
+			const MODULE_371: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_add_to_home_371",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_ADD_TO_HOME_371,
+				imports : &[("{ 	BaseElement, html, css, getLocalSetting, setLocalSetting }",410)],
+				exports : &[],
+			};
+
+			const MODULE_402: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_colors_402",
+				content : ASPECTRON_FLOW_UX_SRC_COLORS_402,
+				imports : &[("{dpc}",409)],
+				exports : &[],
+			};
+
+			const MODULE_407: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_statsd_407",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_STATSD_407,
+				imports : &[("{BaseElement, svg, html, css, baseUrl}",410),("{ dpc }",409)],
+				exports : &[],
+			};
+
+			const MODULE_409: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_helpers_409",
+				content : ASPECTRON_FLOW_UX_SRC_HELPERS_409,
+				imports : &[],
+				exports : &[],
+			};
+
+			const MODULE_505: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_html_directives_repeat_505",
+				content : LIT_HTML_DIRECTIVES_REPEAT_505,
+				imports : &[("{noChange as e}",613),("{directive as s,Directive as t,PartType as r}",611),("{getCommittedValue as l,setChildPartValue as o,insertPart as i,removePart as n,setCommittedValue as f}",546)],
+				exports : &[],
+			};
+
+			const MODULE_613: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_html_lit_html_613",
+				content : LIT_HTML_LIT_HTML_613,
+				imports : &[],
+				exports : &[],
+			};
+
+			const MODULE_611: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_html_directive_611",
+				content : LIT_HTML_DIRECTIVE_611,
+				imports : &[],
+				exports : &[],
+			};
+
+			const MODULE_546: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_html_directive_helpers_546",
+				content : LIT_HTML_DIRECTIVE_HELPERS_546,
+				imports : &[("{_$LH as o}",613)],
+				exports : &[],
+			};
+
+			const MODULE_501: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_html_directives_if_defined_501",
+				content : LIT_HTML_DIRECTIVES_IF_DEFINED_501,
+				imports : &[("{nothing as t}",613)],
+				exports : &[],
+			};
+
+			const MODULE_265: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_resources_externqrqr_265",
+				content : ASPECTRON_FLOW_UX_RESOURCES_EXTERNQRQR_265,
+				imports : &[],
+				exports : &[],
+			};
+
+			const MODULE_673: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_element_lit_element_673",
+				content : LIT_ELEMENT_LIT_ELEMENT_673,
+				imports : &[("{ReactiveElement as t}",89),("{render as e,noChange as i}",613)],
+				exports : &[("*",89),("*",613)],
+			};
+
+			const MODULE_550: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_html_async_directive_550",
+				content : LIT_HTML_ASYNC_DIRECTIVE_550,
+				imports : &[("{isSingleExpression as i}",546),("{Directive as t,PartType as e}",611)],
+				exports : &[("{Directive,PartType,directive}",611)],
+			};
+
+			const MODULE_389: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_html_389",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_HTML_389,
+				imports : &[("{html}",674)],
+				exports : &[],
+			};
+
+			const MODULE_398: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_pagination_398",
+				content : ASPECTRON_FLOW_UX_SRC_PAGINATION_398,
+				imports : &[("{html, css}",674),("{repeat}",505),("{isSmallScreen}",409)],
+				exports : &[],
+			};
+
+			const MODULE_89: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_reactive_element_reactive_element_89",
+				content : LIT_REACTIVE_ELEMENT_REACTIVE_ELEMENT_89,
+				imports : &[("{getCompatibleStyle as t,adoptStyles as i}",31)],
+				exports : &[("{CSSResult,adoptStyles,css,getCompatibleStyle,supportsAdoptingStyleSheets,unsafeCSS}",31)],
+			};
+
+			const MODULE_31: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_reactive_element_css_tag_31",
+				content : LIT_REACTIVE_ELEMENT_CSS_TAG_31,
+				imports : &[],
+				exports : &[],
+			};
+
+			const MODULE_674: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_element_index_674",
+				content : LIT_ELEMENT_INDEX_674,
+				imports : &[],
+				exports : &[("*",89),("*",613),("{LitElement,UpdatingElement,_$LE}",673),("*",38),("*",40),("*",33),("*",37),("*",32),("*",34),("*",36),("*",35),("*",39),("*",41)],
+			};
+
+			const MODULE_38: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_reactive_element_decorators_base_38",
+				content : LIT_REACTIVE_ELEMENT_DECORATORS_BASE_38,
+				imports : &[],
+				exports : &[],
+			};
+
+			const MODULE_40: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_reactive_element_decorators_custom_element_40",
+				content : LIT_REACTIVE_ELEMENT_DECORATORS_CUSTOM_ELEMENT_40,
+				imports : &[],
+				exports : &[],
+			};
+
+			const MODULE_33: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_reactive_element_decorators_property_33",
+				content : LIT_REACTIVE_ELEMENT_DECORATORS_PROPERTY_33,
+				imports : &[],
+				exports : &[],
+			};
+
+			const MODULE_37: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_reactive_element_decorators_state_37",
+				content : LIT_REACTIVE_ELEMENT_DECORATORS_STATE_37,
+				imports : &[("{property as r}",33)],
+				exports : &[],
+			};
+
+			const MODULE_32: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_reactive_element_decorators_event_options_32",
+				content : LIT_REACTIVE_ELEMENT_DECORATORS_EVENT_OPTIONS_32,
+				imports : &[("{decorateProperty as r}",38)],
+				exports : &[],
+			};
+
+			const MODULE_34: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_reactive_element_decorators_query_34",
+				content : LIT_REACTIVE_ELEMENT_DECORATORS_QUERY_34,
+				imports : &[("{decorateProperty as o}",38)],
+				exports : &[],
+			};
+
+			const MODULE_36: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_reactive_element_decorators_query_all_36",
+				content : LIT_REACTIVE_ELEMENT_DECORATORS_QUERY_ALL_36,
+				imports : &[("{decorateProperty as r}",38)],
+				exports : &[],
+			};
+
+			const MODULE_35: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_reactive_element_decorators_query_async_35",
+				content : LIT_REACTIVE_ELEMENT_DECORATORS_QUERY_ASYNC_35,
+				imports : &[("{decorateProperty as r}",38)],
+				exports : &[],
+			};
+
+			const MODULE_39: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_reactive_element_decorators_query_assigned_elements_39",
+				content : LIT_REACTIVE_ELEMENT_DECORATORS_QUERY_ASSIGNED_ELEMENTS_39,
+				imports : &[("{decorateProperty as o}",38)],
+				exports : &[],
+			};
+
+			const MODULE_41: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "lit_reactive_element_decorators_query_assigned_nodes_41",
+				content : LIT_REACTIVE_ELEMENT_DECORATORS_QUERY_ASSIGNED_NODES_41,
+				imports : &[("{decorateProperty as e}",38),("{queryAssignedElements as t}",39)],
+				exports : &[],
+			};
+
+			const MODULE_367: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_events_367",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_EVENTS_367,
+				imports : &[("{dpc, UID}",409)],
+				exports : &[],
+			};
+
+			const MODULE_406: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_toolbar_item_406",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_TOOLBAR_ITEM_406,
+				imports : &[("{BaseElement, html, css}",410)],
+				exports : &[],
+			};
+
+			const MODULE_361: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_gridstack_panel_361",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_GRIDSTACK_PANEL_361,
+				imports : &[("{BaseElement, html, css}",410),("{FlowContextListenerMixin}",422)],
+				exports : &[],
+			};
+
+			const MODULE_348: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_context_test_348",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_CONTEXT_TEST_348,
+				imports : &[("{BaseElement, html, css}",410),("{FlowContextWorkspace, FlowContext}",422),("{FlowContextElement}",422)],
+				exports : &[],
+			};
+
+			const MODULE_422: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_src_flow_context_422",
+				content : ASPECTRON_FLOW_UX_SRC_FLOW_CONTEXT_422,
+				imports : &[("{BaseElement, html, flowHtml, css, ScrollbarStyle, deepClone, render}",410),("{baseUrl, dpc, utils, trigger}",410)],
+				exports : &[],
+			};
+
+			const MODULE_341: &'static Module = Module {
+				url : Mutex::new(None),
+				ident : "aspectron_flow_ux_resources_extern_progressbar_progressbar_341",
+				content : ASPECTRON_FLOW_UX_RESOURCES_EXTERN_PROGRESSBAR_PROGRESSBAR_341,
+				imports : &[],
+				exports : &[],
+			};
+const MODULES : &[(ModuleId,&'static Module)] = &[
+(434,&MODULE_434),
+(431,&MODULE_431),
+(414,&MODULE_414),
+(362,&MODULE_362),
+(396,&MODULE_396),
+(399,&MODULE_399),
+(425,&MODULE_425),
+(364,&MODULE_364),
+(424,&MODULE_424),
+(394,&MODULE_394),
+(356,&MODULE_356),
+(373,&MODULE_373),
+(372,&MODULE_372),
+(412,&MODULE_412),
+(397,&MODULE_397),
+(429,&MODULE_429),
+(433,&MODULE_433),
+(347,&MODULE_347),
+(421,&MODULE_421),
+(393,&MODULE_393),
+(354,&MODULE_354),
+(363,&MODULE_363),
+(376,&MODULE_376),
+(390,&MODULE_390),
+(428,&MODULE_428),
+(375,&MODULE_375),
+(377,&MODULE_377),
+(384,&MODULE_384),
+(420,&MODULE_420),
+(380,&MODULE_380),
+(403,&MODULE_403),
+(405,&MODULE_405),
+(349,&MODULE_349),
+(418,&MODULE_418),
+(386,&MODULE_386),
+(366,&MODULE_366),
+(360,&MODULE_360),
+(416,&MODULE_416),
+(379,&MODULE_379),
+(408,&MODULE_408),
+(423,&MODULE_423),
+(350,&MODULE_350),
+(432,&MODULE_432),
+(391,&MODULE_391),
+(351,&MODULE_351),
+(401,&MODULE_401),
+(410,&MODULE_410),
+(417,&MODULE_417),
+(400,&MODULE_400),
+(359,&MODULE_359),
+(381,&MODULE_381),
+(368,&MODULE_368),
+(352,&MODULE_352),
+(374,&MODULE_374),
+(413,&MODULE_413),
+(387,&MODULE_387),
+(419,&MODULE_419),
+(395,&MODULE_395),
+(378,&MODULE_378),
+(353,&MODULE_353),
+(404,&MODULE_404),
+(369,&MODULE_369),
+(383,&MODULE_383),
+(426,&MODULE_426),
+(370,&MODULE_370),
+(355,&MODULE_355),
+(385,&MODULE_385),
+(415,&MODULE_415),
+(430,&MODULE_430),
+(382,&MODULE_382),
+(427,&MODULE_427),
+(388,&MODULE_388),
+(371,&MODULE_371),
+(402,&MODULE_402),
+(407,&MODULE_407),
+(409,&MODULE_409),
+(505,&MODULE_505),
+(613,&MODULE_613),
+(611,&MODULE_611),
+(546,&MODULE_546),
+(501,&MODULE_501),
+(265,&MODULE_265),
+(673,&MODULE_673),
+(550,&MODULE_550),
+(389,&MODULE_389),
+(398,&MODULE_398),
+(89,&MODULE_89),
+(31,&MODULE_31),
+(674,&MODULE_674),
+(38,&MODULE_38),
+(40,&MODULE_40),
+(33,&MODULE_33),
+(37,&MODULE_37),
+(32,&MODULE_32),
+(34,&MODULE_34),
+(36,&MODULE_36),
+(35,&MODULE_35),
+(39,&MODULE_39),
+(41,&MODULE_41),
+(367,&MODULE_367),
+(406,&MODULE_406),
+(361,&MODULE_361),
+(348,&MODULE_348),
+(422,&MODULE_422),
+(341,&MODULE_341)
+];
+// ASPECTRON_FLOW_UX_SRC_HELPERS
+// LIT_HTML_LIT_HTML, LIT_HTML_DIRECTIVE, LIT_HTML_DIRECTIVE_HELPERS
+// LIT_HTML_DIRECTIVES_REPEAT
+// LIT_HTML_DIRECTIVES_IF_DEFINED
+// ASPECTRON_FLOW_UX_RESOURCES_EXTERNQRQR
+// LIT_REACTIVE_ELEMENT_CSS_TAG
+// LIT_REACTIVE_ELEMENT_REACTIVE_ELEMENT
+// LIT_REACTIVE_ELEMENT_DECORATORS_BASE, LIT_REACTIVE_ELEMENT_DECORATORS_CUSTOM_ELEMENT, LIT_REACTIVE_ELEMENT_DECORATORS_PROPERTY, LIT_REACTIVE_ELEMENT_DECORATORS_STATE, LIT_REACTIVE_ELEMENT_DECORATORS_EVENT_OPTIONS, LIT_REACTIVE_ELEMENT_DECORATORS_QUERY, LIT_REACTIVE_ELEMENT_DECORATORS_QUERY_ALL, LIT_REACTIVE_ELEMENT_DECORATORS_QUERY_ASYNC, LIT_REACTIVE_ELEMENT_DECORATORS_QUERY_ASSIGNED_ELEMENTS, LIT_REACTIVE_ELEMENT_DECORATORS_QUERY_ASSIGNED_NODES
+// LIT_ELEMENT_INDEX
+// LIT_ELEMENT_LIT_ELEMENT, LIT_HTML_ASYNC_DIRECTIVE, ASPECTRON_FLOW_UX_SRC_FLOW_HTML, ASPECTRON_FLOW_UX_SRC_PAGINATION
+// ASPECTRON_FLOW_UX_SRC_FLOW_EVENTS
+// ASPECTRON_FLOW_UX_SRC_FLOW_TOOLBAR_ITEM
+// ASPECTRON_FLOW_UX_SRC_FLOW_GRIDSTACK_PANEL, ASPECTRON_FLOW_UX_SRC_FLOW_CONTEXT_TEST, ASPECTRON_FLOW_UX_SRC_FLOW_CONTEXT
+// ASPECTRON_FLOW_UX_RESOURCES_EXTERN_PROGRESSBAR_PROGRESSBAR
+// ASPECTRON_FLOW_UX_SRC_SVG, ASPECTRON_FLOW_UX_SRC_FLOW_ANCHOR, ASPECTRON_FLOW_UX_SRC_FLOW_ASYNC, ASPECTRON_FLOW_UX_SRC_FLOW_CAPTION_BAR, ASPECTRON_FLOW_UX_SRC_FLOW_CHECKBOX_STYLED, ASPECTRON_FLOW_UX_SRC_FLOW_CHECKBOX, ASPECTRON_FLOW_UX_SRC_FLOW_RADIO, ASPECTRON_FLOW_UX_SRC_FLOW_RADIO_BTN, ASPECTRON_FLOW_UX_SRC_FLOW_RADIO_BTNS, ASPECTRON_FLOW_UX_SRC_FLOW_RADIOS, ASPECTRON_FLOW_UX_SRC_FLOW_TOGGLE_BTN, ASPECTRON_FLOW_UX_SRC_FLOW_BTN_GROUP, ASPECTRON_FLOW_UX_SRC_FLOW_CIRCULAR_SHAPES, ASPECTRON_FLOW_UX_SRC_FLOW_FORM_REGION, ASPECTRON_FLOW_UX_SRC_FLOW_SVG_TEST, ASPECTRON_FLOW_UX_SRC_FLOW_TAB, ASPECTRON_FLOW_UX_SRC_FLOW_TABS, ASPECTRON_FLOW_UX_SRC_FLOW_TEST_ELEMENT, ASPECTRON_FLOW_UX_SRC_FLOW_TEXT_AREA, ASPECTRON_FLOW_UX_SRC_FLOW_FORM_CONTROL, ASPECTRON_FLOW_UX_SRC_FLOW_FORM_MIXIN, ASPECTRON_FLOW_UX_SRC_FLOW_FOLDER_INPUT, ASPECTRON_FLOW_UX_SRC_FLOW_INPUT, ASPECTRON_FLOW_UX_SRC_FLOW_CORE_INPUT, ASPECTRON_FLOW_UX_SRC_FLOW_EXPANDABLE, ASPECTRON_FLOW_UX_SRC_FLOW_QRCODE, ASPECTRON_FLOW_UX_SRC_FLOW_QRCODE_SCANNER, ASPECTRON_FLOW_UX_SRC_FLOW_BTN, ASPECTRON_FLOW_UX_SRC_FLOW_GROUP_BTNS, ASPECTRON_FLOW_UX_SRC_FLOW_SHELL_LINK, ASPECTRON_FLOW_UX_SRC_FLOW_WINDOW_LINK, ASPECTRON_FLOW_UX_SRC_FA_ICON, ASPECTRON_FLOW_UX_SRC_FLOW_DATA_BADGE, ASPECTRON_FLOW_UX_SRC_FLOW_DATA_BADGE_GRAPH, ASPECTRON_FLOW_UX_SRC_FLOW_DIALOG, ASPECTRON_FLOW_UX_SRC_FLOW_PAGES, ASPECTRON_FLOW_UX_SRC_FLOW_I18N, ASPECTRON_FLOW_UX_SRC_FLOW_CODE, ASPECTRON_FLOW_UX_SRC_FLOW_COLOR_SELECTOR, ASPECTRON_FLOW_UX_SRC_FLOW_REFERENCE, ASPECTRON_FLOW_UX_SRC_FLOW_CANVAS, ASPECTRON_FLOW_UX_SRC_FLOW_D3, ASPECTRON_FLOW_UX_SRC_FLOW_GRAPH, ASPECTRON_FLOW_UX_SRC_FLOW_SAMPLER, ASPECTRON_FLOW_UX_SRC_BASE_ELEMENT, ASPECTRON_FLOW_UX_SRC_FLOW_SOCKET, ASPECTRON_FLOW_UX_SRC_FLOW_SOCKET_RPC, ASPECTRON_FLOW_UX_SRC_FLOW_SOCKET_NATS, ASPECTRON_FLOW_UX_SRC_FLOW_APP, ASPECTRON_FLOW_UX_SRC_FLOW_APP_DRAWER, ASPECTRON_FLOW_UX_SRC_FLOW_DROPDOWN, ASPECTRON_FLOW_UX_SRC_FLOW_MENU, ASPECTRON_FLOW_UX_SRC_FLOW_SELECT, ASPECTRON_FLOW_UX_SRC_TABLE_MIXIN, ASPECTRON_FLOW_UX_SRC_FLOW_LINK, ASPECTRON_FLOW_UX_SRC_FLOW_SELECTOR, ASPECTRON_FLOW_UX_SRC_FLOW_FORMAT, ASPECTRON_FLOW_UX_SRC_FLOW_CLOCK_WIDGET, ASPECTRON_FLOW_UX_SRC_FLOW_THEME_SELECT, ASPECTRON_FLOW_UX_SRC_FLOW_DROPZONE_FIELD, ASPECTRON_FLOW_UX_SRC_FLOW_MARKDOWN, ASPECTRON_FLOW_UX_SRC_FLOW_TOOLBAR, ASPECTRON_FLOW_UX_SRC_FLOW_GRIDSTACK, ASPECTRON_FLOW_UX_SRC_FLOW_DOWNLOAD_BADGE, ASPECTRON_FLOW_UX_SRC_FLOW_COLOR_PICKER, ASPECTRON_FLOW_UX_SRC_FLOW_RSS, ASPECTRON_FLOW_UX_SRC_FLOW_SUNBURST_GRAPH, ASPECTRON_FLOW_UX_SRC_FLOW_SWIPEABLE, ASPECTRON_FLOW_UX_SRC_FLOW_T9, ASPECTRON_FLOW_UX_SRC_FLOW_PROGRESSBAR, ASPECTRON_FLOW_UX_SRC_FLOW_ADD_TO_HOME, ASPECTRON_FLOW_UX_SRC_COLORS, ASPECTRON_FLOW_UX_SRC_FLOW_STATSD
+// ASPECTRON_FLOW_UX_FLOW_UX, ASPECTRON_FLOW_UX_SRC_FLOW_TERMINAL
+// FLOW_UX
+const DEPENDENCIES : &[&[ModuleId]] = &[
+	&[409],
+	&[613, 611, 546],
+	&[505],
+	&[501],
+	&[265],
+	&[31],
+	&[89],
+	&[38, 40, 33, 37, 32, 34, 36, 35, 39, 41],
+	&[674],
+	&[673, 550, 389, 398],
+	&[367],
+	&[406],
+	&[361, 348, 422],
+	&[341],
+	&[414, 362, 396, 399, 425, 364, 424, 394, 356, 373, 372, 412, 397, 429, 433, 347, 421, 393, 354, 363, 376, 390, 428, 375, 377, 384, 420, 380, 403, 405, 349, 418, 386, 366, 360, 416, 379, 408, 423, 350, 432, 391, 351, 401, 410, 417, 400, 359, 381, 368, 352, 374, 413, 387, 419, 395, 378, 353, 404, 369, 383, 426, 370, 355, 385, 415, 430, 382, 427, 388, 371, 402, 407],
+	&[434, 431],
+	&[675]
+];
