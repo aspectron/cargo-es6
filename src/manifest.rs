@@ -68,6 +68,7 @@ pub struct Settings {
     pub ignore : Option<Vec<String>>,
     pub wasm : Option<Wasm>,
     pub verbose : Option<bool>,
+    pub enums : Option<Enums>
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -76,4 +77,10 @@ pub struct Wasm {
     pub folder : String,
     pub outdir : String,
     pub dev : Option<bool>,
+}
+
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Enums {
+    pub exports : Vec<String>
 }

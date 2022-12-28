@@ -20,6 +20,7 @@ pub struct Context {
     pub project_file : PathBuf,
     pub project_folder : PathBuf,
     pub node_modules : PathBuf,
+    pub ignore : Filter,
 }
 
 impl Context {
@@ -42,6 +43,12 @@ impl Context {
         log_info!("Project","`{}`",project_folder.to_str().unwrap());
         log_info!("Target","`{}`",target_file.to_str().unwrap());
 
+        let ignore = if let Some(ignore) = &manifest.settings.ignore {
+            Filter::new(&ignore.iter().map(|s|s.as_str()).collect::<Vec<_>>())
+        } else {
+            Filter::default()
+        };
+
         let ctx = Context {
             manifest,
             target_file,
@@ -49,6 +56,7 @@ impl Context {
             project_file,
             project_folder,
             node_modules,
+            ignore,
         };
 
         Ok(ctx)

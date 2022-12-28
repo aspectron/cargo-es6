@@ -115,11 +115,16 @@ impl Modules {
         if let Some(target) = self.file_modules_by_absolute.get(&absolute) {
             Ok(Some(target.clone()))
         } else {
-            log_warn!("Resolver","+--");
-            log_warn!("","| Unable to resolve: `{}`", style(location).yellow());
-            log_warn!("","| absolute: `{}`", style(absolute.display()).yellow());
-            log_warn!("","| referrer: `{}`", style(referrer.display()).yellow());
-            log_warn!("","+--");
+            let relative = referrer.strip_prefix(&self.ctx.project_folder)?;
+            let target = absolute.strip_prefix(&self.ctx.project_folder)?;
+
+            if !self.ctx.ignore.is_match(&relative.to_string_lossy()) && !self.ctx.ignore.is_match(&target.to_string_lossy()) {
+                log_warn!("Resolver","+--");
+                log_warn!("","| Unable to resolve: `{}`", style(location).yellow());
+                log_warn!("","| absolute: `{}`", style(absolute.display()).yellow());
+                log_warn!("","| referrer: `{}`", style(referrer.display()).yellow());
+                log_warn!("","+--");
+            }
             Ok(None)
         }
 

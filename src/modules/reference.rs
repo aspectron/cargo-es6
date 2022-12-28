@@ -2,16 +2,18 @@ use crate::prelude::*;
 
 #[derive(Debug)]
 pub enum ReferenceKind {
+    Style,
     Import,
-    ImportAll,
+    // ImportAll,
     Export,
 }
 
 impl ToString for ReferenceKind {
     fn to_string(&self) -> String {
         match self {
+            ReferenceKind::Style => "stylesheet".to_string(),
             ReferenceKind::Import => "import".to_string(),
-            ReferenceKind::ImportAll => "import-all".to_string(),
+            // ReferenceKind::ImportAll => "import-all".to_string(),
             ReferenceKind::Export => "export".to_string(),
         }
     }
@@ -21,18 +23,26 @@ impl ToString for ReferenceKind {
 pub struct Reference {
     pub kind : ReferenceKind,
     pub referrer: PathBuf,
-    pub what: String,
+    pub what: Option<String>,
     pub location: String,
+    // pub component : String,
     pub reference: Mutex<Option<Arc<FileModule>>>,
 }
 
 impl Reference {
-    pub fn new(kind: ReferenceKind, referrer: &Path, what: &str, location: &str) -> Reference {
+    pub fn new(kind: ReferenceKind, referrer: &Path, what: Option<&str>, location: &str) -> Reference {
+
+
+        // .from_case(Case::Kebab).to_case(Case::Title)
+
+        let what = what.map(|s| s.trim().to_string());
+
         Reference {
             kind,
             referrer: referrer.to_path_buf(),
-            what: what.trim().to_string(),
+            what,
             location: location.trim().to_string(),
+            // component,
             reference: Mutex::new(None),
         }
     }
@@ -43,7 +53,7 @@ impl Reference {
 
     pub fn warn(&self) {
         log_warn!("Warning","+--- import");
-        log_warn!("","| Unable to resolve: `{}`", self.what);
+        log_warn!("","| Unable to resolve: `{:?}`", self.what);
         log_warn!("","| location: `{}`", self.location);
         log_warn!("","| referrer: `{}`", self.referrer.display());
         log_warn!("","+---");

@@ -2,6 +2,13 @@
 project = "../../flow-ux-rs/flow-ux/flow-ux.js"
 target = "../../flow-ux-rs/src/modules.rs"
 wasm = { name = "flow-ux", folder="../", outdir = "test/flow-ux", dev=true }
-ignore = ["xterm"]
+ignore = [
+    "**/xterm",
+    "**/webcomponents-{sd,ce}*",
+    "**/custom-elements-es5-adapter*",
+    "**/development/*",
+    "**/webcomponentsjs/src/platform/{symbol,promise}.js",
+
+]
 verbose = true
-enums = { exports = "@aspectron/flow-ux/flow-ux.js" }
+enums = { exports = ["@aspectron/flow-ux/flow-ux.js"] }

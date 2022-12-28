@@ -14,6 +14,7 @@ pub enum IdentKind {
 pub struct FileModule {
     pub id : ModuleId,
     pub ident : String,
+    pub component : String,
     pub folder: PathBuf,
     pub absolute : PathBuf,
     pub imports : Vec<Reference>,
@@ -29,74 +30,17 @@ impl FileModule {
         let path = path.as_ref();
         let absolute = folder.join(path);
         let parent = absolute.parent().unwrap();
+        let component = Path::new(path).file_stem().unwrap().to_string_lossy().to_case(Case::Pascal);
         // println!("loading: `{}` -> `{}`",folder.display(),path.display());
+
 
         let text = async_std::fs::read_to_string(&absolute).await?;
 
         let comment_re = Regex::new(r###"^\s*//"###).unwrap();
         let text = text.split("\n").filter(|s| !comment_re.is_match(s) && !s.trim().is_empty()).collect::<Vec<_>>().join("\n");
 
-        let mut imports = Vec::new();
-        // handle `import xxx from "xxx"`
-        let import_re = Regex::new(r###"import[^;]*from\s*["'][^"']+["'];"###).unwrap();
-        let import_reference_re = Regex::new(r###"import\s*(.+)\s*from\s*["'](.+)["']"###).unwrap();
-        let import_matches = import_re.find_iter(&text).map(|m| m.as_str().to_string()).collect::<Vec<_>>();
-        for import in import_matches.iter() {
-            let import = import.replace("\n"," ");
-            let captures = import_reference_re.captures(&import).expect(&format!("unable to capture `{}`",import));
-            let what = captures[1].to_string();
-            let location = captures[2].to_string();
-            let import = Reference::new(
-                ReferenceKind::Import,
-                &absolute,
-                &what,
-                &location
-            );
-            imports.push(import);
-        }
-        let text = import_re.replace_all(&text, "");
-
-        // handle `import "..."
-        // let import_re = Regex::new(r###"^\s*import\s*["'][^"']+["'];"###).unwrap();
-        let import_re = Regex::new(r###"import\s*["'][^"']+["'];"###).unwrap();
-        let import_reference_re = Regex::new(r###"import\s*["'](.+)["']"###).unwrap();
-        let import_matches = import_re.find_iter(&text).map(|m| m.as_str().to_string()).collect::<Vec<_>>();
-        for import in import_matches.iter() {
-            // println!("| import len: {}", import.len());
-            // println!("| import match: {} {}", import,import.len());
-            let import = import.replace("\n"," ");
-            let captures = import_reference_re.captures(&import).expect(&format!("unable to capture `{}`",import));
-            let what = "*".to_string();
-            let location = captures[1].to_string();
-            // println!("| import location: {}", location);
-            let import = Reference::new(
-                ReferenceKind::ImportAll,
-                &absolute,
-                &what,
-                &location
-            );
-            imports.push(import);
-        }
-        let text = import_re.replace_all(&text, "");
-
-        let mut exports = Vec::new();
-        let export_re = Regex::new(r###"export[^;]*from\s*["']+[^"']+["']+;"###).unwrap();
-        let export_reference_re = Regex::new(r###"export\s*(.+)\s*from\s*["'](.+)["']"###).unwrap();
-        let export_matches = export_re.find_iter(&text).map(|m| m.as_str().to_string()).collect::<Vec<_>>();
-        for export in export_matches.iter() {
-            let export = export.replace("\n"," ");
-            let captures = export_reference_re.captures(&export).expect(&format!("unable to capture `{}`",export));
-            let what = captures[1].to_string();
-            let location = captures[2].to_string();
-            let export = Reference::new(
-                ReferenceKind::Export,
-                &absolute,
-                &what,
-                &location
-            );
-            exports.push(export);
-        }
-        let text = export_re.replace_all(&text, "");
+        let (imports, text) = gather_references(ReferenceKind::Import, &text, &absolute)?;
+        let (exports, text) = gather_references(ReferenceKind::Export, &text, &absolute)?;
 
         let ident_re_blank = Regex::new(r"(node_modules/|@|.js)")?;
         let ident_re_usc = Regex::new(r"/|-|\.")?;
@@ -117,6 +61,7 @@ impl FileModule {
         let module = FileModule {
             id,
             ident,
+            component,
             folder: parent.to_path_buf(), //folder.to_path_buf(),
             absolute : absolute,// path.to_path_buf(),
             imports,
