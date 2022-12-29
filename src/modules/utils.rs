@@ -88,17 +88,10 @@ pub fn gather_references<P:AsRef<Path>>(text: &str, referrer: P) -> Result<(Opti
     } else {
         Some(references)
     };
-    
+
     Ok((references, text.to_string()))
 
 }
 
-// pub fn gather_stylesheets<P : AsRef<Path>>(text : &str, referrer: P) -> Result<(Vec<Reference>,String)> {
 
-//     // 		<link rel="stylesheet" href="${baseUrl}resources/extern/gridstack/gridstack.min.css">
-//     // let mut stylesheets = Vec::new();
-//     // handle `import xxx from "xxx"`
-//     // let import_re = Regex::new(r###"import[^;]*from\s*["'][^"']+["'];"###).unwrap();
-
-//     Ok((links, text.to_string()))
-// }
+// FlowQRCode.define('flow-qrcode', [baseUrl+'resources/extern/qrcode/qrcode.js']);

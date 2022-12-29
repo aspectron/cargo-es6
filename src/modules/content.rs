@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use minify_js::*;
 
 pub type ModuleId = u64;
 static mut FILE_MODULE_GID: ModuleId = 0;
@@ -115,6 +116,34 @@ impl Content {
         unsafe { FILE_MODULE_GID += 1 };
         let id = unsafe { FILE_MODULE_GID };
 
+        let minify_content  = false;
+
+        let content = if minify_content {
+            match content_type {
+                ContentType::Module => {
+                    let mut content = Vec::new();
+                    match minify(TopLevelMode::Module, text.as_bytes().to_vec(), &mut content) {
+                        Ok(_) => {
+                            String::from_utf8(content)?
+                        },
+                        Err(err) => {
+                            println!("");
+                            log_error!("minify in: `{}`", path.display());
+                            log_error!("error: {}", err);
+                            println!("");
+                            text.to_string()
+                        }
+                    }
+                },
+                ContentType::Script => {
+                    text.to_string()
+                },
+                _ => { text.to_string() }
+            }
+        } else {
+            text.to_string()
+        };
+
         let module = Content {
             id,
             ident,
@@ -124,7 +153,7 @@ impl Content {
             absolute : absolute,
             references,
             content_type,
-            content: text.to_string(),
+            content,
         };
 
         Ok(module)

@@ -1,4 +1,4 @@
-use std::ffi::OsString;
+use std::{ffi::OsString, string::FromUtf8Error};
 use globset::Error as GlobError;
 use thiserror::Error;
 
@@ -31,6 +31,9 @@ pub enum Error {
     
     #[error("Toml Deserialize: {0}")]
     TomlDeserialize(#[from] toml::de::Error),
+
+    #[error("Utf8 error: {0}")]
+    Utf8Error(#[from] FromUtf8Error),
  }
 
 impl From<&str> for Error {
