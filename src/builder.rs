@@ -169,357 +169,93 @@ impl Builder {
             String::new()
         };
 
-        log_info!("Generating","`{}`",self.ctx.target_file.display());
+        // log_info!("Generating","`{}`",self.ctx.target_file.display());
+        log_info!("Generating","`{}`",self.ctx.target_folder.display());
         // let ident_kind = IdentKind::HexFull;
         let ident_kind = IdentKind::IntegerFull;
         
         let mut collection = Collection::new();
         root_module.gather(&mut collection)?;
         
-        let mut text = String::new();
+        let mut content_rs = String::new();
         for module in collection.modules.iter() {
             // println!("{}",module.ident);            
-            text += &format!("const {} : &'static str = r###\"\n", module.ident(&ident_kind));
+            content_rs += &format!("pub const {} : &'static str = r###\"\n", module.ident(&ident_kind));
             // TODO - IMPORTS
-            text += &module.content;
+            content_rs += &module.content;
             // TODO - EXPORTS
-            text += &format!("\n\"###;\n\n");
-
+            content_rs += &format!("\n\"###;\n\n");
+            
         }
+        
 
-        text += r###"
-use std::collections::HashMap;
-use std::sync::Arc;
-use std::sync::Mutex;
-use std::sync::atomic::{AtomicBool, Ordering};
-use workflow_log::*;
-use workflow_wasm::callback::*;
-use js_sys::{Array,Uint8Array};
+        let lib_rs = r###"
 use wasm_bindgen::prelude::*;
-// use wasm_bindgen::prelude::*;
-use web_sys::{Document,Url,Blob};
-// use crate::result::*;
-// use crate::utils::*;
-use workflow_core::channel::oneshot;
-// use thiserror::Error;
-use futures::future::{join_all,BoxFuture,FutureExt};
-// use futures::future::{join_all,ok,err,BoxFuture,FutureExt};
+mod content;
+mod modules;
+pub use modules::*;
 
-use wasm_bindgen::JsCast;
-
-
-#[derive(thiserror::Error, Debug)]
-pub enum Error {
-    #[error("{0}")]
-    String(String),
-    #[error("{0:?}")]
-    JsValue(JsValue),
+#[wasm_bindgen]
+pub async fn load_modules() -> modules::Result<()> {
+    workflow_wasm::panic::init_console_panic_hook();
+    let ctx = modules::Context::new();
+    ctx.load_all().await?;
+    Ok(())
 }
-unsafe impl Send for Error {}
-unsafe impl Sync for Error {}
-
-impl From<String> for Error { fn from(v:String) -> Self { Self::String(v) } }
-impl From<&str> for Error { fn from(v:&str) -> Self { Self::String(v.to_string()) } }
-impl From<JsValue> for Error { fn from(v:JsValue) -> Self { Self::JsValue(v) } }
-// impl From<JsValue> for Error { fn from(_v:JsValue) -> Self { Self::String("JsValue error".into()) } }
-
-impl Into<JsValue> for Error {
-    fn into(self) -> JsValue {
-        JsValue::from_str(&self.to_string())
-    }
-}
-
-pub type Result<T> = std::result::Result<T, Error>;
-
-
-pub fn document() -> Document {
-    web_sys::window().unwrap().document().unwrap()
-}
-
-pub fn root() -> web_sys::Element {
-    let collection = document().get_elements_by_tag_name("head");
-    if collection.length() > 0 {
-        collection.item(0).unwrap()
-    } else {
-        document().get_elements_by_tag_name("body").item(0).unwrap()
-    }
-}
-
-#[allow(dead_code)]
-pub enum Reference {
-    Style,
-    Import,
-    Export,
-}
-
-#[allow(dead_code)]
-pub enum ModuleStatus {
-    Loaded,
-    Exists,
-    Error,
-}
-
-// unsafe impl Send for ModuleStatus {}
-// unsafe impl Sync for ModuleStatus {}
-
 "###;
-text += &format!("\npub type ModuleId = {};\n", module_id_repr);
-text += &format!("\nconst ROOT: ModuleId = {};\n",root_module.id);
-text += r###"
-pub struct Module {
-    url : Mutex<Option<String>>,
-    ident : &'static str,
-    content: &'static str,
-    references: &'static [(Reference, Option<&'static str>, ModuleId)],
-    // imports: &'static [(Reference, Option<&'static str>, ModuleId)],
-    // exports: &'static [(&'static str, ModuleId)],
-    is_loaded : AtomicBool,
-}
 
-impl Module {
+        let mut modules_rs = String::new();
+        modules_rs += r###"
+        use std::sync::{
+            Arc,
+            Mutex,
+            atomic::AtomicBool
+        };
+        use workflow_dom::loader::{
+            // Module,
+            ModuleMap,
+            Id,
+            Reference,
+            Context as Inner
+        };
+        pub use workflow_dom::loader::Module;
+        pub use workflow_dom::result::Result;
+        pub use workflow_dom::error::Error;
+        use crate::content;
 
-    pub fn url(&self) -> Option<String> { 
-        self.url.lock().unwrap().clone() 
-    }
+        "###;
+        modules_rs += &format!("\nconst ROOT: Id = {};\n",root_module.id);
 
-    pub fn content(&self, modules: &ModuleMap) -> Result<String> {
-        let mut text = String::new();
-
-        let mut imports = Vec::new();
-        let mut exports = Vec::new();
-
-        for (kind,what,id) in self.references.iter() {
-            let module = modules.get(id).ok_or(format!("unable to lookup module `{}`",self.ident))?;
-            let url = module.url().ok_or(format!("[{}] module is not loaded `{}`",self.ident,id))?;
-            match kind {
-                Reference::Style => {
-                    // TODO: import style into the global document
-                    log_info!("TODO: loading style {}", what.unwrap())
-                },
-                Reference::Import => {
-                    match what {
-                        Some(detail) => {
-                            imports.push(format!("import {} from \"{}\";\n", detail, url));
-                        },
-                        None => {
-                            imports.push(format!("import \"{}\";\n", url));
-                        }
-                    }
-                },
-                Reference::Export => {
-                    let module = modules.get(id).ok_or(format!("unable to lookup module `{}`",self.ident))?;
-                    let url = module.url().ok_or(format!("[{}] module is not loaded `{}`",self.ident,id))?;
-                    exports.push(format!("export {} from \"{}\";\n", what.unwrap(), url));
-                }
-            }
+        modules_rs += r###"
+        pub struct Context {
+            inner : Arc<Inner>
         }
-        let imports = imports.join("\n");
 
-        // let mut exports = Vec::new();
-        // for (what,id) in self.exports.iter() {
-        //     let module = modules.get(id).ok_or(format!("unable to lookup module `{}`",self.ident))?;
-        //     let url = module.url().ok_or(format!("[{}] module is not loaded `{}`",self.ident,id))?;
-        //     exports.push(format!("export {} from \"{}\";\n", what, url));
-        // }
-        let exports = exports.join("\n");
+        impl Context {
 
-        text += &imports;
-        text += &self.content;
-        text += &exports;
-
-        Ok(text)
-    }
-
-    fn is_loaded(&self) -> bool {
-        self.is_loaded.load(Ordering::SeqCst)
-    }
-
-    pub fn load_deps(self : Arc<Self>, modules: Arc<ModuleMap>) -> BoxFuture<'static, Result<()>> {
-
-        // if self.is_loaded.load(Ordering::SeqCst) {
-        //     return None;
-        // }
-
-        // let future = 
-        async move {
-            // log_info!("[{}] processing dependencies...", self.ident);
-            let futures = self.references
-                .iter()
-                .map(|(kind,what,id)| {
-                    match kind {
-                        Reference::Import | Reference::Export => {
-                            if let Some(module) = modules.get(id) {
-                                if !module.is_loaded.load(Ordering::SeqCst) {
-                                    // log_info!("[inner] loading dependency ... {}", id);
-                                    Some(module.load(&modules))
-                                } else {
-                                    // log_info!("module already loaded {}", id);
-                                    None
-                                }
-                            } else {
-                                log_error!("Unable to locate module {}", id);
-                                // TODO: panic
-                                None
-                            }
-                        },
-                        Reference::Style => {
-                            log_info!("TODO: import stylesheet: {:?}",what);
-                            None
-                        }
-                    }
-                })
-                .flatten()
-                .collect::<Vec<_>>();
-            
-            // log_info!("{} waiting for dependencies to load...",self.ident);
-            // TODO: use Join
-
-            // join_all(futures).await;
-
-            for future in futures {
-                match future.await {
-                    Ok(_event) => {
-                        
-                    },
-                    Err(err) => {
-                        log_error!("{}", err);
-                    }
-                }
-            }
-
-            Ok(())
-        }.boxed()
-
-        // Some(future)
-
-        // Ok(())
-    }
-
-    pub async fn load(self : &Arc<Self>, modules: &Arc<ModuleMap>) -> Result<ModuleStatus> {
-
-        // if let Some(future) =  self.clone().load_deps(modules){
-        //     future.await?;
-        // }
-        
-        if self.is_loaded() {
-            // log_info!("{} already loaded ...", self.ident);
-            return Ok(ModuleStatus::Exists);
-        }
-        
-        // log_info!("{} loading dependencies ...", self.ident);
-        self.clone().load_deps(modules.clone()).await?;
-        // log_info!("{} dependencies load done ...", self.ident);
-        
-        log_info!("load ... {}", self.ident);
-        
-        let (sender,receiver) = oneshot();
-        // let cb = 
-        {
-            let content = self.content(modules)?;
-            let args = Array::new_with_length(1);
-            args.set(0, unsafe { Uint8Array::view(content.as_bytes()).into() });
-            let mut options = web_sys::BlobPropertyBag::new();
-            // options.type_("module");
-            options.type_("application/javascript");
-            let blob = Blob::new_with_u8_array_sequence_and_options(&args, &options)?;
-            let url = Url::create_object_url_with_blob(&blob)?;
-            self.url.lock().unwrap().replace(url.clone());
-            
-            let script = document().create_element("script")?;
-            // if let Some(closure) = load {
-                
-            // let ident = self.ident.clone();
-
-            let closure = Closure::<dyn FnMut(web_sys::CustomEvent)->std::result::Result<(), JsValue>>::new(move|_event|->std::result::Result<(), JsValue>{
-                // TODO
-                let status = ModuleStatus::Loaded;
-                sender.try_send(status).expect("unable to post load event");
-
+            pub async fn load(&self, list : &[Id]) -> Result<()> {
+                self.inner.load_ids(list).await?;
                 Ok(())
-            });
-            script.add_event_listener_with_callback("load", closure.as_ref().unchecked_ref())?;
-            closure.forget();
-
-            // let callback = callback!(move |_event: web_sys::CustomEvent| {
-            //     log_info!("{} ... done", ident);
-            //     // TODO
-            //     let status = ModuleStatus::Loaded;
-            //     sender.try_send(status).expect("unable to post load event");
-            //     // drop(callback);
-            // });
-            // script.add_event_listener_with_callback("load", callback.as_ref())?;
-
-            let content_type = "module";
-            script.set_attribute("module","true")?;
-            script.set_attribute("type",content_type)?;
-            script.set_attribute("src", &url)?;
-            root().append_child(&script)?;
-
-            // Arc::new(Mutex::new(callback))
-        }
-        let status = receiver.recv().await.expect("unable to recv() load event");
-        self.is_loaded.store(true, Ordering::SeqCst);
-        Ok(status)
-    }
-}
-
-pub type ModuleMap = HashMap<ModuleId,Arc<Module>>;
-
-// #[wasm_bindgen]
-// pub async fn load_modules() -> Result<()> {
-// }
-
-
-pub struct Context {
-    pub modules : Arc<ModuleMap>
-}
-
-impl Context {
-    pub async fn load_all(&self) -> Result<()> {
-        self.load_modules(&[ROOT]).await?;
-        Ok(())
-    }
-
-    pub async fn load_modules(&self, list : &[ModuleId]) -> Result<()> {
-
-        // let modules : ModuleMap = MODULES.into_iter().collect();
-        
-        let futures = list
-            .iter()
-            .map(|id| {
-                if let Some(module) = self.modules.get(id) {
-                    Some(module.load(&self.modules))
-                } else {
-                    log_error!("Unable to locate module {}", id);
-                    // TODO: panic
-                    None
-                }
-            })
-            .flatten()
-            .collect::<Vec<_>>();
-        
-        for future in futures {
-            match future.await {
-                Ok(_event) => {
-
-                },
-                Err(err) => {
-                    log_error!("{}", err);
-                }
             }
-        }
 
-        Ok(())
-    }
-}
+            pub async fn load_all(&self) -> Result<()> {
+                self.inner.load_ids(&[ROOT]).await?;
+                Ok(())
+            }
+            
+        }
+        "###;
+        // modules_rs += &format!("\npub type ModuleId = {};\n", module_id_repr);
+        
+        modules_rs += r###"
 
 "###;
 
         if !self.ctx.manifest.settings.verbose.unwrap_or(false) {
-            text = text.replace("log_info","// log_info");
+            modules_rs = modules_rs.replace("log_info","// log_info");
         }
 
-        text += &enums;
+        modules_rs += &enums;
 
         let mut table = Vec::new();
         for module in collection.modules.iter() {
@@ -535,11 +271,11 @@ impl Context {
                     ReferenceKind::Style => {
                         references.push(format!("(Reference::Style,None,{})",reference.id));
                     },
-                    ReferenceKind::Import => {
+                    ReferenceKind::Module => {
                         if let Some(what) = &import.what {
-                            references.push(format!("(Reference::Import,Some(\"{}\"),{})",what,reference.id));
+                            references.push(format!("(Reference::Module,Some(\"{}\"),{})",what,reference.id));
                         } else {
-                            references.push(format!("(Reference::Import,None,{})",reference.id));
+                            references.push(format!("(Reference::Module,None,{})",reference.id));
                         }
                     },
                     _ => {
@@ -562,12 +298,14 @@ impl Context {
                 // \texports : &[{}],\n\
             let definition = format!("Arc::new(Module {{\n\
                 \turl : Mutex::new(None),\n\
+                \tid : {},\n\
                 \tident : \"{}\",\n\
-                \tcontent : {},\n\
+                \tcontent : content::{},\n\
                 \treferences : &[{}],\n\
                 \tis_loaded : AtomicBool::new(false),\n\
             }})", 
                 // module.id(&ident_kind),
+                module.id,
                 module.ident(&ident_kind).to_lowercase(),
                 module.ident(&ident_kind),
                 references,
@@ -579,18 +317,19 @@ impl Context {
         }
         // let table_len = table.len();
         let table = table.join(",\n");
-        text += r###"
-        impl Default for Context {
-            fn default() -> Self {
+        modules_rs += r###"
+        impl Context {
+            pub fn new() -> Self {
 
         "###;
 
         // text += &format!("\nlet modules : [(ModuleId,Arc<Module>);{}] = [\n{}\n];\n",table_len, table);
-        text += &format!("\nlet modules : ModuleMap = [\n{}\n].into_iter().collect();\n", table);
+        modules_rs += &format!("\nlet modules : ModuleMap = [\n{}\n].into_iter().collect();\n", table);
 
-        text += r###"
-
-                Context { modules : Arc::new(modules) }
+        modules_rs += r###"
+                Context {
+                    inner : Arc::new(Inner::new(modules))
+                }
             }
         }
         "###;
@@ -614,8 +353,16 @@ impl Context {
         // }
         // "###;
 
-        async_std::fs::write(&self.ctx.target_file, &text).await?;
-        let file_size = std::fs::metadata(&self.ctx.target_file)?.len() as f64 / 1024.0;
+        let path_lib_rs = self.ctx.target_folder_src.join("lib.rs");
+        let path_content_rs = self.ctx.target_folder_src.join("content.rs");
+        let path_modules_rs = self.ctx.target_folder_src.join("modules.rs");
+        async_std::fs::write(&path_lib_rs, &lib_rs).await?;
+        async_std::fs::write(&path_content_rs, &content_rs).await?;
+        async_std::fs::write(&path_modules_rs, &modules_rs).await?;
+        let mut file_size = 0.0;
+        // file_size += std::fs::metadata(&path_lib_rs)?.len() as f64 / 1024.0;
+        file_size += std::fs::metadata(&path_content_rs)?.len() as f64 / 1024.0;
+        // file_size += std::fs::metadata(&path_modules_rs)?.len() as f64 / 1024.0;
         log_info!("Generating","... modules: {} file size: {:1.0} Kb", collection.modules.len(), file_size);
 
         Ok(())

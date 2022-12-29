@@ -4,7 +4,7 @@ use crate::prelude::*;
 pub fn gather_references<P:AsRef<Path>>(kind: ReferenceKind, text: &str, referrer: P) -> Result<(Vec<Reference>, String)> {
 
     match kind {
-        ReferenceKind::Import => {
+        ReferenceKind::Module => {
             let mut imports = Vec::new();
             // handle `import xxx from "xxx"`
             let import_re = Regex::new(r###"import[^;]*from\s*["'][^"']+["'];"###).unwrap();
@@ -16,7 +16,7 @@ pub fn gather_references<P:AsRef<Path>>(kind: ReferenceKind, text: &str, referre
                 let what = captures[1].to_string();
                 let location = captures[2].to_string();
                 let import = Reference::new(
-                    ReferenceKind::Import,
+                    ReferenceKind::Module,
                     referrer.as_ref(),
                     Some(&what),
                     &location
@@ -39,7 +39,7 @@ pub fn gather_references<P:AsRef<Path>>(kind: ReferenceKind, text: &str, referre
                 let location = captures[1].to_string();
                 // println!("| import location: {}", location);
                 let import = Reference::new(
-                    ReferenceKind::Import,
+                    ReferenceKind::Module,
                     referrer.as_ref(),
                     None,
                     &location

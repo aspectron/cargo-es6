@@ -39,7 +39,7 @@ impl FileModule {
         let comment_re = Regex::new(r###"^\s*//"###).unwrap();
         let text = text.split("\n").filter(|s| !comment_re.is_match(s) && !s.trim().is_empty()).collect::<Vec<_>>().join("\n");
 
-        let (imports, text) = gather_references(ReferenceKind::Import, &text, &absolute)?;
+        let (imports, text) = gather_references(ReferenceKind::Module, &text, &absolute)?;
         let (exports, text) = gather_references(ReferenceKind::Export, &text, &absolute)?;
 
         let ident_re_blank = Regex::new(r"(node_modules/|@|.js)")?;

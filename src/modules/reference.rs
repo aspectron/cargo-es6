@@ -3,8 +3,8 @@ use crate::prelude::*;
 #[derive(Debug)]
 pub enum ReferenceKind {
     Style,
-    Import,
-    // ImportAll,
+    Module,
+    Script,
     Export,
 }
 
@@ -12,7 +12,8 @@ impl ToString for ReferenceKind {
     fn to_string(&self) -> String {
         match self {
             ReferenceKind::Style => "stylesheet".to_string(),
-            ReferenceKind::Import => "import".to_string(),
+            ReferenceKind::Module => "module-import".to_string(),
+            ReferenceKind::Script => "script-import".to_string(),
             // ReferenceKind::ImportAll => "import-all".to_string(),
             ReferenceKind::Export => "export".to_string(),
         }
