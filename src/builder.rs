@@ -211,6 +211,14 @@ pub async fn load_modules() -> context::Result<()> {
                 self.inner.load_ids(&[ROOT]).await?;
                 Ok(())
             }
+
+            pub fn get<'l>(&'l self, id: &Id) -> Option<&'l Arc<Content>> {
+                self.inner.get(id)
+            }
+            
+            pub fn url<'l>(&'l self, id: &Id) -> Option<String> {
+                self.inner.get(id).map(|c|c.url()).unwrap_or(None)
+            }
             
         }
         "###;
