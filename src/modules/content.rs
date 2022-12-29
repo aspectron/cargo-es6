@@ -17,6 +17,16 @@ pub enum ContentType {
     Script,
 }
 
+impl ToString for ContentType {
+    fn to_string(&self) -> String {
+        match self {
+            ContentType::Style => "ContentType::Style".to_string(),
+            ContentType::Module => "ContentType::Module".to_string(),
+            ContentType::Script => "ContentType::Script".to_string(),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct Content {
     pub id : ModuleId,
@@ -51,6 +61,24 @@ impl Content {
         let component = Path::new(path).file_stem().unwrap().to_string_lossy().to_case(Case::Pascal);
         // println!("loading: `{}` -> `{}`",folder.display(),path.display());
 
+        let extension = &path
+            .extension()
+            .expect(&format!("no extension in file: `{}`",path.display()))
+            .to_str()
+            .unwrap()
+            .to_lowercase();
+        // let content_type = match extension {
+
+        // }
+
+        // println!("{}",extension);
+
+        let content_type = if extension == "css" {
+            // println!("ContentType::Style {}", path.display());
+            ContentType::Style
+        } else {
+            content_type
+        };
 
         let text = async_std::fs::read_to_string(&absolute).await?;
 

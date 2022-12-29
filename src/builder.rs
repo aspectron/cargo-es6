@@ -239,6 +239,7 @@ pub async fn load_modules() -> context::Result<()> {
                     
                     match reference.kind {
                         ReferenceKind::Style => {
+                            // println!("INJECTING STYLE {}", content.ident);
                             references.push(format!("(Reference::Style,None,{})",content.id));
                         },
                         ReferenceKind::Module => {
@@ -264,7 +265,6 @@ pub async fn load_modules() -> context::Result<()> {
                 format!("Some(&[{}])",references.join(","))
             };
 
-            let content_type = "ContentType::Module";
             let definition = format!("Arc::new(Content {{\n\
                 \tcontent_type : {},\n\
                 \turl : Mutex::new(None),\n\
@@ -274,7 +274,7 @@ pub async fn load_modules() -> context::Result<()> {
                 \treferences : {},\n\
                 \tis_loaded : AtomicBool::new(false),\n\
             }})", 
-                content_type,
+                module.content_type.to_string(),
                 module.id,
                 module.ident(&ident_kind).to_lowercase(),
                 module.ident(&ident_kind),
