@@ -6,7 +6,7 @@ pub async fn search_upwards(folder: &PathBuf, filename: &str) -> Option<PathBuf>
 
     loop {
         let file_path = folder.join(filename);
-        if file_path.is_file().await {
+        if file_path.is_file() {
             return Some(file_path);
         }
 
@@ -26,9 +26,9 @@ pub async fn current_dir() -> PathBuf {
 pub async fn find_file(folder: &Path,files: &[String]) -> Result<PathBuf> {
     for file in files {
         let path = folder.join(file);
-        match path.canonicalize().await {
+        match path.canonicalize() {
             Ok(path) => {
-                if path.is_file().await {
+                if path.is_file() {
                     return Ok(path);
                 }
             },

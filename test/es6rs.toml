@@ -11,5 +11,9 @@ ignore = [
     "**/webcomponentsjs/src/platform/{symbol,promise}.js",
 
 ]
+replace = [
+    # { location = { regex = "^\\$\\{baseUrl\\}/", to ="" }}
+    { location = { from = "${baseUrl}", to ="" }}
+]
 verbose = true
 enums = { exports = ["@aspectron/flow-ux/flow-ux.js"] }

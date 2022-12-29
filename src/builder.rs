@@ -12,31 +12,20 @@ impl Builder {
         }
     }
 
-
-
     pub async fn execute(self: Arc<Builder>) -> Result<()> {
 
-
-        if !self.ctx.node_modules.exists().await {
+        if !self.ctx.node_modules.exists() {
             cmd!("npm install").dir(&self.ctx.project_folder).run()?;
         }
 
         async_std::fs::create_dir_all(&self.ctx.target_folder).await.unwrap();
 
-        let modules = Modules::load(&self.ctx).await?;
-
-        // for module in node_modules.modules.iter() {
-        //     println!("{}", module.absolute.display());
-        //     println!("name: `{}` files: {} exports: {}", module.name, module.files.len(), module.exports.len());
-        // }
-
+        let mut modules = Modules::load(&self.ctx).await?;
         for node_module in modules.node_modules.iter() {
-            // println!("{}", module.absolute.display());
             log_info!("Module","`{}` files: {} explicit exports: {}", style(&node_module.name).cyan(), node_module.files.len(), node_module.exports.len());
         }
 
-        self.resolve(&modules).await?;
-
+        self.resolve(&mut modules).await?;
 
         println!("");
 
@@ -49,64 +38,39 @@ impl Builder {
 
         self.build_wasm().await?;
 
-        // let xx = modules.node_modules_by_name.get("flow-ux");
-        // println!("{:?}", xx);
-        
         Ok(())
     }
 
-    pub async fn resolve(self: &Arc<Builder>, modules: &Modules) -> Result<()> {
+    pub async fn resolve(self: &Arc<Builder>, modules: &mut Modules) -> Result<()> {
 
-
-        for module in modules.file_content.iter() {
-
-            // println!("... resolving: `{}`", module.absolute.display());
-            // for module in node_module.files.iter() {
-                self.resolve_module(module,modules).await?;
-            // }
-
+        let file_content = modules.file_content.clone();
+        for module in file_content.iter() {
+            self.resolve_module(module,modules).await?;
         }
 
         Ok(())
     }
 
-    pub async fn resolve_module(self: &Arc<Builder>, module: &Content, modules: &Modules) -> Result<()> {
+    pub async fn resolve_module(self: &Arc<Builder>, module: &Content, modules: &mut Modules) -> Result<()> {
 
         if let Some(references) = &module.references {
             for reference in references.iter() {
-                match modules.resolve(&reference.location,&reference.referrer).await {
+                match modules.resolve(&reference,&module).await {
                     Ok(target) => {
                         *reference.reference.lock().unwrap() = target;//.clone();
                     },
                     Err(_err) => {
+                        // println!("err: {}",_err);
                         let relative = reference.referrer.strip_prefix(&self.ctx.project_folder)?;
                         if !self.ctx.ignore.is_match(&relative.to_string_lossy()) && !self.ctx.ignore.is_match(&reference.location) {
-                            log_warn!("Resolver","referrer: `{}`",reference.referrer.display());
-                            log_warn!("","target: `{}`",reference.location);
+                            reference.warn();
+                            // log_warn!("Resolver","referrer: `{}`",reference.referrer.display());
+                            // log_warn!("","target: `{}`",reference.location);
                         }
-                        // import.warn();
-                        // log_error!("{}",err);
                     }
                 }
             }
         }
-
-        // if let Some(exports) = &module.exports {
-        //     for export in exports.iter() {
-        //         match modules.resolve(&export.location,&export.referrer).await {
-        //             Ok(target) => {
-        //                 *export.reference.lock().unwrap() = target;
-        //             },
-        //             Err(_err) => {
-        //                 log_warn!("Export","`{}`",export.referrer.display());
-        //                 log_warn!("Target","`{}`",export.location);
-        //                 // export.warn();
-        //                 // log_error!("{}",err);
-        //             }
-        //         }
-        //     }
-        // }
-
 
         Ok(())
     }
@@ -120,11 +84,11 @@ impl Builder {
         let mut targets = Vec::new();
         for file in files.iter() {
             let in_root = self.ctx.project_folder.join(file);
-            if in_root.canonicalize().await.is_ok() {
+            if in_root.canonicalize().is_ok() {
                 targets.push(in_root);
             } else {
                 let in_node_modules = self.ctx.node_modules.join(file);
-                if in_node_modules.canonicalize().await.is_ok() {
+                if in_node_modules.canonicalize().is_ok() {
                     targets.push(in_node_modules);
                 } else {
                     return Err(format!("get_references(): unable to locate `{}` in project root or node modules", file).into());
@@ -293,14 +257,7 @@ pub async fn load_modules() -> context::Result<()> {
                     }
                 }
             }
-            // let references = references.join(",");
-            
-            // let mut exports = Vec::new();
-            // if let Some(exports) = &module.exports {
-            //     for export in exports.iter() {
-            //         let reference = export.reference().unwrap();
-            //     }
-            // }
+
             let references = if references.is_empty() {
                 "None".to_string()
             } else {
@@ -308,11 +265,6 @@ pub async fn load_modules() -> context::Result<()> {
             };
 
             let content_type = "ContentType::Module";
-
-            // println!("{}",module.ident);            
-            // text += &format!("\n\t\t\tconst MODULE_{}: Module = Module {{\n\
-                // \timports : &[{}],\n\
-                // \texports : &[{}],\n\
             let definition = format!("Arc::new(Content {{\n\
                 \tcontent_type : {},\n\
                 \turl : Mutex::new(None),\n\
@@ -322,29 +274,22 @@ pub async fn load_modules() -> context::Result<()> {
                 \treferences : {},\n\
                 \tis_loaded : AtomicBool::new(false),\n\
             }})", 
-                // module.id(&ident_kind),
                 content_type,
                 module.id,
                 module.ident(&ident_kind).to_lowercase(),
                 module.ident(&ident_kind),
                 references,
-                // imports,
-                // exports,
             );
 
             table.push(format!("({},{})",module.id,definition));
         }
-        // let table_len = table.len();
         let table = table.join(",\n");
         context_rs += r###"
         impl Context {
             pub fn new() -> Self {
 
         "###;
-
-        // text += &format!("\nlet modules : [(ModuleId,Arc<Module>);{}] = [\n{}\n];\n",table_len, table);
         context_rs += &format!("\nlet content : ContentMap = [\n{}\n].into_iter().collect();\n", table);
-
         context_rs += r###"
                 Context {
                     inner : Arc::new(Inner::new(content))
@@ -353,25 +298,6 @@ pub async fn load_modules() -> context::Result<()> {
         }
         "###;
         
-
-        // let mut groups = Vec::new();
-        // let mut comments = Vec::new();
-        // for group in collection.groups.iter() {
-        //     let ids = group.iter().map(|m|m.id.to_string()).collect::<Vec<_>>().join(", ");
-        //     let names = group.iter().map(|m|m.ident.clone()).collect::<Vec<_>>().join(", ");
-        //     groups.push(format!("&[{}]",ids));
-        //     comments.push(names)
-        // }
-        // let comments = comments.join("\n// ");
-        // let groups = groups.join(",\n\t");
-
-        // text += &format!("\n// {}\n", comments);
-        // text += &format!("\nconst DEPENDENCIES : &[&[ModuleId]] = &[\n\t{}\n];\n", groups);
-
-        // text += r###"
-        // }
-        // "###;
-
         let path_lib_rs = self.ctx.target_folder_src.join("lib.rs");
         let path_content_rs = self.ctx.target_folder_src.join("content.rs");
         let path_modules_rs = self.ctx.target_folder_src.join("context.rs");
@@ -382,7 +308,7 @@ pub async fn load_modules() -> context::Result<()> {
         // file_size += std::fs::metadata(&path_lib_rs)?.len() as f64 / 1024.0;
         file_size += std::fs::metadata(&path_content_rs)?.len() as f64 / 1024.0;
         // file_size += std::fs::metadata(&path_modules_rs)?.len() as f64 / 1024.0;
-        log_info!("Generating","... modules: {} file size: {:1.0} Kb", collection.modules.len(), file_size);
+        log_info!("Generating","... modules: {} content file size: {:1.0} Kb", collection.modules.len(), file_size);
 
         Ok(())
     }
@@ -394,7 +320,7 @@ pub async fn load_modules() -> context::Result<()> {
             // wasm-pack build --dev --target web --out-name $NAME --out-dir root/wasm
             // wasm-pack build --target web --out-name $NAME --out-dir root/wasm
 
-            let folder = self.ctx.project_folder.join(&wasm.folder).canonicalize().await?;
+            let folder = self.ctx.project_folder.join(&wasm.folder).canonicalize()?;
 
             let outdir = folder.join(&wasm.outdir);//.join(wasm.name);
             let outdir = outdir.to_str().unwrap();

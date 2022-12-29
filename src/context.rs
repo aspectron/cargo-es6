@@ -12,6 +12,15 @@ impl Default for Options {
 }
 
 #[derive(Debug)]
+pub enum Replace {
+    Location {
+        regex : Option<Regex>,
+        from : Option<String>,
+        to : String,
+    }
+} 
+
+#[derive(Debug)]
 pub struct Context {
 
     pub manifest : Manifest,
@@ -22,6 +31,7 @@ pub struct Context {
     pub project_folder : PathBuf,
     pub node_modules : PathBuf,
     pub ignore : Filter,
+    pub replace : Option<Vec<Replace>>,
 }
 
 impl Context {
@@ -36,7 +46,7 @@ impl Context {
         let manifest = Manifest::load(&manifest_toml).await?;
         let manifest_folder = manifest_toml.parent().unwrap().to_path_buf();
 
-        let project_file = manifest_folder.join(&manifest.settings.project).canonicalize().await?;
+        let project_file = manifest_folder.join(&manifest.settings.project).canonicalize()?;
         let project_folder = project_file.parent().unwrap().to_path_buf();
         let node_modules = project_folder.join("node_modules");
         let target_folder = manifest_folder.join(&manifest.settings.target);//.canonicalize().await?;
@@ -52,6 +62,47 @@ impl Context {
             Filter::default()
         };
 
+        let mut replace = Vec::new();
+        if let Some(items) = &manifest.settings.replace {
+            for item in items {
+                match item {
+                    crate::manifest::Replace::Location { 
+                        regex, 
+                        from,
+                        to } => {
+                        
+                        if regex.is_none() && from.is_none() {
+                            return Err(format!("[settings].replace must contain `regex` or `from`").into());
+                        }
+
+                        let r = if let Some(regex) = regex {
+                            let r = Regex::new(regex).map_err(|err|{
+                                println!("");
+                                println!("Error compiling replace Regex expression: `{}`", regex);
+                                println!("");
+                                err
+                            })?;
+                            Some(r)
+                        } else {
+                            None
+                        };
+
+                        replace.push(Replace::Location {
+                            regex: r,
+                            from : from.clone(),
+                            to : to.clone()
+                        });
+                    }
+                }
+            }
+        }
+
+        let replace = if replace.is_empty() {
+            None
+        } else {
+            Some(replace)
+        };
+
         let ctx = Context {
             manifest,
             // target_file,
@@ -61,6 +112,7 @@ impl Context {
             project_folder,
             node_modules,
             ignore,
+            replace,
         };
 
         Ok(ctx)
@@ -85,6 +137,36 @@ impl Context {
         //     async_std::fs::remove_dir_all(&self.target_folder_src).await?;
         // }
         Ok(())
+    }
+
+    pub fn replace(&self, text: &str) -> String {
+        let mut text = text.to_string();
+        if let Some(replace) = &self.replace {
+            for r in replace.iter() {
+                match r {
+                    crate::context::Replace::Location {
+                        regex, from, to
+                    } => {
+                        if let Some(regex) = regex {
+                            text = regex.replace_all(&text,to).to_string();
+                        } else if let Some(from) = from {
+                            // TODO: CLEANUP
+                            // if text.starts_with("$") {
+                            //     println!("replacing {}",l);
+                            //     l = location.replace(from,to);                            
+                            //     println!("result {}",l);
+                            // } else {
+                                text = text.replace(from,to);                            
+                            // }
+                        } else {
+                            panic!("replace directivec has no regex or from values");
+                        }
+                    }
+                }
+            }
+        }
+
+        text
     }
 
 }

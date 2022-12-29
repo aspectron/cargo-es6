@@ -31,18 +31,17 @@ impl NodeModule {
     pub async fn load<P>(ctx: &Context, absolute: P, package_json: PackageJson) -> Result<NodeModule> 
     where P: AsRef<Path> {
 
-        // let files = Vec::new();
         let absolute = absolute.as_ref();
         let folder = absolute.parent().unwrap();
 
         let exports = if let Some(node_module_exports) = package_json.exports {
             let mut exports = HashMap::new();
             for (file, export) in node_module_exports.iter() {
-                let path = folder.join(&export.default).canonicalize().await?;
+                let path = folder.join(&export.default).canonicalize()?;
                 let module = Content::load(ctx,ContentType::Module, folder, &path).await?;
                 exports.insert(file.to_string(), Arc::new(module));
                 if let Some(development) = &export.development {
-                    let path = folder.join(development).canonicalize().await?;
+                    let path = folder.join(development).canonicalize()?;
                     let module = Content::load(ctx,ContentType::Module,folder, &path).await?;
                     exports.insert(file.to_string(), Arc::new(module));
                 }
@@ -52,21 +51,18 @@ impl NodeModule {
             HashMap::new()
         };
 
-        let filter = Filter::new(&["*.{js,mjs}"]);
+        let filter = Filter::new(&["*.{js,mjs,css}"]);
         let relative_files = if let Some(files) = package_json.files {
 
             let globs = files
                 .iter()
                 .map(|s|s.as_str())
                 .collect::<Vec<_>>();
-            // globs.push("*.js");
-            // println!("globs: {:#?}", globs);
             let aggregator = Filter::new(&globs);
             let list = get_files(&folder, Some(&aggregator),Some(&filter)).await?;
-            // println!("{:#?}",list);
             list
         } else {
-            let aggregator = Filter::new(&["*.{js,mjs}"]);
+            let aggregator = Filter::new(&["*.{js,mjs,css}"]);
             get_files(&folder, Some(&aggregator),None).await?
         };
 
@@ -85,7 +81,7 @@ impl NodeModule {
             root_file = "index.js".to_string();
         }
 
-        let root = match folder.join(Path::new(&root_file)).canonicalize().await {
+        let root = match folder.join(Path::new(&root_file)).canonicalize() {
             Ok(path) => {
                 let relative = path.strip_prefix(folder).unwrap().to_path_buf();
                 let m = Arc::new(Content::load(ctx,ContentType::Module, folder,&relative).await?);

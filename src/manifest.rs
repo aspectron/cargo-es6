@@ -1,5 +1,4 @@
 use async_std::fs::*;
-use async_std::path::{PathBuf, Path};
 use crate::prelude::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -33,9 +32,9 @@ impl Manifest {
         ];
 
         for location in locations.iter() {
-            match location.canonicalize().await {
+            match location.canonicalize() {
                 Ok(location) => {
-                    if location.is_file().await {
+                    if location.is_file() {
                         return Ok(location)
                     }
                 }, 
@@ -86,7 +85,8 @@ pub struct Settings {
     pub ignore : Option<Vec<String>>,
     pub wasm : Option<Wasm>,
     pub verbose : Option<bool>,
-    pub enums : Option<Enums>
+    pub enums : Option<Enums>,
+    pub replace : Option<Vec<Replace>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -101,4 +101,14 @@ pub struct Wasm {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Enums {
     pub exports : Vec<String>
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Replace {
+    Location {
+        regex : Option<String>,
+        from : Option<String>,
+        to : String,
+    }
 }

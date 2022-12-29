@@ -10,7 +10,6 @@ pub struct Modules {
 }
 
 impl Modules {
-// pub async fn load_node_modules(ctx: &Context) -> Result<HashMap<String,Arc<NodeModule>>> {
     pub async fn load(ctx: &Arc<Context>) -> Result<Modules> {
 
         let node_modules = &ctx.node_modules;
@@ -82,10 +81,16 @@ impl Modules {
 
     }
 
-    pub async fn resolve(&self, location: &str, referrer : &Path) -> Result<Option<Arc<Content>>> {
+    // pub async fn resolve(&mut self, location: &str, referrer : &Path) -> Result<Option<Arc<Content>>> {
+    pub async fn resolve(&mut self, reference : &Reference, content : &Content) -> Result<Option<Arc<Content>>> {
 
+        let location = &reference.location.clone();
+        let referrer = content.absolute.clone();
+
+        // let location = &self.ctx.replace(&location);
+        
         let relative_re = Regex::new(r"^.?.?/").unwrap();
-        // println!("location: {}", location);
+
         let absolute = if relative_re.is_match(location) {
             
             let location = if location.starts_with("./") {
@@ -96,10 +101,25 @@ impl Modules {
                 location
             };
 
-            let origin = referrer.parent().unwrap();
-            // println!("origin: {}", origin.display());
-            let absolute = origin.join(location).canonicalize().await?;
-            absolute
+            let paths = [
+                reference.referrer.parent().unwrap().join(location),
+                content.absolute.parent().unwrap().join(location),
+                content.folder.join(location),
+                content.base_folder.join(location)
+
+            ];
+
+            let path = paths
+                .iter()
+                .find(|p|{
+                    p.canonicalize().is_ok()
+                });
+
+            if path.is_none() {
+                return Err(format!("Unable to resolve location `{}`", location).into())
+            }
+
+            Path::new(&path.unwrap().canonicalize()?).to_path_buf()
         } else {
 
             if let Some(node_module) = self.node_modules_by_name.get(location) {
@@ -116,17 +136,25 @@ impl Modules {
         if let Some(target) = self.file_content_by_absolute.get(&absolute) {
             Ok(Some(target.clone()))
         } else {
-            let relative = referrer.strip_prefix(&self.ctx.project_folder)?;
-            let target = absolute.strip_prefix(&self.ctx.project_folder)?;
 
-            if !self.ctx.ignore.is_match(&relative.to_string_lossy()) && !self.ctx.ignore.is_match(&target.to_string_lossy()) {
-                log_warn!("Resolver","+--");
-                log_warn!("","| Unable to resolve: `{}`", style(location).yellow());
-                log_warn!("","| absolute: `{}`", style(absolute.display()).yellow());
-                log_warn!("","| referrer: `{}`", style(referrer.display()).yellow());
-                log_warn!("","+--");
+            // last resort, try base folder
+            let absolute = content.base_folder.join(location);
+            if let Some(target) = self.file_content_by_absolute.get(&absolute) {
+                Ok(Some(target.clone()))
+            } else {
+    
+                let relative = referrer.strip_prefix(&self.ctx.project_folder)?;
+                let target = absolute.strip_prefix(&self.ctx.project_folder)?;
+
+                if !self.ctx.ignore.is_match(&relative.to_string_lossy()) && !self.ctx.ignore.is_match(&target.to_string_lossy()) {
+                    log_warn!("Resolver","+--");
+                    log_warn!("","| Unable to resolve: `{}`", style(location).yellow());
+                    log_warn!("","| absolute: `{}`", style(absolute.display()).yellow());
+                    log_warn!("","| referrer: `{}`", style(referrer.display()).yellow());
+                    log_warn!("","+--");
+                }
+                Ok(None)
             }
-            Ok(None)
         }
 
     }

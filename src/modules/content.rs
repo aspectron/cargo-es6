@@ -23,6 +23,8 @@ pub struct Content {
     pub ident : String,
     pub component : String,
     pub folder: PathBuf,
+    // pub node_module_folder : Option<PathBuf>,
+    pub base_folder : PathBuf,
     pub absolute : PathBuf,
     pub references : Option<Vec<Reference>>,
     // pub exports : Option<Vec<Reference>>,
@@ -37,7 +39,13 @@ impl Content {
     pub async fn load<P>(ctx: &Context, content_type:ContentType, folder :P, path: P) -> Result<Content> 
     where P: AsRef<Path> {
         let folder = folder.as_ref();
+        let base_folder = folder.to_path_buf();
+        
         let path = path.as_ref();
+        let path_str = path.to_str().unwrap();
+        let path_str = ctx.replace(path_str);
+        let path = Path::new(&path_str);
+
         let absolute = folder.join(path);
         let parent = absolute.parent().unwrap();
         let component = Path::new(path).file_stem().unwrap().to_string_lossy().to_case(Case::Pascal);
@@ -46,41 +54,35 @@ impl Content {
 
         let text = async_std::fs::read_to_string(&absolute).await?;
 
+        let text = match content_type {
+            ContentType::Module | ContentType::Script => {
+                let comment_re = Regex::new(r###"^\s*//"###).unwrap();
+                text.split("\n").filter(|s| !comment_re.is_match(s) && !s.trim().is_empty()).collect::<Vec<_>>().join("\n")
+            },
+            _ => { text }
+        };
 
         let (references, text) = gather_references(&text, &absolute)?;
 
-        // let (text,imports,exports) = match content_type {
-        //     ContentType::Module | ContentType::Script => {
-        //         let comment_re = Regex::new(r###"^\s*//"###).unwrap();
-        //         let text = text.split("\n").filter(|s| !comment_re.is_match(s) && !s.trim().is_empty()).collect::<Vec<_>>().join("\n");
-        
-        //         let (imports, text) = gather_references(ReferenceKind::Module, &text, &absolute)?;
-        //         let (exports, text) = gather_references(ReferenceKind::Export, &text, &absolute)?;
-        //         let (links, text) = gather_stylesheets(&text, &absolute)?;
+        let references = if let Some(mut references) = references {
 
-        //         if !links.is_empty() {
-        //             println!("links: {:#?}", links);
-        //         }
-
-        //         (text, Some(imports), Some(exports))
-        //     },
-        //     ContentType::Style => {
-        //         (text, None, None)
-        //     },
-        // };
+            for reference in references.iter_mut() {
+                // let location = ctx
+                reference.location = ctx.replace(&reference.location);
+            }
+            Some(references)
+        } else {
+            references
+        };
 
         let ident_re_blank = Regex::new(r"(node_modules/|@|.js)")?;
         let ident_re_usc = Regex::new(r"/|-|\.")?;
         let ident = absolute.strip_prefix(&ctx.project_folder)?.to_string_lossy().to_string();
-        // let ident = ident_path
-        //     .replace("node_modules/","");
         let ident = ident_re_blank.replace_all(&ident,"")
             .to_string();
         let ident = ident_re_usc.replace_all(&ident, "_")
             .to_string()
             .to_uppercase();
-
-        // println!("{}",ident);
 
         unsafe { FILE_MODULE_GID += 1 };
         let id = unsafe { FILE_MODULE_GID };
@@ -89,10 +91,10 @@ impl Content {
             id,
             ident,
             component,
-            folder: parent.to_path_buf(), //folder.to_path_buf(),
-            absolute : absolute,// path.to_path_buf(),
+            base_folder,
+            folder: parent.to_path_buf(),
+            absolute : absolute,
             references,
-            // exports,
             content_type,
             content: text.to_string(),
         };
@@ -134,15 +136,6 @@ impl Content {
                 }
             }
         }
-        // if let Some(exports) = &self.exports {
-        //     for export in exports.iter() {
-        //         if let Some(reference) = export.reference() {
-        //             list.push(reference);
-        //         } else {
-        //             export.warn();
-        //         }
-        //     }
-        // }
         list
     }
 
