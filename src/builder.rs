@@ -40,7 +40,7 @@ impl Builder {
 
         println!("");
 
-        let module = modules.file_modules_by_absolute.get(&self.ctx.project_file);
+        let module = modules.file_content_by_absolute.get(&self.ctx.project_file);
         if let Some(module) = module {
             self.generate(&module, &modules).await?;
         } else {
@@ -58,7 +58,7 @@ impl Builder {
     pub async fn resolve(self: &Arc<Builder>, modules: &Modules) -> Result<()> {
 
 
-        for module in modules.file_modules.iter() {
+        for module in modules.file_content.iter() {
 
             // println!("... resolving: `{}`", module.absolute.display());
             // for module in node_module.files.iter() {
@@ -70,45 +70,49 @@ impl Builder {
         Ok(())
     }
 
-    pub async fn resolve_module(self: &Arc<Builder>, module: &FileModule, modules: &Modules) -> Result<()> {
+    pub async fn resolve_module(self: &Arc<Builder>, module: &Content, modules: &Modules) -> Result<()> {
 
-        for import in module.imports.iter() {
-            match modules.resolve(&import.location,&import.referrer).await {
-                Ok(target) => {
-                    *import.reference.lock().unwrap() = target;//.clone();
-                },
-                Err(_err) => {
-                    let relative = import.referrer.strip_prefix(&self.ctx.project_folder)?;
-                    if !self.ctx.ignore.is_match(&relative.to_string_lossy()) && !self.ctx.ignore.is_match(&import.location) {
-                        log_warn!("Resolver","referrer: `{}`",import.referrer.display());
-                        log_warn!("","target: `{}`",import.location);
+        if let Some(references) = &module.references {
+            for reference in references.iter() {
+                match modules.resolve(&reference.location,&reference.referrer).await {
+                    Ok(target) => {
+                        *reference.reference.lock().unwrap() = target;//.clone();
+                    },
+                    Err(_err) => {
+                        let relative = reference.referrer.strip_prefix(&self.ctx.project_folder)?;
+                        if !self.ctx.ignore.is_match(&relative.to_string_lossy()) && !self.ctx.ignore.is_match(&reference.location) {
+                            log_warn!("Resolver","referrer: `{}`",reference.referrer.display());
+                            log_warn!("","target: `{}`",reference.location);
+                        }
+                        // import.warn();
+                        // log_error!("{}",err);
                     }
-                    // import.warn();
-                    // log_error!("{}",err);
                 }
             }
         }
 
-        for export in module.exports.iter() {
-            match modules.resolve(&export.location,&export.referrer).await {
-                Ok(target) => {
-                    *export.reference.lock().unwrap() = target;
-                },
-                Err(_err) => {
-                    log_warn!("Export","`{}`",export.referrer.display());
-                    log_warn!("Target","`{}`",export.location);
-                    // export.warn();
-                    // log_error!("{}",err);
-                }
-            }
-        }
+        // if let Some(exports) = &module.exports {
+        //     for export in exports.iter() {
+        //         match modules.resolve(&export.location,&export.referrer).await {
+        //             Ok(target) => {
+        //                 *export.reference.lock().unwrap() = target;
+        //             },
+        //             Err(_err) => {
+        //                 log_warn!("Export","`{}`",export.referrer.display());
+        //                 log_warn!("Target","`{}`",export.location);
+        //                 // export.warn();
+        //                 // log_error!("{}",err);
+        //             }
+        //         }
+        //     }
+        // }
 
 
         Ok(())
     }
 
     // pub async fn get_references(self: &Arc<Builder>, enums : &Enums, modules: &Modules) -> Result<Vec<Arc<FileModule>>> {
-    pub async fn get_references(self: &Arc<Builder>, files : &Vec<String>, modules: &Modules) -> Result<Vec<Arc<FileModule>>> {
+    pub async fn get_references(self: &Arc<Builder>, files : &Vec<String>, modules: &Modules) -> Result<Vec<Arc<Content>>> {
         // let text = String::new();
 
         // let exports = &enums.exports;
@@ -131,7 +135,7 @@ impl Builder {
 
         let mut references = Vec::new();
         for target in targets.iter() {
-            let module = modules.file_modules_by_absolute.get(target); //modules.resolve(location, referrer)
+            let module = modules.file_content_by_absolute.get(target); //modules.resolve(location, referrer)
             if let Some(module) = module {
 
                 let list = module.references();
@@ -151,7 +155,7 @@ impl Builder {
         Ok(references)
     }
 
-    pub async fn generate(self: &Arc<Builder>, root_module : &Arc<FileModule>, modules: &Modules) -> Result<()> {
+    pub async fn generate(self: &Arc<Builder>, root_module : &Arc<Content>, modules: &Modules) -> Result<()> {
 
         let module_id_repr = "u64";
 
@@ -192,20 +196,20 @@ impl Builder {
         let lib_rs = r###"
 use wasm_bindgen::prelude::*;
 mod content;
-mod modules;
-pub use modules::*;
+mod context;
+pub use context::*;
 
 #[wasm_bindgen]
-pub async fn load_modules() -> modules::Result<()> {
+pub async fn load_modules() -> context::Result<()> {
     workflow_wasm::panic::init_console_panic_hook();
-    let ctx = modules::Context::new();
+    let ctx = Context::new();
     ctx.load_all().await?;
     Ok(())
 }
 "###;
 
-        let mut modules_rs = String::new();
-        modules_rs += r###"
+        let mut context_rs = String::new();
+        context_rs += r###"
         use std::sync::{
             Arc,
             Mutex,
@@ -213,20 +217,21 @@ pub async fn load_modules() -> modules::Result<()> {
         };
         use workflow_dom::loader::{
             // Module,
-            ModuleMap,
+            ContentType,
+            ContentMap,
             Id,
             Reference,
             Context as Inner
         };
-        pub use workflow_dom::loader::Module;
+        pub use workflow_dom::loader::Content;
         pub use workflow_dom::result::Result;
         pub use workflow_dom::error::Error;
         use crate::content;
 
         "###;
-        modules_rs += &format!("\nconst ROOT: Id = {};\n",root_module.id);
+        context_rs += &format!("\nconst ROOT: Id = {};\n",root_module.id);
 
-        modules_rs += r###"
+        context_rs += r###"
         pub struct Context {
             inner : Arc<Inner>
         }
@@ -247,64 +252,78 @@ pub async fn load_modules() -> modules::Result<()> {
         "###;
         // modules_rs += &format!("\npub type ModuleId = {};\n", module_id_repr);
         
-        modules_rs += r###"
+        context_rs += r###"
 
 "###;
 
         if !self.ctx.manifest.settings.verbose.unwrap_or(false) {
-            modules_rs = modules_rs.replace("log_info","// log_info");
+            context_rs = context_rs.replace("log_info","// log_info");
         }
 
-        modules_rs += &enums;
+        context_rs += &enums;
 
         let mut table = Vec::new();
         for module in collection.modules.iter() {
 
             let mut references = Vec::new();
-            for import in module.imports.iter() {
-                let reference = import
-                    .reference()
-                    .expect(&format!("failure dereferencing `{}` -> `{}`", import.referrer.display(),import.location));
-                
-                
-                match import.kind {
-                    ReferenceKind::Style => {
-                        references.push(format!("(Reference::Style,None,{})",reference.id));
-                    },
-                    ReferenceKind::Module => {
-                        if let Some(what) = &import.what {
-                            references.push(format!("(Reference::Module,Some(\"{}\"),{})",what,reference.id));
-                        } else {
-                            references.push(format!("(Reference::Module,None,{})",reference.id));
+            if let Some(targets) = &module.references {
+                for reference in targets.iter() {
+                    let content = reference
+                        .content()
+                        .expect(&format!("failure dereferencing `{}` -> `{}`", reference.referrer.display(),reference.location));
+                    
+                    
+                    match reference.kind {
+                        ReferenceKind::Style => {
+                            references.push(format!("(Reference::Style,None,{})",content.id));
+                        },
+                        ReferenceKind::Module => {
+                            if let Some(what) = &reference.what {
+                                references.push(format!("(Reference::Module,Some(\"{}\"),{})",what,content.id));
+                            } else {
+                                references.push(format!("(Reference::Module,None,{})",content.id));
+                            }
+                        },
+                        ReferenceKind::Script => {
+                        },
+                        ReferenceKind::Export => {
+                            references.push(format!("(Reference::Export,Some(\"{}\"),{})",reference.what.as_ref().unwrap(),content.id));
                         }
-                    },
-                    _ => {
-                        panic!("wtf");
+
                     }
                 }
             }
             // let references = references.join(",");
             
             // let mut exports = Vec::new();
-            for export in module.exports.iter() {
-                let reference = export.reference().unwrap();
-                references.push(format!("(Reference::Export,Some(\"{}\"),{})",export.what.as_ref().unwrap(),reference.id));
-            }
-            let references = references.join(",");
+            // if let Some(exports) = &module.exports {
+            //     for export in exports.iter() {
+            //         let reference = export.reference().unwrap();
+            //     }
+            // }
+            let references = if references.is_empty() {
+                "None".to_string()
+            } else {
+                format!("Some(&[{}])",references.join(","))
+            };
+
+            let content_type = "ContentType::Module";
 
             // println!("{}",module.ident);            
             // text += &format!("\n\t\t\tconst MODULE_{}: Module = Module {{\n\
                 // \timports : &[{}],\n\
                 // \texports : &[{}],\n\
-            let definition = format!("Arc::new(Module {{\n\
+            let definition = format!("Arc::new(Content {{\n\
+                \tcontent_type : {},\n\
                 \turl : Mutex::new(None),\n\
                 \tid : {},\n\
                 \tident : \"{}\",\n\
                 \tcontent : content::{},\n\
-                \treferences : &[{}],\n\
+                \treferences : {},\n\
                 \tis_loaded : AtomicBool::new(false),\n\
             }})", 
                 // module.id(&ident_kind),
+                content_type,
                 module.id,
                 module.ident(&ident_kind).to_lowercase(),
                 module.ident(&ident_kind),
@@ -317,18 +336,18 @@ pub async fn load_modules() -> modules::Result<()> {
         }
         // let table_len = table.len();
         let table = table.join(",\n");
-        modules_rs += r###"
+        context_rs += r###"
         impl Context {
             pub fn new() -> Self {
 
         "###;
 
         // text += &format!("\nlet modules : [(ModuleId,Arc<Module>);{}] = [\n{}\n];\n",table_len, table);
-        modules_rs += &format!("\nlet modules : ModuleMap = [\n{}\n].into_iter().collect();\n", table);
+        context_rs += &format!("\nlet content : ContentMap = [\n{}\n].into_iter().collect();\n", table);
 
-        modules_rs += r###"
+        context_rs += r###"
                 Context {
-                    inner : Arc::new(Inner::new(modules))
+                    inner : Arc::new(Inner::new(content))
                 }
             }
         }
@@ -355,10 +374,10 @@ pub async fn load_modules() -> modules::Result<()> {
 
         let path_lib_rs = self.ctx.target_folder_src.join("lib.rs");
         let path_content_rs = self.ctx.target_folder_src.join("content.rs");
-        let path_modules_rs = self.ctx.target_folder_src.join("modules.rs");
+        let path_modules_rs = self.ctx.target_folder_src.join("context.rs");
         async_std::fs::write(&path_lib_rs, &lib_rs).await?;
         async_std::fs::write(&path_content_rs, &content_rs).await?;
-        async_std::fs::write(&path_modules_rs, &modules_rs).await?;
+        async_std::fs::write(&path_modules_rs, &context_rs).await?;
         let mut file_size = 0.0;
         // file_size += std::fs::metadata(&path_lib_rs)?.len() as f64 / 1024.0;
         file_size += std::fs::metadata(&path_content_rs)?.len() as f64 / 1024.0;

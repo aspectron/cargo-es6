@@ -62,8 +62,26 @@ impl Manifest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ProjectType {
+    Module,
+    Script,
+}
+
+impl Into<ContentType> for ProjectType {
+    fn into(self) -> ContentType {
+        match self {
+            ProjectType::Module => ContentType::Module,
+            ProjectType::Script => ContentType::Script,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Settings {
     pub project : String,
+    #[serde(rename = "type")]
+    pub project_type : ProjectType,
     pub target : String,
     pub ignore : Option<Vec<String>>,
     pub wasm : Option<Wasm>,

@@ -10,7 +10,7 @@ pub use crate:: {
     utils::*,
     filter::*,
     modules::reference::*,
-    modules::file_module::*,
+    modules::content::*,
     modules::node_module::*,
     modules::collection::*,
     modules::utils::*,

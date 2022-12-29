@@ -22,9 +22,9 @@ pub struct NodeModule {
     pub absolute : PathBuf,
     pub name : String,
     pub full_name : Option<String>,
-    pub root : Option<Arc<FileModule>>,
-    pub exports : HashMap<String, Arc<FileModule>>,
-    pub files : Vec<Arc<FileModule>>,
+    pub root : Option<Arc<Content>>,
+    pub exports : HashMap<String, Arc<Content>>,
+    pub files : Vec<Arc<Content>>,
 }
 
 impl NodeModule {
@@ -39,11 +39,11 @@ impl NodeModule {
             let mut exports = HashMap::new();
             for (file, export) in node_module_exports.iter() {
                 let path = folder.join(&export.default).canonicalize().await?;
-                let module = FileModule::load(ctx,folder, &path).await?;
+                let module = Content::load(ctx,ContentType::Module, folder, &path).await?;
                 exports.insert(file.to_string(), Arc::new(module));
                 if let Some(development) = &export.development {
                     let path = folder.join(development).canonicalize().await?;
-                    let module = FileModule::load(ctx,folder, &path).await?;
+                    let module = Content::load(ctx,ContentType::Module,folder, &path).await?;
                     exports.insert(file.to_string(), Arc::new(module));
                 }
             }
@@ -73,7 +73,7 @@ impl NodeModule {
 
         let mut files = Vec::new();
         for relative in relative_files.iter() {
-            files.push(Arc::new(FileModule::load(ctx,folder,relative).await?));
+            files.push(Arc::new(Content::load(ctx,ContentType::Module,folder,relative).await?));
         } 
 
         let mut root_file = package_json
@@ -88,7 +88,7 @@ impl NodeModule {
         let root = match folder.join(Path::new(&root_file)).canonicalize().await {
             Ok(path) => {
                 let relative = path.strip_prefix(folder).unwrap().to_path_buf();
-                let m = Arc::new(FileModule::load(ctx,folder,&relative).await?);
+                let m = Arc::new(Content::load(ctx,ContentType::Module, folder,&relative).await?);
                 files.push(m.clone());
                 Some(m)
             },

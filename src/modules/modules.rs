@@ -5,8 +5,8 @@ pub struct Modules {
     pub node_modules : Vec<Arc<NodeModule>>,
     pub node_modules_by_name : HashMap<String, Arc<NodeModule>>,
     pub node_modules_by_absolute : HashMap<PathBuf, Arc<NodeModule>>,
-    pub file_modules : Vec<Arc<FileModule>>,
-    pub file_modules_by_absolute : HashMap<PathBuf, Arc<FileModule>>,
+    pub file_content : Vec<Arc<Content>>,
+    pub file_content_by_absolute : HashMap<PathBuf, Arc<Content>>,
 }
 
 impl Modules {
@@ -64,7 +64,8 @@ impl Modules {
             file_modules_by_absolute.insert(file_module.absolute.clone(), file_module.clone());
         }
 
-        let project = Arc::new(FileModule::load(&ctx,&ctx.project_folder, &ctx.project_file).await?);
+        let content_type : ContentType = ctx.manifest.settings.project_type.clone().into();
+        let project = Arc::new(Content::load(&ctx,content_type,&ctx.project_folder, &ctx.project_file).await?);
         file_modules.push(project.clone());
         file_modules_by_absolute.insert(ctx.project_file.clone(), project.clone());
 
@@ -73,15 +74,15 @@ impl Modules {
             node_modules,
             node_modules_by_name,
             node_modules_by_absolute,
-            file_modules,
-            file_modules_by_absolute,
+            file_content: file_modules,
+            file_content_by_absolute: file_modules_by_absolute,
         };
 
         Ok(node_modules)
 
     }
 
-    pub async fn resolve(&self, location: &str, referrer : &Path) -> Result<Option<Arc<FileModule>>> {
+    pub async fn resolve(&self, location: &str, referrer : &Path) -> Result<Option<Arc<Content>>> {
 
         let relative_re = Regex::new(r"^.?.?/").unwrap();
         // println!("location: {}", location);
@@ -112,7 +113,7 @@ impl Modules {
         };
 
 
-        if let Some(target) = self.file_modules_by_absolute.get(&absolute) {
+        if let Some(target) = self.file_content_by_absolute.get(&absolute) {
             Ok(Some(target.clone()))
         } else {
             let relative = referrer.strip_prefix(&self.ctx.project_folder)?;

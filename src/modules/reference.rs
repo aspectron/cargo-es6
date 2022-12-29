@@ -27,7 +27,7 @@ pub struct Reference {
     pub what: Option<String>,
     pub location: String,
     // pub component : String,
-    pub reference: Mutex<Option<Arc<FileModule>>>,
+    pub reference: Mutex<Option<Arc<Content>>>,
 }
 
 impl Reference {
@@ -48,13 +48,15 @@ impl Reference {
         }
     }
 
-    pub fn reference(&self) -> Option<Arc<FileModule>> {
+    pub fn content(&self) -> Option<Arc<Content>> {
         self.reference.lock().unwrap().as_ref().cloned()
     }
 
     pub fn warn(&self) {
-        log_warn!("Warning","+--- import");
-        log_warn!("","| Unable to resolve: `{:?}`", self.what);
+        log_warn!("Warning","+--- Unable to resolve");
+        if let Some(what) = &self.what {
+            log_warn!("","| what: `{:?}`", what);
+        }
         log_warn!("","| location: `{}`", self.location);
         log_warn!("","| referrer: `{}`", self.referrer.display());
         log_warn!("","+---");

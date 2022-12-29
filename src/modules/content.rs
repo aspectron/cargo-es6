@@ -10,21 +10,31 @@ pub enum IdentKind {
     Hex,
 }
 
+#[derive(Debug, Clone)]
+pub enum ContentType {
+    Style,
+    Module,
+    Script,
+}
+
 #[derive(Debug)]
-pub struct FileModule {
+pub struct Content {
     pub id : ModuleId,
     pub ident : String,
     pub component : String,
     pub folder: PathBuf,
     pub absolute : PathBuf,
-    pub imports : Vec<Reference>,
-    pub exports : Vec<Reference>,
+    pub references : Option<Vec<Reference>>,
+    // pub exports : Option<Vec<Reference>>,
+    // pub styles : Option<Vec<Reference>>,
+    // pub stylesheets : Vec<Reference>,
+    pub content_type : ContentType,
     pub content : String,
 }
 
 
-impl FileModule {
-    pub async fn load<P>(ctx: &Context, folder :P, path: P) -> Result<FileModule> 
+impl Content {
+    pub async fn load<P>(ctx: &Context, content_type:ContentType, folder :P, path: P) -> Result<Content> 
     where P: AsRef<Path> {
         let folder = folder.as_ref();
         let path = path.as_ref();
@@ -36,11 +46,28 @@ impl FileModule {
 
         let text = async_std::fs::read_to_string(&absolute).await?;
 
-        let comment_re = Regex::new(r###"^\s*//"###).unwrap();
-        let text = text.split("\n").filter(|s| !comment_re.is_match(s) && !s.trim().is_empty()).collect::<Vec<_>>().join("\n");
 
-        let (imports, text) = gather_references(ReferenceKind::Module, &text, &absolute)?;
-        let (exports, text) = gather_references(ReferenceKind::Export, &text, &absolute)?;
+        let (references, text) = gather_references(&text, &absolute)?;
+
+        // let (text,imports,exports) = match content_type {
+        //     ContentType::Module | ContentType::Script => {
+        //         let comment_re = Regex::new(r###"^\s*//"###).unwrap();
+        //         let text = text.split("\n").filter(|s| !comment_re.is_match(s) && !s.trim().is_empty()).collect::<Vec<_>>().join("\n");
+        
+        //         let (imports, text) = gather_references(ReferenceKind::Module, &text, &absolute)?;
+        //         let (exports, text) = gather_references(ReferenceKind::Export, &text, &absolute)?;
+        //         let (links, text) = gather_stylesheets(&text, &absolute)?;
+
+        //         if !links.is_empty() {
+        //             println!("links: {:#?}", links);
+        //         }
+
+        //         (text, Some(imports), Some(exports))
+        //     },
+        //     ContentType::Style => {
+        //         (text, None, None)
+        //     },
+        // };
 
         let ident_re_blank = Regex::new(r"(node_modules/|@|.js)")?;
         let ident_re_usc = Regex::new(r"/|-|\.")?;
@@ -58,14 +85,15 @@ impl FileModule {
         unsafe { FILE_MODULE_GID += 1 };
         let id = unsafe { FILE_MODULE_GID };
 
-        let module = FileModule {
+        let module = Content {
             id,
             ident,
             component,
             folder: parent.to_path_buf(), //folder.to_path_buf(),
             absolute : absolute,// path.to_path_buf(),
-            imports,
-            exports,
+            references,
+            // exports,
+            content_type,
             content: text.to_string(),
         };
 
@@ -95,26 +123,30 @@ impl FileModule {
         format!("{:x}", self.id)
     }
 
-    pub fn references(&self) -> Vec<Arc<FileModule>> {
+    pub fn references(&self) -> Vec<Arc<Content>> {
         let mut list = Vec::new();
-        for import in self.imports.iter() {
-            if let Some(reference) = import.reference() {
-                list.push(reference);
-            } else {
-                import.warn();
+        if let Some(references) = &self.references {
+            for reference in references.iter() {
+                if let Some(reference) = reference.content() {
+                    list.push(reference);
+                } else {
+                    reference.warn();
+                }
             }
         }
-        for export in self.exports.iter() {
-            if let Some(reference) = export.reference() {
-                list.push(reference);
-            } else {
-                export.warn();
-            }
-        }
+        // if let Some(exports) = &self.exports {
+        //     for export in exports.iter() {
+        //         if let Some(reference) = export.reference() {
+        //             list.push(reference);
+        //         } else {
+        //             export.warn();
+        //         }
+        //     }
+        // }
         list
     }
 
-    pub fn gather(self : &Arc<FileModule>, collection: &mut Collection) -> Result<()> {
+    pub fn gather(self : &Arc<Content>, collection: &mut Collection) -> Result<()> {
 
         self.gather_impl(collection)?;
 
@@ -124,7 +156,7 @@ impl FileModule {
         Ok(())
     }
 
-    fn gather_impl(self : &Arc<FileModule>, collection: &mut Collection) -> Result<()> {
+    fn gather_impl(self : &Arc<Content>, collection: &mut Collection) -> Result<()> {
 
         let mut group = Vec::new();
         let references = self.references();

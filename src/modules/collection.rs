@@ -2,8 +2,8 @@ use crate::prelude::*;
 
 pub struct Collection {
     pub idents : HashSet<String>,
-    pub groups : Vec<Vec<Arc<FileModule>>>,
-    pub modules : Vec<Arc<FileModule>>,
+    pub groups : Vec<Vec<Arc<Content>>>,
+    pub modules : Vec<Arc<Content>>,
 }
 
 impl Collection {
