@@ -1,0 +1,171 @@
+[settings]
+project = "../../flow-ux-rs/flow-ux/flow-ux.js"
+# main = "lib"
+type = "module"
+# output = { type = "module", target = "../../flow-ux-rs/src/flow-ux", folder = "src/flow-ux" }
+target = "../../flow-ux-rs/src/flow-ux" # modules.rs"
+wasm = { name = "flow-ux", folder="../", outdir = "test/flow-ux", dev=true }
+ignore = [
+    "**/xterm*",
+    "**/webcomponents-{sd,ce}*",
+    "**/custom-elements-es5-adapter*",
+    "**/development/*",
+    "**/webcomponentsjs/src/platform/{symbol,promise}.js",
+
+]
+replace = [
+    # { location = { regex = "^\\$\\{baseUrl\\}/", to ="" }}
+    { location = { from = "${baseUrl}", to ="" }}
+]
+verbose = true
+enums = { exports = ["@aspectron/flow-ux/flow-ux.js"] }
+
+[dependencies]
+flow-ux = { git = "git@github.com:aspectron/flow-ux-rs" }
+
+
+# es6 manifest - do not edit below this line
+# generated on 2022-12-30T12:10:55.828159-05:00
+
+[manifest.node_modules]
+0x83cf1acfef940a6d = "@lit/reactive-element"
+0xafd79155a55b104e = "lit"
+0xe19367138938f5fd = "@webcomponents/webcomponentsjs"
+0x536c760c3549adb0 = "xterm"
+0xdd2d2cb8344ef4df = "decimal.js"
+0x4c757202d0828b04 = "xterm-addon-fit"
+0x1d4f07795493efe4 = "xterm-addon-web-links"
+0x6d6fda792d718dad = "bignumber.js"
+0xa371576ff9c207eb = "nats.ws"
+0xfc84d94ba02d3e3b = "js-nuid"
+0x92578e9559ffdbe6 = "@aspectron/flow-ux"
+0xc80478dad8dc68a5 = "lit-html"
+0x432fec734192486e = "lit-element"
+
+[manifest.modules]
+0xada15bd9e7d378a1 = "node_modules/@lit/reactive-element/css-tag.js"
+0x83cf1acfef940a6d = "node_modules/@lit/reactive-element/reactive-element.js"
+0xc80478dad8dc68a5 = "node_modules/lit-html/lit-html.js"
+0xb24fac07a580c758 = "node_modules/@aspectron/flow-ux/src/helpers.js"
+0x6b295dfd5ed93dcc = "node_modules/lit-html/directive-helpers.js"
+0xa9ffaf02ad3376a8 = "node_modules/lit-html/directive.js"
+0x370a08ac21bb2237 = "node_modules/@lit/reactive-element/decorators/property.js"
+0x3677efa393271213 = "node_modules/@lit/reactive-element/decorators/base.js"
+0x5ce2a12538c47093 = "node_modules/@lit/reactive-element/decorators/query-assigned-elements.js"
+0x2ef64b812b91917c = "node_modules/lit-element/lit-element.js"
+0x719b7b942bf38755 = "node_modules/@lit/reactive-element/decorators/custom-element.js"
+0xdd76c5b6bc86e336 = "node_modules/@lit/reactive-element/decorators/state.js"
+0xcc24fb8584d896a0 = "node_modules/@lit/reactive-element/decorators/event-options.js"
+0xeb1a985566fe640a = "node_modules/@lit/reactive-element/decorators/query.js"
+0x4e01b3e1b4c9983c = "node_modules/@lit/reactive-element/decorators/query-all.js"
+0xd96fa0498b94950f = "node_modules/@lit/reactive-element/decorators/query-async.js"
+0xd255bded465a439c = "node_modules/@lit/reactive-element/decorators/query-assigned-nodes.js"
+0x432fec734192486e = "node_modules/lit-element/index.js"
+0x45a8fec44225f5ec = "node_modules/lit-html/directives/repeat.js"
+0x9aba7490e93c1737 = "node_modules/@aspectron/flow-ux/src/flow-async.js"
+0x5d5decd610fc894e = "node_modules/lit-html/async-directive.js"
+0xe997d140ee7bb30b = "node_modules/@aspectron/flow-ux/src/flow-html.js"
+0xa9020fb2c19019f1 = "node_modules/@aspectron/flow-ux/src/pagination.js"
+0xef3f7382398a11d1 = "node_modules/@aspectron/flow-ux/src/base-element.js"
+0xbd964808c2d8d3eb = "node_modules/@aspectron/flow-ux/src/flow-i18n.js"
+0xf6c175c35043352d = "node_modules/@aspectron/flow-ux/src/flow-btn.js"
+0x417907cec90015c1 = "node_modules/@aspectron/flow-ux/src/flow-toggle-btn.js"
+0x498ec023ecfadccd = "node_modules/@aspectron/flow-ux/src/flow-menu.js"
+0xe06f3b531e137106 = "node_modules/lit-html/directives/if-defined.js"
+0x5c182b3c12e9749a = "node_modules/@aspectron/flow-ux/resources/extern/jsQR/jsQR.js"
+0x3d14b8f0cfb85998 = "node_modules/@aspectron/flow-ux/src/flow-d3.js"
+0xad0328e6064f601f = "node_modules/@aspectron/flow-ux/src/flow-sampler.js"
+0x474268e5c0677b64 = "node_modules/@aspectron/flow-ux/src/flow-canvas.js"
+0x158bd02b5c931dae = "node_modules/@aspectron/flow-ux/src/flow-format.js"
+0x37e57c049300bb32 = "node_modules/@aspectron/flow-ux/src/flow-events.js"
+0x94b3d6b50bb89ef4 = "node_modules/@aspectron/flow-ux/src/flow-socket.js"
+0xe8c0439b20bd7f09 = "node_modules/@aspectron/flow-ux/src/flow-socket-rpc.js"
+0x370d408c144c76b6 = "node_modules/@aspectron/flow-ux/src/flow-socket-nats.js"
+0x92d1b3e876e9d61e = "node_modules/@aspectron/flow-ux/src/flow-select.js"
+0x609321fc9900c126 = "node_modules/@aspectron/flow-ux/resources/extern/dz/min/dropzone.min.js"
+0x2bca1a75e27f42e2 = "node_modules/@aspectron/flow-ux/src/flow-code.js"
+0x94a30b6a38647b6b = "node_modules/@aspectron/flow-ux/src/fa-icon.js"
+0x7a8d6704c0e04bab = "node_modules/@aspectron/flow-ux/src/flow-toolbar-item.js"
+0x5e2a3ff777112e84 = "node_modules/@aspectron/flow-ux/src/flow-context.js"
+0xd82da7a0f02768d6 = "node_modules/@aspectron/flow-ux/src/flow-gridstack-panel.js"
+0x4122723787b2fd7c = "node_modules/@aspectron/flow-ux/resources/extern/progressbar.js/progressbar.js"
+0xee087eab509b64d7 = "node_modules/@aspectron/flow-ux/src/svg.js"
+0x69b01206406a7979 = "node_modules/@aspectron/flow-ux/src/flow-anchor.js"
+0x5dd8998b1e28cc7b = "node_modules/@aspectron/flow-ux/src/flow-caption-bar.js"
+0x29816ac2b2e0760a = "node_modules/@aspectron/flow-ux/src/flow-checkbox-styled.js"
+0xc05dd6c2052b298f = "node_modules/@aspectron/flow-ux/src/flow-checkbox.js"
+0xfdd035d71ca11293 = "node_modules/@aspectron/flow-ux/src/flow-radio.js"
+0xb2b2637f1befcf97 = "node_modules/@aspectron/flow-ux/src/flow-radio-btn.js"
+0x9d760f1f6b8d75f3 = "node_modules/@aspectron/flow-ux/src/flow-radio-btns.js"
+0x97b065a49ee1daf1 = "node_modules/@aspectron/flow-ux/src/flow-radios.js"
+0xd86776b3af5a2242 = "node_modules/@aspectron/flow-ux/src/flow-btn-group.js"
+0xf5b02165a8696487 = "node_modules/@aspectron/flow-ux/src/flow-circular-shapes.js"
+0xd73d4927d3188bff = "node_modules/@aspectron/flow-ux/src/flow-form-region.js"
+0x5cc4ad50e57f0f7f = "node_modules/@aspectron/flow-ux/src/flow-svg-test.js"
+0x490a14509ecb4a27 = "node_modules/@aspectron/flow-ux/src/flow-tab.js"
+0x567f4df356f6a895 = "node_modules/@aspectron/flow-ux/src/flow-tabs.js"
+0x717588936c488378 = "node_modules/@aspectron/flow-ux/src/flow-test-element.js"
+0xbc132ddb8ad78345 = "node_modules/@aspectron/flow-ux/src/flow-text-area.js"
+0x24e744096b219f0b = "node_modules/@aspectron/flow-ux/src/flow-form-control.js"
+0xfded3628938b0dae = "node_modules/@aspectron/flow-ux/src/flow-form-mixin.js"
+0xe8066de0d1449a1b = "node_modules/@aspectron/flow-ux/src/flow-folder-input.js"
+0x49b55a909effd180 = "node_modules/@aspectron/flow-ux/src/flow-input.js"
+0x49575704796d1a2d = "node_modules/@aspectron/flow-ux/src/flow-core-input.js"
+0xed508a490c88bebf = "node_modules/@aspectron/flow-ux/src/flow-expandable.js"
+0x6623ca0f6d3dc1b3 = "node_modules/@aspectron/flow-ux/src/flow-qrcode.js"
+0xb54196bfe2d51a70 = "node_modules/@aspectron/flow-ux/src/flow-qrcode-scanner.js"
+0x9e587329fff146d2 = "node_modules/@aspectron/flow-ux/src/flow-group-btns.js"
+0xdf85bd798aca3592 = "node_modules/@aspectron/flow-ux/src/flow-shell-link.js"
+0xa26e5c1cd6e1ccd2 = "node_modules/@aspectron/flow-ux/src/flow-window-link.js"
+0x7529930052957b7e = "node_modules/@aspectron/flow-ux/src/flow-data-badge.js"
+0x247ca523a2a8c14d = "node_modules/@aspectron/flow-ux/src/flow-data-badge-graph.js"
+0x0e01ae1a332e968f = "node_modules/@aspectron/flow-ux/src/flow-dialog.js"
+0x22d156aa8eced429 = "node_modules/@aspectron/flow-ux/src/flow-pages.js"
+0x88737269e3c6901f = "node_modules/@aspectron/flow-ux/src/flow-color-selector.js"
+0xbbd56b35e1b4d67d = "node_modules/@aspectron/flow-ux/src/flow-reference.js"
+0x83c1028af2860b7d = "node_modules/@aspectron/flow-ux/src/flow-graph.js"
+0xb9f15d805e8b846b = "node_modules/@aspectron/flow-ux/src/flow-app.js"
+0x354ef8cec6e54409 = "node_modules/@aspectron/flow-ux/src/flow-app-drawer.js"
+0xff55aa4f3d2e2f4b = "node_modules/@aspectron/flow-ux/src/flow-dropdown.js"
+0x330f160529ebfa34 = "node_modules/@aspectron/flow-ux/src/table-mixin.js"
+0x331ad5a71304456b = "node_modules/@aspectron/flow-ux/src/flow-link.js"
+0xa537f89662f1906a = "node_modules/@aspectron/flow-ux/src/flow-selector.js"
+0x6620f5565b92c332 = "node_modules/@aspectron/flow-ux/src/flow-clock-widget.js"
+0x5f587f3a306f2a4b = "node_modules/@aspectron/flow-ux/src/flow-theme-select.js"
+0x271c19351edf4958 = "node_modules/@aspectron/flow-ux/src/flow-dropzone-field.js"
+0x71fd8427cf249ee3 = "node_modules/@aspectron/flow-ux/src/flow-markdown.js"
+0x84a779686ad8f787 = "node_modules/@aspectron/flow-ux/src/flow-toolbar.js"
+0x8718b8747402d004 = "node_modules/@aspectron/flow-ux/src/flow-gridstack.js"
+0x1f11bf3a97e3584c = "node_modules/@aspectron/flow-ux/src/flow-download-badge.js"
+0x131b145e7f163b71 = "node_modules/@aspectron/flow-ux/src/flow-color-picker.js"
+0x4217274eb05f4be9 = "node_modules/@aspectron/flow-ux/src/flow-rss.js"
+0x00cc216b17eb09cb = "node_modules/@aspectron/flow-ux/src/flow-sunburst-graph.js"
+0x643c689115665998 = "node_modules/@aspectron/flow-ux/src/flow-swipeable.js"
+0x39c7898ef0f653b9 = "node_modules/@aspectron/flow-ux/src/flow-t9.js"
+0x0a49f439926aea5c = "node_modules/@aspectron/flow-ux/src/flow-progressbar.js"
+0xc2f1d01eaba7a004 = "node_modules/@aspectron/flow-ux/src/flow-add-to-home.js"
+0xd6ea09921a6bedad = "node_modules/@aspectron/flow-ux/src/colors.js"
+0x0daf0876c58b453c = "node_modules/@aspectron/flow-ux/src/flow-statsd.js"
+0xdac0cfcbf81da7d0 = "node_modules/@aspectron/flow-ux/resources/extern/colors/colors.js"
+0xf917f1be32183596 = "node_modules/@aspectron/flow-ux/resources/extern/colors/styles.js"
+0x07eec75aa7b5aee2 = "node_modules/@aspectron/flow-ux/resources/extern/colors/extend-string-prototypes.js"
+0x536c760c3549adb0 = "node_modules/@aspectron/flow-ux/resources/extern/xterm/lib/xterm.js"
+0x4c757202d0828b04 = "node_modules/@aspectron/flow-ux/resources/extern/xterm-addon-fit/lib/xterm-addon-fit.js"
+0x1d4f07795493efe4 = "node_modules/@aspectron/flow-ux/resources/extern/xterm-addon-web-links/lib/xterm-addon-web-links.js"
+0x92578e9559ffdbe6 = "node_modules/@aspectron/flow-ux/flow-ux.js"
+0xc36d86856dff26fc = "node_modules/@aspectron/flow-ux/src/flow-terminal.js"
+0x3f9a5eaff6cfea9d = "flow-ux.js"
+
+[manifest.scripts]
+0xe86704417364c37a = "node_modules/@aspectron/flow-ux/resources/extern/qrcode/qrcode.js"
+0x4df109a3b4b18e22 = "node_modules/@aspectron/flow-ux/resources/extern/dialog/dialog-polyfill.js"
+0x7208afb34609db3b = "node_modules/@aspectron/flow-ux/resources/extern/google-prettify/prettify.js"
+0x5e165cf5e9b50e9f = "node_modules/@aspectron/flow-ux/resources/extern/marked/marked.min.js"
+0x6d62faa6444f58c1 = "node_modules/@aspectron/flow-ux/resources/extern/dom-purify/purify.min.js"
+0x2a32c785eacf9d3e = "node_modules/@aspectron/flow-ux/resources/extern/gridstack/gridstack.all.js"
+
+[manifest.styles]
+0x1060525756df3fd1 = "node_modules/@aspectron/flow-ux/resources/extern/dialog/dialog-polyfill.css"
+0xdebbcf4fce91b053 = "node_modules/@aspectron/flow-ux/resources/extern/gridstack/gridstack.min.css"
+0xc2a8ec95538082d0 = "node_modules/@aspectron/flow-ux/resources/extern/gridstack/gridstack-extra.css"
+

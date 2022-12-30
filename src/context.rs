@@ -24,6 +24,8 @@ pub enum Replace {
 pub struct Context {
 
     pub manifest : Manifest,
+    pub manifest_toml : PathBuf,
+    pub manifest_folder : PathBuf,
     // pub target_file : PathBuf,
     pub target_folder : PathBuf,
     // pub target_folder_src : PathBuf,
@@ -105,6 +107,8 @@ impl Context {
 
         let ctx = Context {
             manifest,
+            manifest_toml,
+            manifest_folder,
             // target_file,
             target_folder,
             // target_folder_src,

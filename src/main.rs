@@ -12,6 +12,7 @@ pub mod log;
 pub mod utils;
 pub mod filter;
 pub mod modules;
+pub mod dependencies;
 pub mod prelude;
 
 use prelude::*;

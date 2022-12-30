@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use toml::*;
 
 pub struct Builder {
     ctx : Arc<Context>
@@ -117,17 +118,6 @@ impl Builder {
         let mut collection = Collection::new();
         root_module.gather(&mut collection)?;
         
-        let mut manifest_toml = String::new();
-        // let mut manifest_toml_scripts = String::new();
-        // let mut manifest_toml_modules = String::new();
-        // let mut manifest_toml_styles = String::new();
-        manifest_toml += "[manifest]\n\n\n";
-        // manifest_toml_scripts += "\n[scripts]\n";
-        // manifest_toml_modules += "\n[modules]\n";
-        // manifest_toml_styles += "\n[styles]\n";
-        let mut manifest_modules = Vec::new();
-        let mut manifest_scripts = Vec::new();
-        let mut manifest_styles = Vec::new();
 
         let mut content_rs = String::new();
         for content in collection.content.iter() {
@@ -137,45 +127,7 @@ impl Builder {
             content_rs += &content.content;
             // TODO - EXPORTS
             content_rs += &format!("\n\"###;\n\n");
-            
-            // ~~~
-
-            let manifest_entry = format!("{} = \"{}\"", 
-                // content.content_type.to_manifest_type(),
-                content.id(),
-                content.absolute.strip_prefix(&self.ctx.project_folder)?.to_str().unwrap()
-            );
-
-            match content.content_type {
-                ContentType::Module => {
-                    manifest_modules.push(manifest_entry);
-                },
-                ContentType::Script => {
-                    manifest_scripts.push(manifest_entry);
-                },
-                ContentType::Style => {
-                    manifest_styles.push(manifest_entry);
-                },
-            }
         }
-
-        let mut manifest_node_modules = Vec::new();
-
-        for node_module in db.node_modules.iter() {
-            if let Some(id) = node_module.id {
-                let manifest_entry = format!("0x{:16x} = \"{}\"", 
-                    id,
-                    node_module.name
-                );
-
-                manifest_node_modules.push(manifest_entry);
-            }
-        }
-        
-        manifest_toml += &format!("[node_modules]\n{}\n\n", manifest_node_modules.join("\n"));
-        manifest_toml += &format!("[modules]\n{}\n\n", manifest_modules.join("\n"));
-        manifest_toml += &format!("[scripts]\n{}\n\n", manifest_scripts.join("\n"));
-        manifest_toml += &format!("[styles]\n{}\n\n", manifest_styles.join("\n"));
 
         let lib_rs = r###"
 mod content;
@@ -320,14 +272,15 @@ impl Context {
         "###;
 
         
-        let path_manifest_toml = self.ctx.target_folder.join("manifest.toml");
         let path_lib_rs = self.ctx.target_folder.join("mod.rs");
         let path_content_rs = self.ctx.target_folder.join("content.rs");
         let path_modules_rs = self.ctx.target_folder.join("context.rs");
-        async_std::fs::write(&path_manifest_toml, &manifest_toml).await?;
         async_std::fs::write(&path_lib_rs, &lib_rs).await?;
         async_std::fs::write(&path_content_rs, &content_rs).await?;
         async_std::fs::write(&path_modules_rs, &context_rs).await?;
+
+        self.update_manifest(&db, &collection)?;
+
         let mut file_size = 0.0;
         // file_size += std::fs::metadata(&path_lib_rs)?.len() as f64 / 1024.0;
         file_size += std::fs::metadata(&path_content_rs)?.len() as f64 / 1024.0;
@@ -361,4 +314,133 @@ impl Context {
 
         Ok(())
     }
+
+    pub fn update_manifest(&self, db : &Db, collection: &Collection) -> Result<()> {
+
+        // manifest_toml += "[manifest]\n\n\n";
+        let mut manifest_modules = Vec::new();
+        let mut manifest_scripts = Vec::new();
+        let mut manifest_styles = Vec::new();
+
+        
+        for content in collection.content.iter() {
+
+            let manifest_entry = format!("{} = \"{}\"", 
+                // content.content_type.to_manifest_type(),
+                content.id(),
+                content.absolute.strip_prefix(&self.ctx.project_folder)?.to_str().unwrap()
+            );
+
+            match content.content_type {
+                ContentType::Module => {
+                    manifest_modules.push(manifest_entry);
+                },
+                ContentType::Script => {
+                    manifest_scripts.push(manifest_entry);
+                },
+                ContentType::Style => {
+                    manifest_styles.push(manifest_entry);
+                },
+            }
+        }
+
+        let mut manifest_node_modules = Vec::new();
+
+        for node_module in db.node_modules.iter() {
+            if let Some(id) = node_module.id {
+                let manifest_entry = format!("0x{:16x} = \"{}\"", 
+                    id,
+                    node_module.full_name.as_ref().unwrap_or(&node_module.name)
+                );
+
+                manifest_node_modules.push(manifest_entry);
+            }
+        }
+        
+        let mut manifest_toml = String::new();
+        const DO_NOT_EDIT: &str = "# es6 manifest - do not edit below this line";
+        manifest_toml += &format!("\n\n\n{}\n",DO_NOT_EDIT);
+        manifest_toml += &format!("# generated on {:?}\n\n", chrono::offset::Local::now());
+        manifest_toml += &format!("[manifest.node_modules]\n{}\n\n", manifest_node_modules.join("\n"));
+        manifest_toml += &format!("[manifest.modules]\n{}\n\n", manifest_modules.join("\n"));
+        manifest_toml += &format!("[manifest.scripts]\n{}\n\n", manifest_scripts.join("\n"));
+        manifest_toml += &format!("[manifest.styles]\n{}\n\n", manifest_styles.join("\n"));
+
+        // let path_manifest_toml = self.ctx.target_folder.join("manifest.toml");
+        // fs::write(&path_manifest_toml, &manifest_toml)?;
+
+        let mut toml = fs::read_to_string(&self.ctx.manifest_toml)?;
+        let lines = toml.split("\n").collect::<Vec<_>>();
+        let index = lines.iter().position(|&l| l.contains(DO_NOT_EDIT));
+        if let Some(index) = index {
+            let mut slice = lines[0..index].to_vec();
+            while slice.len() > 0 && slice[slice.len()-1].trim().is_empty() {
+                slice.remove(slice.len()-1);
+            }
+            toml = slice.join("\n");
+        }
+        toml += &manifest_toml;
+        // fs::write(&self.ctx.manifest_folder.join("test-es6.toml"), toml)?;
+        fs::write(&self.ctx.manifest_toml, toml)?;
+
+        Ok(())
+    }
+
+
+
+    pub fn update_manifest2(&self, db : &Db, collection: &Collection) -> Result<()> {
+
+        // let mut manifest_toml = String::new();
+        // manifest_toml += "[manifest]\n\n\n";
+        // let mut manifest_modules = Vec::new();
+        // let mut manifest_scripts = Vec::new();
+        // let mut manifest_styles = Vec::new();
+
+        let mut modules = value::Table::new();
+        let mut scripts = value::Table::new();
+        let mut styles = value::Table::new();
+        let mut node_modules = value::Table::new();
+
+        for content in collection.content.iter() {
+            let path = content.absolute.strip_prefix(&self.ctx.project_folder)?.to_str().unwrap().to_string();
+            match content.content_type {
+                ContentType::Module => {
+                    modules.insert(content.id(),value::Value::String(path));
+                },
+                ContentType::Script => {
+                    scripts.insert(content.id(),value::Value::String(path));
+                },
+                ContentType::Style => {
+                    styles.insert(content.id(),value::Value::String(path));
+                },
+            }
+        }
+
+        for node_module in db.node_modules.iter() {
+            if let Some(id) = node_module.id {
+                node_modules.insert(format!("0x{:16x}",id),value::Value::String(node_module.name.clone()));
+            }
+        }
+
+        let toml_text = fs::read_to_string(&self.ctx.manifest_toml)?;
+        let mut toml: Value = match toml::from_str(&toml_text) {
+            Ok(toml) => toml,
+            Err(err) => {
+                return Err(format!("Error loading es6.toml: {}", err).into());
+            }
+        };
+
+        let manifest = toml.as_table_mut().unwrap();
+        manifest.insert("manifest.modules".to_string(),value::Value::Table(modules));
+        manifest.insert("manifest.scripts".to_string(),value::Value::Table(scripts));
+        manifest.insert("manifest.styles".to_string(),value::Value::Table(styles));
+        manifest.insert("manifest.node-modules".to_string(),value::Value::Table(node_modules));
+
+        let toml_text = toml::to_string(manifest)?;
+        // fs::write(&self.ctx.manifest_toml, toml_text)?;
+        fs::write(&self.ctx.manifest_folder.join("test-es6.toml"), toml_text)?;
+        
+        Ok(())
+    }
+
 }

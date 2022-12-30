@@ -28,7 +28,7 @@ impl Manifest {
         let locations = [
             &location,
             &location.with_extension("toml"),
-            &location.join("es6rs.toml")
+            &location.join("es6.toml")
         ];
 
         for location in locations.iter() {
@@ -50,7 +50,7 @@ impl Manifest {
         let manifest: Manifest = match toml::from_str(&toml_text) {
             Ok(manifest) => manifest,
             Err(err) => {
-                return Err(format!("Error loading nw.toml: {}", err).into());
+                return Err(format!("Error loading es6.toml: {}", err).into());
             }
 
         };

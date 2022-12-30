@@ -31,6 +31,9 @@ pub enum Error {
     
     #[error("Toml Deserialize: {0}")]
     TomlDeserialize(#[from] toml::de::Error),
+    
+    #[error("Toml Serialize: {0}")]
+    TomlSerialize(#[from] toml::ser::Error),
 
     #[error("Utf8 error: {0}")]
     Utf8Error(#[from] FromUtf8Error),
