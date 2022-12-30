@@ -2,6 +2,7 @@
 project = "../../flow-ux-rs/flow-ux/flow-ux.js"
 # main = "lib"
 type = "module"
+# output = { type = "module", target = "../../flow-ux-rs/src/flow-ux", folder = "src/flow-ux" }
 target = "../../flow-ux-rs/src/flow-ux" # modules.rs"
 wasm = { name = "flow-ux", folder="../", outdir = "test/flow-ux", dev=true }
 ignore = [
@@ -18,3 +19,6 @@ replace = [
 ]
 verbose = true
 enums = { exports = ["@aspectron/flow-ux/flow-ux.js"] }
+
+[dependencies]
+flow-ux = { git = "git@github.com:aspectron/flow-ux-rs" }

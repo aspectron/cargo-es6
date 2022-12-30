@@ -91,12 +91,12 @@ impl Builder {
         Ok(references)
     }
 
-    pub async fn generate(self: &Arc<Builder>, root_module : &Arc<Content>, modules: &Db) -> Result<()> {
+    pub async fn generate(self: &Arc<Builder>, root_module : &Arc<Content>, db: &Db) -> Result<()> {
 // std::process::exit(1);
         let module_id_repr = "u64";
 
         let enums = if let Some(enums) = &self.ctx.manifest.settings.enums {
-            let references = self.get_references(&enums.exports, modules).await?;
+            let references = self.get_references(&enums.exports, db).await?;
             let mut text = String::new();
             text.push_str(&format!("\n#[allow(dead_code)]\n#[repr({})]\npub enum Modules {{\n", module_id_repr));
             text.push_str("\tAll = 0,\n");
@@ -118,7 +118,17 @@ impl Builder {
         root_module.gather(&mut collection)?;
         
         let mut manifest_toml = String::new();
-        manifest_toml += "[manifest]\n";
+        // let mut manifest_toml_scripts = String::new();
+        // let mut manifest_toml_modules = String::new();
+        // let mut manifest_toml_styles = String::new();
+        manifest_toml += "[manifest]\n\n\n";
+        // manifest_toml_scripts += "\n[scripts]\n";
+        // manifest_toml_modules += "\n[modules]\n";
+        // manifest_toml_styles += "\n[styles]\n";
+        let mut manifest_modules = Vec::new();
+        let mut manifest_scripts = Vec::new();
+        let mut manifest_styles = Vec::new();
+
         let mut content_rs = String::new();
         for content in collection.content.iter() {
             // println!("{}",module.ident);            
@@ -130,11 +140,42 @@ impl Builder {
             
             // ~~~
 
+            let manifest_entry = format!("{} = \"{}\"", 
+                // content.content_type.to_manifest_type(),
+                content.id(),
+                content.absolute.strip_prefix(&self.ctx.project_folder)?.to_str().unwrap()
+            );
 
+            match content.content_type {
+                ContentType::Module => {
+                    manifest_modules.push(manifest_entry);
+                },
+                ContentType::Script => {
+                    manifest_scripts.push(manifest_entry);
+                },
+                ContentType::Style => {
+                    manifest_styles.push(manifest_entry);
+                },
+            }
+        }
 
-            manifest_toml += &format!("{} = \"{}\"\n", content.id(), content.absolute.strip_prefix(&self.ctx.project_folder)?.to_str().unwrap());
+        let mut manifest_node_modules = Vec::new();
+
+        for node_module in db.node_modules.iter() {
+            if let Some(id) = node_module.id {
+                let manifest_entry = format!("0x{:16x} = \"{}\"", 
+                    id,
+                    node_module.name
+                );
+
+                manifest_node_modules.push(manifest_entry);
+            }
         }
         
+        manifest_toml += &format!("[node_modules]\n{}\n\n", manifest_node_modules.join("\n"));
+        manifest_toml += &format!("[modules]\n{}\n\n", manifest_modules.join("\n"));
+        manifest_toml += &format!("[scripts]\n{}\n\n", manifest_scripts.join("\n"));
+        manifest_toml += &format!("[styles]\n{}\n\n", manifest_styles.join("\n"));
 
         let lib_rs = r###"
 mod content;

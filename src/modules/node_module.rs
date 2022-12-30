@@ -18,6 +18,7 @@ pub struct PackageJson {
 
 #[derive(Debug)]
 pub struct NodeModule {
+    pub id : Option<u64>,
     pub folder : PathBuf,
     pub absolute : PathBuf,
     pub name : String,
@@ -107,6 +108,7 @@ impl NodeModule {
         };
 
         let node_module = NodeModule {
+            id : root.as_ref().map(|m|m.id),
             folder : folder.to_path_buf(),
             absolute : absolute.to_path_buf(),
             name,// : package_json.name.clone(),

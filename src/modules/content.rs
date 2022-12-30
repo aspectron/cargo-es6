@@ -26,6 +26,16 @@ impl ToString for ContentType {
     }
 }
 
+impl ContentType {
+    pub fn to_manifest_type(&self) -> String {
+        match self {
+            ContentType::Style => "style".to_string(),
+            ContentType::Module => "module".to_string(),
+            ContentType::Script => "script".to_string(),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct Content {
     pub id : ModuleId,
