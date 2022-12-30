@@ -150,6 +150,10 @@ pub fn gather_references<P:AsRef<Path>>(text: &str, referrer: P) -> Result<(Opti
 
 }
 
+pub fn id_from_string(s: &str) -> Result<u64> {
+    let without_prefix = s.trim_start_matches("0x");
+    Ok(u64::from_str_radix(without_prefix, 16)?)
+}
 
 // FlowQRCode.define('flow-qrcode', [baseUrl+'resources/extern/qrcode/qrcode.js']);
 

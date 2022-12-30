@@ -1,4 +1,4 @@
-use std::{ffi::OsString, string::FromUtf8Error};
+use std::{ffi::OsString, string::FromUtf8Error, num::ParseIntError};
 use globset::Error as GlobError;
 use thiserror::Error;
 
@@ -37,7 +37,10 @@ pub enum Error {
 
     #[error("Utf8 error: {0}")]
     Utf8Error(#[from] FromUtf8Error),
- }
+
+    #[error("ParseInt error: {0}")]
+    ParseInt(#[from] ParseIntError),
+}
 
 impl From<&str> for Error {
     fn from(s: &str) -> Self {

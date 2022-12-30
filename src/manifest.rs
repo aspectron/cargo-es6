@@ -1,9 +1,18 @@
 use async_std::fs::*;
 use crate::prelude::*;
 
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// pub struct Dependency {
+//     pub dependencies : Vec<String>,
+//     pub settings : Vec<String>,
+//     pub dependencies : Vec<String>,
+// }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Manifest {
     pub settings : Settings,
+    pub manifest : HashMap<String,HashMap<String,String>>,
 }
 
 impl Manifest {
@@ -54,7 +63,7 @@ impl Manifest {
             }
 
         };
-
+// println!("{:#?}",manifest.manifest);
         Ok(manifest)
     }
     
