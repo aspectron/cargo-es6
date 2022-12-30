@@ -86,53 +86,59 @@ pub fn gather_references<P:AsRef<Path>>(text: &str, referrer: P) -> Result<(Opti
     // ~~~~~~~~~~~~~~~~~
     // FlowQRCode.define('flow-qrcode', [baseUrl+'resources/extern/qrcode/qrcode.js']);
 
-    let define_re = Regex::new(r###"\w+.define\(["'][^"']+["'],\s*(\[[^]]+\])?\)"###).unwrap();
-    // let define_reference_re = Regex::new(r###"\[\s*([^\],]+[,\s]*)+\s*\]"###).unwrap();
-    // let define_reference_re = Regex::new(r###"\[\s*([^\],]+[,\s]*)+\s*\]"###).unwrap();
-    // let define_reference_re = Regex::new(r###"\[([^\],]+[,\]]+)+"###).unwrap();
-    // let define_reference_re = Regex::new(r###"[^\[]+\[\s*(\s*[^,]+\s*)+\s*\]"###).unwrap();
-    // let define_reference_re = Regex::new(r###"[^\[]+\s*(\s*[^,\]]+\s*)+\s*"###).unwrap();
-    let define_list_re = Regex::new(r###"\[([^\]]+)]"###).unwrap();
-    let define_reference_re = Regex::new(r###"["']([^"']+)["']"###).unwrap();
-    let define_matches = define_re.find_iter(&text).map(|m| m.as_str().to_string()).collect::<Vec<_>>();
-    for define in define_matches.iter() {
+    let text = {
 
-        let define = define.replace("\n","");
-        let captures = define_list_re.captures(&define).expect(&format!("unable to capture `{}`",define));
-        let define = captures[1].to_string();
-        let items = define.split(",").collect::<Vec<_>>();
-        let items = items.iter().map(|s|{
-            let captures = define_reference_re.captures(&s).expect(&format!("unable to capture `{}`",define));
-            captures[1].to_string()
-        }).collect::<Vec<_>>();
-        // println!("");
+        let mut text = text.to_string();
+        // let define_re = Regex::new(r###"\w+.define\(["'][^"']+["'],\s*(\[[^]]+\])?\)"###).unwrap();
+        let define_re = Regex::new(r###"\w+\.define\(["'][^"']+["'],\s*["'\[]([^]]+\])?"###).unwrap();
+        let define_list_re = Regex::new(r###"\[([^\]]+)]"###).unwrap();
+        let define_replace_re = Regex::new(r###"(,\s*\[([^\]]+)]\s*)"###).unwrap();
+        let define_reference_re = Regex::new(r###"["']([^"']+)["']"###).unwrap();
+        let define_matches = define_re.find_iter(&text).map(|m| m.as_str().to_string()).collect::<Vec<_>>();
+        for define in define_matches.iter() {
 
-        for location in items.iter() {
-            let extension = Path::new(location).extension().unwrap();
-            let kind = if extension == "css" {
-                ReferenceKind::Style
-            } else {
-                ReferenceKind::Script
-            };
+            // println!("A:{}",define);
+            let replace = define_replace_re.captures(&define).expect(&format!("unable to capture replace for `{}`",define));
+            text = text.replace(&replace[1].to_string(),"");
+            let define = define.replace("\n","");
+            let captures = define_list_re.captures(&define).expect(&format!("unable to capture list`{}`",define));
+            let define = captures[1].to_string();
+            let items = define.split(",").collect::<Vec<_>>();
+            let items = items.iter().map(|s|{
+                // println!("capturing: `{}`",s);
+                match define_reference_re.captures(&s) {
+                    Some(captures) => {
+                        Some(captures[1].to_string())
+                    },
+                    None => None
+                }
+                // let captures = define_reference_re.captures(&s).expect(&format!("unable to capture item`{}`",define));
+                // captures[1].to_string()
+            })
+            .flatten()
+            .collect::<Vec<_>>();
+            // println!("");
 
-            let import = Reference::new(
-                kind,
-                referrer.as_ref(),
-                None,
-                &location
-            );
-            references.push(import);
+            for location in items.iter() {
+                let extension = Path::new(location).extension().unwrap();
+                let kind = if extension == "css" {
+                    ReferenceKind::Style
+                } else {
+                    ReferenceKind::Script
+                };
+
+                let import = Reference::new(
+                    kind,
+                    referrer.as_ref(),
+                    None,
+                    &location
+                );
+                references.push(import);
+            }
         }
-        // println!("{:?}", items);
-        // println!("");
-        
 
-    }
-
-
-
-
-    // ~~~~~~~~~~~~~~~~~
+        text
+    };
 
     let references = if references.is_empty() {
         None
@@ -140,9 +146,56 @@ pub fn gather_references<P:AsRef<Path>>(text: &str, referrer: P) -> Result<(Opti
         Some(references)
     };
 
-    Ok((references, text.to_string()))
+    Ok((references, text))
 
 }
 
 
 // FlowQRCode.define('flow-qrcode', [baseUrl+'resources/extern/qrcode/qrcode.js']);
+
+// pub fn strip_js_comments(source: &str) -> String {
+//     let mut result = String::new();
+//     let mut block_comment = false;
+
+//     let mut chars = source.chars();
+//     while let Some(c) = chars.next() {
+//         if !block_comment {
+//             if c == '/' {
+//                 if let Some(next) = chars.next() {
+//                     if next == '/' {
+//                         // Skip single-line comment
+//                         while let Some(c) = chars.next() {
+//                             if c == '\n' {
+//                                 break;
+//                             }
+//                         }
+//                         continue;
+//                     } else if next == '*' {
+//                         // Start block comment
+//                         block_comment = true;
+//                         continue;
+//                     } else {
+//                         // Not a comment, add both characters to result
+//                         result.push(c);
+//                         result.push(next);
+//                     }
+//                 }
+//             } else {
+//                 // Not a comment, add character to result
+//                 result.push(c);
+//             }
+//         } else {
+//             if c == '*' {
+//                 if let Some(next) = chars.next() {
+//                     if next == '/' {
+//                         // End block comment
+//                         block_comment = false;
+//                         continue;
+//                     }
+//                 }
+//             }
+//         }
+//     }
+
+//     result
+// }

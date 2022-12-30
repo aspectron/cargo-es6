@@ -47,54 +47,50 @@ pub struct Content {
 impl Content {
     pub fn load<P>(ctx: &Context, content_type:ContentType, base_folder :P, path: P) -> Result<Content> 
     where P: AsRef<Path> {
-        // let folder = base_folder.as_ref();
         let base_folder = base_folder.as_ref().to_path_buf();
-        
         let path = path.as_ref();
-        // let path_str = path.to_str().unwrap();
-        // let path_str = ctx.replace(path_str);
-        // let path = Path::new(&path_str);
-
         let absolute = base_folder.join(path).canonicalize()?;
-        // let parent = absolute.parent().unwrap();
         let component = Path::new(path).file_stem().unwrap().to_string_lossy().to_case(Case::Pascal);
-        // println!("loading: `{}` -> `{}`",folder.display(),path.display());
-
-        // let extension = &path
-        //     .extension()
-        //     .expect(&format!("no extension in file: `{}`",path.display()))
-        //     .to_str()
-        //     .unwrap()
-        //     .to_lowercase();
-        // let content_type = match extension {
-
-        // }
-
-        // println!("{}",extension);
-
-        // let content_type = if extension == "css" {
-        //     // println!("ContentType::Style {}", path.display());
-        //     ContentType::Style
-        // } else {
-        //     content_type
-        // };
-
         let text = fs::read_to_string(&absolute)?;
 
         let text = match content_type {
             ContentType::Module | ContentType::Script => {
-                let comment_re = Regex::new(r###"^\s*//"###).unwrap();
-                text.split("\n").filter(|s| !comment_re.is_match(s) && !s.trim().is_empty()).collect::<Vec<_>>().join("\n")
+
+                // println!("processing: {}",absolute.display());
+                // use no_comment::{IntoWithoutComments as _, languages};
+
+                // let text = text
+                // .chars()
+                // .without_comments(languages::rust())
+                // .collect::<String>();
+                // ~~~
+                // let text = strip_js_comments(text)?;
+                // text.split("\n").map(|l|l.trim()).filter(|l|!l.is_empty()).collect::<Vec<_>>().join("\n")
+                // text
+                // let comment_block_re = Regex::new(r###"/\*[^(\*/)]*\*/"###).unwrap();
+                // let text = comment_block_re.replace_all(&text, "");
+                let comment_line_re = Regex::new(r###"^\s*//"###).unwrap();
+                
+                text.split("\n").filter(|s|{
+                    if (comment_line_re.is_match(s) && !s.contains("*/")) || s.trim().is_empty() {
+                        false
+                    } else {
+                        true
+                    }
+                    // !comment_line_re.is_match(s) && !s.trim().is_empty()
+                }).collect::<Vec<_>>().join("\n")
+                // text
             },
-            _ => { text }
+            _ => { 
+                // println!("processing: {}",absolute.display());
+                
+                text }
         };
 
+        // println!("processing: {}",absolute.display());
         let (references, text) = gather_references(&text, &absolute)?;
-
         let references = if let Some(mut references) = references {
-
             for reference in references.iter_mut() {
-                // let location = ctx
                 reference.location = ctx.replace(&reference.location);
             }
             Some(references)
@@ -148,7 +144,7 @@ impl Content {
     }
 
     pub fn id(&self) -> String {
-        format!("0x{:16x}",self.id)
+        format!("0x{:016x}",self.id)
     }
 
     // pub fn id(&self, kind : &IdentKind) -> String {
@@ -260,9 +256,11 @@ impl Content {
             });
 
         if path.is_none() {
-            // reference.warn();
+            reference.warn();
             let relative = self.absolute.strip_prefix(&db.ctx.project_folder)?;
+
             if !db.ctx.ignore.is_match(&relative.to_string_lossy()) && !db.ctx.ignore.is_match(&location) {
+                println!("location: `{}`",location);
                 reference.warn();
                 return Err(format!("unable to resolve: `{}`", location).into())
             }

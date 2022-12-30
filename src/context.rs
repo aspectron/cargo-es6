@@ -26,7 +26,7 @@ pub struct Context {
     pub manifest : Manifest,
     // pub target_file : PathBuf,
     pub target_folder : PathBuf,
-    pub target_folder_src : PathBuf,
+    // pub target_folder_src : PathBuf,
     pub project_file : PathBuf,
     pub project_folder : PathBuf,
     pub node_modules : PathBuf,
@@ -50,7 +50,7 @@ impl Context {
         let project_folder = project_file.parent().unwrap().to_path_buf();
         let node_modules = project_folder.join("node_modules");
         let target_folder = manifest_folder.join(&manifest.settings.target);//.canonicalize().await?;
-        let target_folder_src = target_folder.join("src");//.canonicalize().await?;
+        // let target_folder_src = target_folder.join("src");//.canonicalize().await?;
         // let target_file = manifest_folder.join(&manifest.settings.target);//.canonicalize().await?;
         // let target_folder = target_file.parent().unwrap().canonicalize().await?;//to_path_buf();
         log_info!("Project","`{}`",project_folder.to_str().unwrap());
@@ -107,7 +107,7 @@ impl Context {
             manifest,
             // target_file,
             target_folder,
-            target_folder_src,
+            // target_folder_src,
             project_file,
             project_folder,
             node_modules,
@@ -120,7 +120,7 @@ impl Context {
 
     pub async fn ensure_folders(&self) -> Result<()> {
         let folders = [
-            &self.target_folder_src,
+            &self.target_folder,
         ];
         for folder in folders {
             if !std::path::Path::new(folder).exists() {

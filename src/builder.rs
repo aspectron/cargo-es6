@@ -52,41 +52,7 @@ impl Builder {
         Ok(())
     }
 
-    // pub async fn resolve_module(self: &Arc<Builder>, module: &Content, modules: &mut Modules) -> Result<()> {
-
-    //     if let Some(references) = &module.references {
-    //         for reference in references.iter() {
-    //             println!("... trying location: {}", reference.location);
-    //             println!("... trying with referrer: {}", reference.referrer.display());
-    //             match modules.resolve(&reference,&module) {
-    //                 Ok(target) => {
-    //                     // println!("resolve ok for `{}`", reference.location);
-    //                     *reference.reference.lock().unwrap() = target;//.clone();
-    //                 },
-    //                 Err(_err) => {
-    //                     println!("resolve location: `{}`",reference.location);
-    //                     println!("resolve err: {}",_err);
-    //                     let relative = reference.referrer.strip_prefix(&self.ctx.project_folder)?;
-    //                     if !self.ctx.ignore.is_match(&relative.to_string_lossy()) && !self.ctx.ignore.is_match(&reference.location) {
-    //                         // reference.warn();
-    //                         log_warn!("Resolver","referrer: `{}`",reference.referrer.display());
-    //                         log_warn!("","target: `{}`",reference.location);
-    //                         // std::process::exit(1);
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     Ok(())
-    // }
-
-    // pub async fn get_references(self: &Arc<Builder>, enums : &Enums, modules: &Modules) -> Result<Vec<Arc<FileModule>>> {
     pub async fn get_references(self: &Arc<Builder>, files : &Vec<String>, modules: &Db) -> Result<Vec<Arc<Content>>> {
-        // let text = String::new();
-
-        // let exports = &enums.exports;
-
         let mut targets = Vec::new();
         for file in files.iter() {
             let in_root = self.ctx.project_folder.join(file);
@@ -151,31 +117,29 @@ impl Builder {
         let mut collection = Collection::new();
         root_module.gather(&mut collection)?;
         
+        let mut manifest_toml = String::new();
+        manifest_toml += "[manifest]\n";
         let mut content_rs = String::new();
-        for module in collection.content.iter() {
+        for content in collection.content.iter() {
             // println!("{}",module.ident);            
-            content_rs += &format!("pub const {} : &'static str = r###\"\n", module.ident(&ident_kind));
+            content_rs += &format!("pub const {} : &'static str = r###\"\n", content.ident(&ident_kind));
             // TODO - IMPORTS
-            content_rs += &module.content;
+            content_rs += &content.content;
             // TODO - EXPORTS
             content_rs += &format!("\n\"###;\n\n");
             
+            // ~~~
+
+
+
+            manifest_toml += &format!("{} = \"{}\"\n", content.id(), content.absolute.strip_prefix(&self.ctx.project_folder)?.to_str().unwrap());
         }
         
 
         let lib_rs = r###"
-use wasm_bindgen::prelude::*;
 mod content;
 mod context;
 pub use context::*;
-
-#[wasm_bindgen]
-pub async fn load_modules() -> context::Result<()> {
-    workflow_wasm::panic::init_console_panic_hook();
-    let ctx = Context::new();
-    ctx.load_all().await?;
-    Ok(())
-}
 "###;
 
         let mut context_rs = String::new();
@@ -186,9 +150,7 @@ use std::sync::{
     atomic::AtomicBool
 };
 use workflow_dom::loader::{
-    // Module,
     ContentType,
-    // ContentMap,
     ContentList,
     Id,
     Reference,
@@ -200,7 +162,7 @@ pub use workflow_dom::loader::{
 };
 pub use workflow_dom::result::Result;
 pub use workflow_dom::error::Error;
-use crate::content;
+use super::content;
 "###;
         context_rs += &format!("\nconst ROOT: Id = {};\n",root_module.id());
 
@@ -244,31 +206,35 @@ impl Context {
             let mut references = Vec::new();
             if let Some(targets) = &content.references {
                 for reference in targets.iter() {
-                    let content = reference
-                        .content()
-                        .expect(&format!("failure dereferencing `{}` -> `{}`", reference.referrer.display(),reference.location));
-                    
-                    
-                    match reference.kind {
-                        ReferenceKind::Style => {
-                            // println!("INJECTING STYLE {}", content.ident);
-                            references.push(format!("(Reference::Style,None,{})",content.id()));
-                        },
-                        ReferenceKind::Module => {
-                            if let Some(what) = &reference.what {
-                                references.push(format!("(Reference::Module,Some(\"{}\"),{})",what,content.id()));
-                            } else {
-                                references.push(format!("(Reference::Module,None,{})",content.id()));
+                    match reference.content() {
+                        Some(content) => {
+                            match reference.kind {
+                                ReferenceKind::Style => {
+                                    references.push(format!("(Reference::Style,None,{})",content.id()));
+                                },
+                                ReferenceKind::Module => {
+                                    if let Some(what) = &reference.what {
+                                        references.push(format!("(Reference::Module,Some(\"{}\"),{})",what,content.id()));
+                                    } else {
+                                        references.push(format!("(Reference::Module,None,{})",content.id()));
+                                    }
+                                },
+                                ReferenceKind::Script => {
+                                    references.push(format!("(Reference::Script,None,{})",content.id()));
+                                },
+                                ReferenceKind::Export => {
+                                    references.push(format!("(Reference::Export,Some(\"{}\"),{})",reference.what.as_ref().unwrap(),content.id()));
+                                }
                             }
                         },
-                        ReferenceKind::Script => {
-                            references.push(format!("(Reference::Script,None,{})",content.id()));
-                        },
-                        ReferenceKind::Export => {
-                            references.push(format!("(Reference::Export,Some(\"{}\"),{})",reference.what.as_ref().unwrap(),content.id()));
+                        None => {
+                            reference.error();
+                            // .expect(&format!("failure dereferencing `{}` -> `{}`", reference.referrer.display(),reference.location));
                         }
-
                     }
+
+                    
+
                 }
             }
 
@@ -311,10 +277,13 @@ impl Context {
             }
         }
         "###;
+
         
-        let path_lib_rs = self.ctx.target_folder_src.join("lib.rs");
-        let path_content_rs = self.ctx.target_folder_src.join("content.rs");
-        let path_modules_rs = self.ctx.target_folder_src.join("context.rs");
+        let path_manifest_toml = self.ctx.target_folder.join("manifest.toml");
+        let path_lib_rs = self.ctx.target_folder.join("mod.rs");
+        let path_content_rs = self.ctx.target_folder.join("content.rs");
+        let path_modules_rs = self.ctx.target_folder.join("context.rs");
+        async_std::fs::write(&path_manifest_toml, &manifest_toml).await?;
         async_std::fs::write(&path_lib_rs, &lib_rs).await?;
         async_std::fs::write(&path_content_rs, &content_rs).await?;
         async_std::fs::write(&path_modules_rs, &context_rs).await?;

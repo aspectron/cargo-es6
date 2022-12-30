@@ -1,10 +1,11 @@
 [settings]
 project = "../../flow-ux-rs/flow-ux/flow-ux.js"
+# main = "lib"
 type = "module"
-target = "../../flow-ux-rs/" # modules.rs"
+target = "../../flow-ux-rs/src/flow-ux" # modules.rs"
 wasm = { name = "flow-ux", folder="../", outdir = "test/flow-ux", dev=true }
 ignore = [
-    "**/xterm",
+    "**/xterm*",
     "**/webcomponents-{sd,ce}*",
     "**/custom-elements-es5-adapter*",
     "**/development/*",

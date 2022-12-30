@@ -62,6 +62,13 @@ impl Reference {
         log_warn!("","+---");
     }
 
+    pub fn error(&self) {
+        log_error!("+--- Unable to resolve");
+        log_error!("| location: `{}`", self.location);
+        log_error!("| referrer: `{}`", self.referrer.display());
+        log_error!("+---");
+    }
+
 
 
 }

@@ -60,6 +60,13 @@ impl Manifest {
     
 }
 
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// #[serde(rename_all = "lowercase")]
+// pub enum RustOutput {
+//     Lib,
+//     Mod,
+// }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ProjectType {
@@ -81,6 +88,7 @@ pub struct Settings {
     pub project : String,
     #[serde(rename = "type")]
     pub project_type : ProjectType,
+    // pub generate : RustOutput,
     pub target : String,
     pub ignore : Option<Vec<String>>,
     pub wasm : Option<Wasm>,
