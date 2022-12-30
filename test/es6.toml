@@ -25,7 +25,7 @@ enums = { exports = ["@aspectron/flow-ux/flow-ux.js"] }
 
 
 # es6 manifest - do not edit below this line
-# generated on 2022-12-30T13:05:39.842891-05:00
+# generated on 2022-12-30T13:10:42.309303-05:00
 
 [manifest.node_modules]
 0x83cf1acfef940a6d = "@lit/reactive-element"

@@ -17,25 +17,25 @@ pub mod prelude;
 
 use prelude::*;
 
-// #[derive(Debug, Parser)]
-// #[clap(name = "cargo")]
-// #[clap(bin_name = "cargo")]
-// #[clap(
-//     setting = clap::AppSettings::DeriveDisplayOrder,
-//     dont_collapse_args_in_usage = true,
-// )]
-// enum Cmd {
-//     #[clap(name = "wahoo")]
-//     #[clap(about, author, version)]
-//     #[clap(
-//         setting = clap::AppSettings::DeriveDisplayOrder,
-//     )]
-//     Args(Args),
-// }
+#[derive(Debug, Parser)]
+#[clap(name = "cargo")]
+#[clap(bin_name = "cargo")]
+#[clap(
+    setting = clap::AppSettings::DeriveDisplayOrder,
+    dont_collapse_args_in_usage = true,
+)]
+enum Cmd {
+    #[clap(name = "es6")]
+    #[clap(about, author, version)]
+    #[clap(
+        setting = clap::AppSettings::DeriveDisplayOrder,
+    )]
+    Args(Args),
+}
 
-
-#[derive(Debug, Parser)] //clap::Args)]
-#[clap(name = "wahoo")]
+// #[derive(Debug, Parser)] //clap::Args)]
+#[derive(Debug, clap::Args)]
+#[clap(name = "es6")]
 #[clap(about, author, version)]
 #[clap(
     setting = clap::AppSettings::DeriveDisplayOrder,
@@ -68,11 +68,19 @@ enum Action {
 
 pub async fn async_main() -> Result<()> {
     
-    let Args {
+    // let Args {
+    //     location,
+    //     action,
+    //     verbose,
+    // }= Args::parse();
+
+    let args = Cmd::parse();
+    let Cmd::Args(Args {
         location,
         action,
         verbose,
-    }= Args::parse();
+    }) = args;
+
 
     if verbose {
         log::enable_verbose();
