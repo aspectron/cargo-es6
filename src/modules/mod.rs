@@ -3,5 +3,5 @@ pub mod content;
 pub mod node_module;
 pub mod collection;
 pub mod utils;
-pub mod modules;
-pub use modules::*;
+pub mod db;
+pub use db::*;

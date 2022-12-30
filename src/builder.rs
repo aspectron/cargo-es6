@@ -20,7 +20,7 @@ impl Builder {
 
         async_std::fs::create_dir_all(&self.ctx.target_folder).await.unwrap();
 
-        let mut modules = Modules::load(&self.ctx).await?;
+        let mut modules = Db::load(&self.ctx).await?;
         for node_module in modules.node_modules.iter() {
             log_info!("Module","`{}` files: {} explicit exports: {}", style(&node_module.name).cyan(), node_module.files.len(), node_module.exports.len());
         }
@@ -41,42 +41,48 @@ impl Builder {
         Ok(())
     }
 
-    pub async fn resolve(self: &Arc<Builder>, modules: &mut Modules) -> Result<()> {
+    pub async fn resolve(self: &Arc<Builder>, db: &mut Db) -> Result<()> {
 
-        let file_content = modules.file_content.clone();
-        for module in file_content.iter() {
-            self.resolve_module(module,modules).await?;
+        let file_content = db.file_content.clone();
+        for content in file_content.iter() {
+            content.resolve(db)?;
+            // self.resolve_module(module,modules).await?;
         }
 
         Ok(())
     }
 
-    pub async fn resolve_module(self: &Arc<Builder>, module: &Content, modules: &mut Modules) -> Result<()> {
+    // pub async fn resolve_module(self: &Arc<Builder>, module: &Content, modules: &mut Modules) -> Result<()> {
 
-        if let Some(references) = &module.references {
-            for reference in references.iter() {
-                match modules.resolve(&reference,&module).await {
-                    Ok(target) => {
-                        *reference.reference.lock().unwrap() = target;//.clone();
-                    },
-                    Err(_err) => {
-                        // println!("err: {}",_err);
-                        let relative = reference.referrer.strip_prefix(&self.ctx.project_folder)?;
-                        if !self.ctx.ignore.is_match(&relative.to_string_lossy()) && !self.ctx.ignore.is_match(&reference.location) {
-                            reference.warn();
-                            // log_warn!("Resolver","referrer: `{}`",reference.referrer.display());
-                            // log_warn!("","target: `{}`",reference.location);
-                        }
-                    }
-                }
-            }
-        }
+    //     if let Some(references) = &module.references {
+    //         for reference in references.iter() {
+    //             println!("... trying location: {}", reference.location);
+    //             println!("... trying with referrer: {}", reference.referrer.display());
+    //             match modules.resolve(&reference,&module) {
+    //                 Ok(target) => {
+    //                     // println!("resolve ok for `{}`", reference.location);
+    //                     *reference.reference.lock().unwrap() = target;//.clone();
+    //                 },
+    //                 Err(_err) => {
+    //                     println!("resolve location: `{}`",reference.location);
+    //                     println!("resolve err: {}",_err);
+    //                     let relative = reference.referrer.strip_prefix(&self.ctx.project_folder)?;
+    //                     if !self.ctx.ignore.is_match(&relative.to_string_lossy()) && !self.ctx.ignore.is_match(&reference.location) {
+    //                         // reference.warn();
+    //                         log_warn!("Resolver","referrer: `{}`",reference.referrer.display());
+    //                         log_warn!("","target: `{}`",reference.location);
+    //                         // std::process::exit(1);
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
     // pub async fn get_references(self: &Arc<Builder>, enums : &Enums, modules: &Modules) -> Result<Vec<Arc<FileModule>>> {
-    pub async fn get_references(self: &Arc<Builder>, files : &Vec<String>, modules: &Modules) -> Result<Vec<Arc<Content>>> {
+    pub async fn get_references(self: &Arc<Builder>, files : &Vec<String>, modules: &Db) -> Result<Vec<Arc<Content>>> {
         // let text = String::new();
 
         // let exports = &enums.exports;
@@ -119,8 +125,8 @@ impl Builder {
         Ok(references)
     }
 
-    pub async fn generate(self: &Arc<Builder>, root_module : &Arc<Content>, modules: &Modules) -> Result<()> {
-
+    pub async fn generate(self: &Arc<Builder>, root_module : &Arc<Content>, modules: &Db) -> Result<()> {
+// std::process::exit(1);
         let module_id_repr = "u64";
 
         let enums = if let Some(enums) = &self.ctx.manifest.settings.enums {
@@ -128,8 +134,8 @@ impl Builder {
             let mut text = String::new();
             text.push_str(&format!("\n#[allow(dead_code)]\n#[repr({})]\npub enum Modules {{\n", module_id_repr));
             text.push_str("\tAll = 0,\n");
-            for module in references.iter() {
-                text.push_str(&format!("\t{} = {},\n", module.component, module.id));
+            for content in references.iter() {
+                text.push_str(&format!("\t{} = {},\n", content.component, content.id()));
             }
             text.push_str("}\n");
             text
@@ -140,13 +146,13 @@ impl Builder {
         // log_info!("Generating","`{}`",self.ctx.target_file.display());
         log_info!("Generating","`{}`",self.ctx.target_folder.display());
         // let ident_kind = IdentKind::HexFull;
-        let ident_kind = IdentKind::IntegerFull;
+        let ident_kind = IdentKind::Full;
         
         let mut collection = Collection::new();
         root_module.gather(&mut collection)?;
         
         let mut content_rs = String::new();
-        for module in collection.modules.iter() {
+        for module in collection.content.iter() {
             // println!("{}",module.ident);            
             content_rs += &format!("pub const {} : &'static str = r###\"\n", module.ident(&ident_kind));
             // TODO - IMPORTS
@@ -174,59 +180,57 @@ pub async fn load_modules() -> context::Result<()> {
 
         let mut context_rs = String::new();
         context_rs += r###"
-        use std::sync::{
-            Arc,
-            Mutex,
-            atomic::AtomicBool
-        };
-        use workflow_dom::loader::{
-            // Module,
-            ContentType,
-            ContentMap,
-            Id,
-            Reference,
-            Context as Inner
-        };
-        pub use workflow_dom::loader::Content;
-        pub use workflow_dom::result::Result;
-        pub use workflow_dom::error::Error;
-        use crate::content;
-
-        "###;
-        context_rs += &format!("\nconst ROOT: Id = {};\n",root_module.id);
-
-        context_rs += r###"
-        pub struct Context {
-            inner : Arc<Inner>
-        }
-
-        impl Context {
-
-            pub async fn load(&self, list : &[Id]) -> Result<()> {
-                self.inner.load_ids(list).await?;
-                Ok(())
-            }
-
-            pub async fn load_all(&self) -> Result<()> {
-                self.inner.load_ids(&[ROOT]).await?;
-                Ok(())
-            }
-
-            pub fn get<'l>(&'l self, id: &Id) -> Option<&'l Arc<Content>> {
-                self.inner.get(id)
-            }
-            
-            pub fn url<'l>(&'l self, id: &Id) -> Option<String> {
-                self.inner.get(id).map(|c|c.url()).unwrap_or(None)
-            }
-            
-        }
-        "###;
-        // modules_rs += &format!("\npub type ModuleId = {};\n", module_id_repr);
-        
-        context_rs += r###"
-
+use std::sync::{
+    Arc,
+    Mutex,
+    atomic::AtomicBool
+};
+use workflow_dom::loader::{
+    // Module,
+    ContentType,
+    // ContentMap,
+    ContentList,
+    Id,
+    Reference,
+    declare,
+    Context as Inner,
+};
+pub use workflow_dom::loader::{
+    Content
+};
+pub use workflow_dom::result::Result;
+pub use workflow_dom::error::Error;
+use crate::content;
 "###;
+        context_rs += &format!("\nconst ROOT: Id = {};\n",root_module.id());
+
+        context_rs += r###"
+pub struct Context {
+    inner : Arc<Inner>
+}
+
+impl Context {
+
+    pub async fn load(&self, list : &[Id]) -> Result<()> {
+        self.inner.load_ids(list).await?;
+        Ok(())
+    }
+
+    pub async fn load_all(&self) -> Result<()> {
+        self.inner.load_ids(&[ROOT]).await?;
+        Ok(())
+    }
+
+    pub fn get(&self, id: &Id) -> Option<Arc<Content>> {
+        self.inner.get(id)
+    }
+    
+    pub fn url<'l>(&'l self, id: &Id) -> Option<String> {
+        self.inner.get(id).map(|c|c.url()).unwrap_or(None)
+    }
+    
+}
+        "###;
 
         if !self.ctx.manifest.settings.verbose.unwrap_or(false) {
             context_rs = context_rs.replace("log_info","// log_info");
@@ -235,10 +239,10 @@ pub async fn load_modules() -> context::Result<()> {
         context_rs += &enums;
 
         let mut table = Vec::new();
-        for module in collection.modules.iter() {
+        for content in collection.content.iter() {
 
             let mut references = Vec::new();
-            if let Some(targets) = &module.references {
+            if let Some(targets) = &content.references {
                 for reference in targets.iter() {
                     let content = reference
                         .content()
@@ -248,19 +252,20 @@ pub async fn load_modules() -> context::Result<()> {
                     match reference.kind {
                         ReferenceKind::Style => {
                             // println!("INJECTING STYLE {}", content.ident);
-                            references.push(format!("(Reference::Style,None,{})",content.id));
+                            references.push(format!("(Reference::Style,None,{})",content.id()));
                         },
                         ReferenceKind::Module => {
                             if let Some(what) = &reference.what {
-                                references.push(format!("(Reference::Module,Some(\"{}\"),{})",what,content.id));
+                                references.push(format!("(Reference::Module,Some(\"{}\"),{})",what,content.id()));
                             } else {
-                                references.push(format!("(Reference::Module,None,{})",content.id));
+                                references.push(format!("(Reference::Module,None,{})",content.id()));
                             }
                         },
                         ReferenceKind::Script => {
+                            references.push(format!("(Reference::Script,None,{})",content.id()));
                         },
                         ReferenceKind::Export => {
-                            references.push(format!("(Reference::Export,Some(\"{}\"),{})",reference.what.as_ref().unwrap(),content.id));
+                            references.push(format!("(Reference::Export,Some(\"{}\"),{})",reference.what.as_ref().unwrap(),content.id()));
                         }
 
                     }
@@ -270,7 +275,7 @@ pub async fn load_modules() -> context::Result<()> {
             let references = if references.is_empty() {
                 "None".to_string()
             } else {
-                format!("Some(&[{}])",references.join(","))
+                format!("Some(&[\n\t\t{}\n\t])",references.join(",\n\t\t"))
             };
 
             let definition = format!("Arc::new(Content {{\n\
@@ -282,14 +287,14 @@ pub async fn load_modules() -> context::Result<()> {
                 \treferences : {},\n\
                 \tis_loaded : AtomicBool::new(false),\n\
             }})", 
-                module.content_type.to_string(),
-                module.id,
-                module.ident(&ident_kind).to_lowercase(),
-                module.ident(&ident_kind),
+                content.content_type.to_string(),
+                content.id(),
+                content.ident(&ident_kind).to_lowercase(),
+                content.ident(&ident_kind),
                 references,
             );
 
-            table.push(format!("({},{})",module.id,definition));
+            table.push(format!("(0x{:x},{})",content.id,definition));
         }
         let table = table.join(",\n");
         context_rs += r###"
@@ -297,10 +302,11 @@ pub async fn load_modules() -> context::Result<()> {
             pub fn new() -> Self {
 
         "###;
-        context_rs += &format!("\nlet content : ContentMap = [\n{}\n].into_iter().collect();\n", table);
+        // context_rs += &format!("\nlet content : ContentList = [\n{}\n].into_iter().collect();\n", table);
+        context_rs += &format!("\nlet content : ContentList = &[\n{}\n];\n", table);
         context_rs += r###"
                 Context {
-                    inner : Arc::new(Inner::new(content))
+                    inner : declare(content)
                 }
             }
         }
@@ -316,7 +322,7 @@ pub async fn load_modules() -> context::Result<()> {
         // file_size += std::fs::metadata(&path_lib_rs)?.len() as f64 / 1024.0;
         file_size += std::fs::metadata(&path_content_rs)?.len() as f64 / 1024.0;
         // file_size += std::fs::metadata(&path_modules_rs)?.len() as f64 / 1024.0;
-        log_info!("Generating","... modules: {} content file size: {:1.0} Kb", collection.modules.len(), file_size);
+        log_info!("Generating","... modules: {} content file size: {:1.0} Kb", collection.content.len(), file_size);
 
         Ok(())
     }

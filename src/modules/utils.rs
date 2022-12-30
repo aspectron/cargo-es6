@@ -83,6 +83,57 @@ pub fn gather_references<P:AsRef<Path>>(text: &str, referrer: P) -> Result<(Opti
     }
     let text = link_re.replace_all(&text, "");
 
+    // ~~~~~~~~~~~~~~~~~
+    // FlowQRCode.define('flow-qrcode', [baseUrl+'resources/extern/qrcode/qrcode.js']);
+
+    let define_re = Regex::new(r###"\w+.define\(["'][^"']+["'],\s*(\[[^]]+\])?\)"###).unwrap();
+    // let define_reference_re = Regex::new(r###"\[\s*([^\],]+[,\s]*)+\s*\]"###).unwrap();
+    // let define_reference_re = Regex::new(r###"\[\s*([^\],]+[,\s]*)+\s*\]"###).unwrap();
+    // let define_reference_re = Regex::new(r###"\[([^\],]+[,\]]+)+"###).unwrap();
+    // let define_reference_re = Regex::new(r###"[^\[]+\[\s*(\s*[^,]+\s*)+\s*\]"###).unwrap();
+    // let define_reference_re = Regex::new(r###"[^\[]+\s*(\s*[^,\]]+\s*)+\s*"###).unwrap();
+    let define_list_re = Regex::new(r###"\[([^\]]+)]"###).unwrap();
+    let define_reference_re = Regex::new(r###"["']([^"']+)["']"###).unwrap();
+    let define_matches = define_re.find_iter(&text).map(|m| m.as_str().to_string()).collect::<Vec<_>>();
+    for define in define_matches.iter() {
+
+        let define = define.replace("\n","");
+        let captures = define_list_re.captures(&define).expect(&format!("unable to capture `{}`",define));
+        let define = captures[1].to_string();
+        let items = define.split(",").collect::<Vec<_>>();
+        let items = items.iter().map(|s|{
+            let captures = define_reference_re.captures(&s).expect(&format!("unable to capture `{}`",define));
+            captures[1].to_string()
+        }).collect::<Vec<_>>();
+        // println!("");
+
+        for location in items.iter() {
+            let extension = Path::new(location).extension().unwrap();
+            let kind = if extension == "css" {
+                ReferenceKind::Style
+            } else {
+                ReferenceKind::Script
+            };
+
+            let import = Reference::new(
+                kind,
+                referrer.as_ref(),
+                None,
+                &location
+            );
+            references.push(import);
+        }
+        // println!("{:?}", items);
+        // println!("");
+        
+
+    }
+
+
+
+
+    // ~~~~~~~~~~~~~~~~~
+
     let references = if references.is_empty() {
         None
     } else {

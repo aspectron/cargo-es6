@@ -28,7 +28,7 @@ pub struct NodeModule {
 }
 
 impl NodeModule {
-    pub async fn load<P>(ctx: &Context, absolute: P, package_json: PackageJson) -> Result<NodeModule> 
+    pub fn load<P>(ctx: &Context, absolute: P, package_json: PackageJson) -> Result<NodeModule> 
     where P: AsRef<Path> {
 
         let absolute = absolute.as_ref();
@@ -38,11 +38,11 @@ impl NodeModule {
             let mut exports = HashMap::new();
             for (file, export) in node_module_exports.iter() {
                 let path = folder.join(&export.default).canonicalize()?;
-                let module = Content::load(ctx,ContentType::Module, folder, &path).await?;
+                let module = Content::load(ctx,ContentType::Module, folder, &path)?;
                 exports.insert(file.to_string(), Arc::new(module));
                 if let Some(development) = &export.development {
                     let path = folder.join(development).canonicalize()?;
-                    let module = Content::load(ctx,ContentType::Module,folder, &path).await?;
+                    let module = Content::load(ctx,ContentType::Module,folder, &path)?;
                     exports.insert(file.to_string(), Arc::new(module));
                 }
             }
@@ -51,26 +51,26 @@ impl NodeModule {
             HashMap::new()
         };
 
-        let filter = Filter::new(&["*.{js,mjs,css}"]);
-        let relative_files = if let Some(files) = package_json.files {
+        // let filter = Filter::new(&["*.{js,mjs,css}"]);
+        // let relative_files = if let Some(files) = package_json.files {
 
-            let globs = files
-                .iter()
-                .map(|s|s.as_str())
-                .collect::<Vec<_>>();
-            let aggregator = Filter::new(&globs);
-            let list = get_files(&folder, Some(&aggregator),Some(&filter)).await?;
-            list
-        } else {
-            let aggregator = Filter::new(&["*.{js,mjs,css}"]);
-            get_files(&folder, Some(&aggregator),None).await?
-        };
+        //     let globs = files
+        //         .iter()
+        //         .map(|s|s.as_str())
+        //         .collect::<Vec<_>>();
+        //     let aggregator = Filter::new(&globs);
+        //     let list = get_files(&folder, Some(&aggregator),Some(&filter)).await?;
+        //     list
+        // } else {
+        //     let aggregator = Filter::new(&["*.{js,mjs,css}"]);
+        //     get_files(&folder, Some(&aggregator),None).await?
+        // };
 
 
         let mut files = Vec::new();
-        for relative in relative_files.iter() {
-            files.push(Arc::new(Content::load(ctx,ContentType::Module,folder,relative).await?));
-        } 
+        // for relative in relative_files.iter() {
+        //     files.push(Arc::new(Content::load(ctx,ContentType::Module,folder,relative).await?));
+        // } 
 
         let mut root_file = package_json
             .module
@@ -84,7 +84,7 @@ impl NodeModule {
         let root = match folder.join(Path::new(&root_file)).canonicalize() {
             Ok(path) => {
                 let relative = path.strip_prefix(folder).unwrap().to_path_buf();
-                let m = Arc::new(Content::load(ctx,ContentType::Module, folder,&relative).await?);
+                let m = Arc::new(Content::load(ctx,ContentType::Module, folder,&relative)?);
                 files.push(m.clone());
                 Some(m)
             },
