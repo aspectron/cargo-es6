@@ -12,7 +12,6 @@ pub mod log;
 pub mod utils;
 pub mod filter;
 pub mod modules;
-pub mod dependencies;
 pub mod prelude;
 
 use prelude::*;
@@ -93,7 +92,7 @@ pub async fn async_main() -> Result<()> {
             let ctx = Arc::new(Context::create(
                 location,
                 Options::default(),
-            ).await?);
+            )?);
 
             let build = Arc::new(Builder::new(ctx));
             build.execute().await?;
@@ -103,7 +102,7 @@ pub async fn async_main() -> Result<()> {
             let ctx = Arc::new(Context::create(
                 location,
                 Options::default()
-            ).await?);
+            )?);
 
             ctx.clean().await?;
 

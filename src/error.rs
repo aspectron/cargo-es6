@@ -1,4 +1,4 @@
-use std::{ffi::OsString, string::FromUtf8Error, num::ParseIntError};
+use std::{ffi::OsString, string::FromUtf8Error, num::ParseIntError, sync::PoisonError};
 use globset::Error as GlobError;
 use thiserror::Error;
 
@@ -40,6 +40,9 @@ pub enum Error {
 
     #[error("ParseInt error: {0}")]
     ParseInt(#[from] ParseIntError),
+
+    #[error("Poison error: {0}")]
+    PoisonError(String),
 }
 
 impl From<&str> for Error {
@@ -57,5 +60,11 @@ impl From<String> for Error {
 impl From<OsString> for Error {
     fn from(os_str: OsString) -> Error {
         Error::OsString(format!("{:?}", os_str))
+    }
+}
+
+impl<T> From<PoisonError<T>> for Error {
+    fn from(e: PoisonError<T>) -> Error {
+        Error::PoisonError(format!("{:?}", e))
     }
 }

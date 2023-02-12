@@ -13,6 +13,7 @@ pub use crate:: {
     modules::content::*,
     modules::node_module::*,
     modules::collection::*,
+    modules::dependency::*,
     modules::utils::*,
     modules::*,
     // node_modules::*,
@@ -32,3 +33,5 @@ pub use walkdir::WalkDir;
 pub use regex::Regex;
 pub use std::collections::{HashSet,HashMap};
 pub use convert_case::{Case, Casing};
+pub use std::hash::{Hash, Hasher};
+pub use std::collections::hash_map::DefaultHasher;

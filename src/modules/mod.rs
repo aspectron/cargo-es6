@@ -1,7 +1,9 @@
 pub mod reference;
-pub mod content;
+pub mod library;
 pub mod node_module;
+pub mod content;
 pub mod collection;
+pub mod dependency;
 pub mod utils;
 pub mod db;
 pub use db::*;

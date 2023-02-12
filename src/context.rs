@@ -37,15 +37,15 @@ pub struct Context {
 }
 
 impl Context {
-    pub async fn create(
+    pub fn create(
         location : Option<String>,
         // output : Option<String>,
         _options: Options,
     ) -> Result<Context> {
 
-        let manifest_toml = Manifest::locate(location).await?;
+        let manifest_toml = Manifest::locate(location)?;
         log_info!("Manifest","`{}`",manifest_toml.to_str().unwrap());
-        let manifest = Manifest::load(&manifest_toml).await?;
+        let manifest = Manifest::load(&manifest_toml)?;
         let manifest_folder = manifest_toml.parent().unwrap().to_path_buf();
 
         let project_file = manifest_folder.join(&manifest.settings.project).canonicalize()?;

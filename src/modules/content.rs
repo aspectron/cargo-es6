@@ -1,6 +1,4 @@
 use crate::prelude::*;
-use std::hash::{Hash, Hasher};
-use std::collections::hash_map::DefaultHasher;
 
 pub type ModuleId = u64;
 
@@ -41,64 +39,73 @@ pub struct Content {
     pub id : ModuleId,
     pub ident : String,
     pub component : String,
-    // pub folder: PathBuf,
-    // pub node_module_folder : Option<PathBuf>,
-    pub base_folder : PathBuf,
-    pub absolute : PathBuf,
+    /// node_modules folder in which the file resides (if aailable)
+    /// if not available, this contains the project folder
+    // pub base_folder : PathBuf,
+    pub node_module_id : u64,
+    pub location : PathBuf,
     pub references : Option<Vec<Reference>>,
-    // pub exports : Option<Vec<Reference>>,
-    // pub styles : Option<Vec<Reference>>,
-    // pub stylesheets : Vec<Reference>,
     pub content_type : ContentType,
-    pub content : String,
+    pub content : Option<String>,
+    pub external : bool,
 }
 
 
 impl Content {
-    pub fn load<P>(ctx: &Context, content_type:ContentType, base_folder :P, path: P) -> Result<Content> 
-    where P: AsRef<Path> {
-        let base_folder = base_folder.as_ref().to_path_buf();
-        let path = path.as_ref();
-        let absolute = base_folder.join(path).canonicalize()?;
-        let component = Path::new(path).file_stem().unwrap().to_string_lossy().to_case(Case::Pascal);
-        let text = fs::read_to_string(&absolute)?;
+    // pub fn load<P>(ctx: &Context, content_type:ContentType, base_folder :P, absolute: P) -> Result<Content> 
+    // pub fn load<P>(ctx: &Context, content_type:ContentType, node_module : &NodeModule, location: P) -> Result<Content> 
+    pub fn get_ident<P : AsRef<Path>>(ctx: &Context, p : P) -> Result<String> {
+        let ident_re_blank = Regex::new(r"(node_modules/|@|.js)")?;
+        let ident_re_usc = Regex::new(r"/|-|\.")?;
+        // let ident = p.as_ref().strip_prefix(&ctx.project_folder)?.to_string_lossy().to_string();
+        let ident = p.as_ref().to_string_lossy().to_string();
+        let ident = ident_re_blank.replace_all(&ident,"")
+            .to_string();
+        let ident = ident_re_usc.replace_all(&ident, "_")
+            .to_string()
+            .to_uppercase();
+        Ok(ident)
+    }
 
+    pub fn load<P>(
+        ctx: &Context,
+        content_type:ContentType,
+        // node_module : &NodeModule,
+        node_module_id : u64,
+        base_folder : P,
+        location: P,
+    ) -> Result<Content> 
+    where P: AsRef<Path> {
+        let location = location.as_ref().to_path_buf();
+        println!("loading base_folder: {}", base_folder.as_ref().display());
+        println!("loading location: {}", location.display());
+        let absolute = ctx
+            .project_folder
+            .join(&base_folder)
+            .join(&location)
+            .canonicalize()
+            .expect(&format!("unable to canonicalize to absolute"));
+        let ident = Self::get_ident(ctx, &absolute)?;
+        let id = ident.u64_hash();
+        println!("loading absolute: {}", absolute.display());
+
+        let text = fs::read_to_string(&absolute)?;
         let text = match content_type {
             ContentType::Module | ContentType::Script => {
-
-                // println!("processing: {}",absolute.display());
-                // use no_comment::{IntoWithoutComments as _, languages};
-
-                // let text = text
-                // .chars()
-                // .without_comments(languages::rust())
-                // .collect::<String>();
-                // ~~~
-                // let text = strip_js_comments(text)?;
-                // text.split("\n").map(|l|l.trim()).filter(|l|!l.is_empty()).collect::<Vec<_>>().join("\n")
-                // text
-                // let comment_block_re = Regex::new(r###"/\*[^(\*/)]*\*/"###).unwrap();
-                // let text = comment_block_re.replace_all(&text, "");
                 let comment_line_re = Regex::new(r###"^\s*//"###).unwrap();
-                
                 text.split("\n").filter(|s|{
                     if (comment_line_re.is_match(s) && !s.contains("*/")) || s.trim().is_empty() {
                         false
                     } else {
                         true
                     }
-                    // !comment_line_re.is_match(s) && !s.trim().is_empty()
                 }).collect::<Vec<_>>().join("\n")
-                // text
             },
-            _ => { 
-                // println!("processing: {}",absolute.display());
-                
-                text }
+            _ => { text }
         };
 
         // println!("processing: {}",absolute.display());
-        let (references, text) = gather_references(&text, &absolute)?;
+        let (references, text) = gather_references(&text, id)?;
         let references = if let Some(mut references) = references {
             for reference in references.iter_mut() {
                 reference.location = ctx.replace(&reference.location);
@@ -108,35 +115,75 @@ impl Content {
             references
         };
 
-        let ident_re_blank = Regex::new(r"(node_modules/|@|.js)")?;
-        let ident_re_usc = Regex::new(r"/|-|\.")?;
-        let ident = absolute.strip_prefix(&ctx.project_folder)?.to_string_lossy().to_string();
-        let ident = ident_re_blank.replace_all(&ident,"")
-            .to_string();
-        let ident = ident_re_usc.replace_all(&ident, "_")
-            .to_string()
-            .to_uppercase();
+
+        let content = Some(text.to_string());
+
+        Content::new(ctx,content_type,node_module_id,location,id,content,references)
+
+    }
+
+    // pub fn external(ctx: &Context, content_type:ContentType, id: u64, reference: &ExternalContentReference) -> Result<Content> {
+    pub fn external(ctx: &Context, content_type:ContentType, id: u64, node_module_id: u64, location: &str) -> Result<Content> {
+
+        // let base_folder = ctx.project_folder.join(&reference.base);
+        // let absolute = base_folder.join(&reference.location);
+
+        // let base_folder = base_folder.as_ref().to_path_buf();
+        // let path = path.as_ref();
+        // let absolute = base_folder.join(path).canonicalize()?;
+        // let component = absolute.file_stem().unwrap().to_string_lossy().to_case(Case::Pascal);
 
 
-        let mut hasher = DefaultHasher::new();
-        ident.hash(&mut hasher);
-        let id = hasher.finish();
+        Content::new(ctx,content_type,node_module_id,location,id,None,None)
+        // let content = text.to_string();
+        // let module = Content {
+        //     id,
+        //     ident,
+        //     component,
+        //     base_folder,
+        //     absolute,
+        //     references : None,
+        //     content_type,
+        //     content : None,
+        // };
 
-        let content = text.to_string();
+        // Ok(module)
+
+    }
+    fn new<P>(
+        ctx: &Context, 
+        content_type:ContentType, 
+        node_module_id : u64,
+        // base_folder :P, 
+        location: P,
+        id : u64,
+        content : Option<String>,
+        references : Option<Vec<Reference>>,
+    ) -> Result<Content> 
+    where P: AsRef<Path> {
+        let location = location.as_ref().to_path_buf();
+        let component = location.file_stem().unwrap().to_string_lossy().to_case(Case::Pascal);
+        let ident = Self::get_ident(ctx,&location)?;
+
+        let external = content.is_some();
         let module = Content {
             id,
             ident,
             component,
-            base_folder,
-            absolute,
+            // base_folder,
+            node_module_id,
+            location,
             references,
             content_type,
             content,
+            external,
         };
 
         Ok(module)
 
     }
+
+    // pub fn get_export_path()
 
     pub fn ident(&self, kind : &IdentKind) -> String {
         match kind {
@@ -170,23 +217,26 @@ impl Content {
     //     format!("{:x}", self.id)
     // }
 
-    pub fn references(&self) -> Vec<Arc<Content>> {
-        let mut list = Vec::new();
+    pub fn references(&self, db: &Db) -> Result<Option<Vec<Arc<Content>>>> {
+        // let references = self.references.lock()?;
         if let Some(references) = &self.references {
+            let mut list = Vec::new();
             for reference in references.iter() {
                 if let Some(reference) = reference.content() {
                     list.push(reference);
                 } else {
-                    reference.warn();
+                    reference.warn(db);
                 }
             }
+            Ok(Some(list))
+        } else {
+            Ok(None)
         }
-        list
     }
 
-    pub fn gather(self : &Arc<Content>, collection: &mut Collection) -> Result<()> {
+    pub fn gather(self : &Arc<Content>,db:&Db, collection: &mut Collection) -> Result<()> {
 
-        self.gather_impl(collection)?;
+        self.gather_impl(db,collection)?;
 
         collection.content.push(self.clone());
         collection.groups.push(vec![self.clone()]);
@@ -194,20 +244,21 @@ impl Content {
         Ok(())
     }
 
-    fn gather_impl(self : &Arc<Content>, collection: &mut Collection) -> Result<()> {
+    fn gather_impl(self : &Arc<Content>, db: &Db, collection: &mut Collection) -> Result<()> {
 
         let mut group = Vec::new();
-        let references = self.references();
+        let references = self.references(db)?;
+        if let Some(references) = references {
+            for reference in references.iter() {
+                reference.gather_impl(db,collection)?;
+            }
 
-        for reference in references.iter() {
-            reference.gather_impl(collection)?;
-        }
-
-        for reference in references.iter() {
-            if !collection.idents.contains(&reference.ident) {
-                collection.idents.insert(reference.ident.clone());
-                collection.content.push(reference.clone());
-                group.push(reference.clone());
+            for reference in references.iter() {
+                if !collection.idents.contains(&reference.ident) {
+                    collection.idents.insert(reference.ident.clone());
+                    collection.content.push(reference.clone());
+                    group.push(reference.clone());
+                }
             }
         }
 
@@ -218,14 +269,22 @@ impl Content {
         Ok(())
     }
 
-    pub fn resolve(&self, db : &mut Db) -> Result<()> {
+    pub fn node_module<'db>(&self, db : &'db Db) -> Arc<NodeModule> {
+        db
+            .node_modules_by_id
+            .get(&self.node_module_id)
+            .expect(&format!("Unable to location node module in `{}`", self.location.display()))
+            .clone()
+    }
+
+    pub fn resolve(self : &Arc<Self>, db : &mut Db) -> Result<()> {
         if let Some(references) = &self.references {
             let references = references.iter().filter(|r|{
-                r.reference.lock().unwrap().is_none()
+                r.content.lock().unwrap().is_none()
             }).collect::<Vec<_>>();
 
             for reference in references.iter() {
-                *reference.reference.lock().unwrap() = self.resolve_reference(db,reference)?;
+                *reference.content.lock().unwrap() = self.resolve_reference(db,reference)?;
             }
         }
 
@@ -233,77 +292,111 @@ impl Content {
     }
 
     // pub async fn resolve(&mut self, location: &str, referrer : &Path) -> Result<Option<Arc<Content>>> {
-    pub fn resolve_reference(&self, db : &mut Db, reference : &Reference) -> Result<Option<Arc<Content>>> {
+    pub fn resolve_reference(self : &Arc<Self>, db : &mut Db, reference : &Reference) -> Result<Option<Arc<Content>>> {
+println!("dependency processing location: {}", reference.location);
 
-        let location = &reference.location.clone();
-        let location = if location.starts_with("./") {
-            &location[2..]
-        } else if location.starts_with("/") {
-            &location[1..]
-        } else {
-            location
-        };
+        let location = Path::new(&reference.location).normalize()?;
+        let location = location.to_str().unwrap();
+println!("normalized location: {}",location);
 
-        // check if location matches any node modules
-        if let Some(node_module) = db.node_modules_by_name.get(location) {
-            if let Some(module) = &node_module.root {
-                return Ok(Some(module.clone()));
-            }
+        // let location = &reference.location.clone();
+        // let location = if location.starts_with("./") {
+        //     &location[2..]
+        // } else if location.starts_with("/") {
+        //     &location[1..]
+        // } else {
+        //     location
+        // };
+
+        let content = db.locate(location, self)?;
+        if content.is_some() {
+            return Ok(content);
         }
 
-        // println!("--- relative: `{}`",location);
-        let paths = [
-            reference.referrer.parent().unwrap().join(location),
-            self.absolute.parent().unwrap().join(location),
-            self.base_folder.join(location),
-            db.ctx.node_modules.join(location),
-        ];
 
-        let path = paths
-            .iter()
-            .find(|p|{
-                p.canonicalize().is_ok()
-            });
+        // // println!("--- relative: `{}`",location);
+        // let paths = [
+        //     reference.referrer.parent().unwrap().join(location),
+        //     self.location.parent().unwrap().join(location),
+        //     self.base_folder.join(location),
+        //     // db.ctx.node_modules.join(location),
+        // ];
 
-        if path.is_none() {
-            reference.warn();
-            let relative = self.absolute.strip_prefix(&db.ctx.project_folder)?;
+        // let path = paths
+        //     .iter()
+        //     .find(|p|{
+        //         p.canonicalize().is_ok()
+        //     });
 
-            if !db.ctx.ignore.is_match(&relative.to_string_lossy()) && !db.ctx.ignore.is_match(&location) {
-                println!("location: `{}`",location);
-                reference.warn();
-                return Err(format!("unable to resolve: `{}`", location).into())
-            }
-            return Ok(None);
-        }
+        // let (base_folder, path) = if path.is_some() {
+        //     (Some(self.base_folder.clone()), path)
+        // } else {
+        //     db.locate_file(location)
+        //     // let absolute = db.ctx.node_modules.join(location);
+        //     // let folder = absolute.parent().unwrap();
+        //     // let package_json = search_upwards(folder, "package.json").unwrap();
+        //     // db.locate_file_in_node_modules(location)
+        // };
 
-        let absolute = path.unwrap();
+        // if path.is_none() {
+        //     reference.warn();
+        //     let relative = self.location.strip_prefix(&db.ctx.project_folder)?;
 
-        if let Some(target) = db.file_content_by_absolute.get(absolute) {
-            Ok(Some(target.clone()))
-        } else {
-            let content_type = match reference.kind {
-                ReferenceKind::Module | ReferenceKind::Export => {
-                    ContentType::Module
-                },
-                ReferenceKind::Script => {
-                    ContentType::Script
-                },
-                ReferenceKind::Style => {
-                    ContentType::Style
-                }
-            };
+        //     if !db.ctx.ignore.is_match(&relative.to_string_lossy()) && !db.ctx.ignore.is_match(&location) {
+        //         println!("location: `{}`",location);
+        //         reference.warn();
+        //         return Err(format!("unable to resolve: `{}`", location).into())
+        //     }
+        //     return Ok(None);
+        // }
 
-            // println!("creating ref content for: `{}`",reference.location);
-            let base_folder = self.base_folder.clone();
-            let dependency = Arc::new(Content::load(&db.ctx, content_type, base_folder, absolute.clone())?);
-            db.file_content.push(dependency.clone());
-            db.file_content_by_absolute.insert(absolute.clone(), dependency.clone());
-            // *reference.reference.lock().unwrap() = Some(dependency.clone());
-            dependency.resolve(db)?;
-            Ok(Some(dependency))
-        }
+        // 
 
+
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        // let absolute = path.unwrap();
+
+        // if let Some(target) = db.locate_file_absolute(absolute) {
+        //     Ok(Some(target.clone()))
+        // } else {
+        //     let content_type = match reference.kind {
+        //         ReferenceKind::Module | ReferenceKind::Export => {
+        //             ContentType::Module
+        //         },
+        //         ReferenceKind::Script => {
+        //             ContentType::Script
+        //         },
+        //         ReferenceKind::Style => {
+        //             ContentType::Style
+        //         }
+        //     };
+
+        //     // println!("creating ref content for: `{}`",reference.location);
+        //     let base_folder = self.base_folder.clone();
+        //     println!("loading dependency");
+        //     let dependency = Arc::new(Content::load(&db.ctx, content_type, base_folder, absolute.clone())?);
+        //     db.file_content.push(dependency.clone());
+        //     db.file_content_by_location.insert(absolute.clone(), dependency.clone());
+        //     // *reference.reference.lock().unwrap() = Some(dependency.clone());
+        //     dependency.resolve(db)?;
+        //     Ok(Some(dependency))
+        // }
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        Err(format!("Unable to resolve reference `{}` from `{}`", 
+            reference.location,
+            self.location.display()
+        ).into())
     }
 
 }

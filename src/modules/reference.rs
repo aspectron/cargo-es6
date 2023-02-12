@@ -20,18 +20,25 @@ impl ToString for ReferenceKind {
     }
 }
 
+// #[derive(Debug)]
+// pub struct Referrer {
+
+// }
+
 #[derive(Debug)]
 pub struct Reference {
     pub kind : ReferenceKind,
-    pub referrer: PathBuf,
+    pub referrer: u64,
+    // pub referrer: PathBuf,
+    // pub referrer: Arc<Content>,
     pub what: Option<String>,
     pub location: String,
     // pub component : String,
-    pub reference: Mutex<Option<Arc<Content>>>,
+    pub content: Mutex<Option<Arc<Content>>>,
 }
 
 impl Reference {
-    pub fn new(kind: ReferenceKind, referrer: &Path, what: Option<&str>, location: &str) -> Reference {
+    pub fn new(kind: ReferenceKind, referrer: u64, what: Option<&str>, location: &str) -> Reference {
 
 
         // .from_case(Case::Kebab).to_case(Case::Title)
@@ -40,32 +47,38 @@ impl Reference {
 
         Reference {
             kind,
-            referrer: referrer.to_path_buf(),
+            referrer, //: referrer.to_path_buf(),
             what,
             location: location.trim().to_string(),
             // component,
-            reference: Mutex::new(None),
+            content: Mutex::new(None),
         }
     }
 
     pub fn content(&self) -> Option<Arc<Content>> {
-        self.reference.lock().unwrap().as_ref().cloned()
+        self.content.lock().unwrap().as_ref().cloned()
     }
 
-    pub fn warn(&self) {
+    pub fn warn(&self, db : &Db) {
         log_warn!("Warning","+--- Unable to resolve");
         if let Some(what) = &self.what {
             log_warn!("","| what: `{:?}`", what);
         }
         log_warn!("","| location: `{}`", self.location);
-        log_warn!("","| referrer: `{}`", self.referrer.display());
+        let referrer = db
+            .get_file(&self.referrer)
+            .expect(&format!("unable to get file id 0x{:16x}", self.referrer));
+        log_warn!("","| referrer: `{}`", referrer.location.display());
         log_warn!("","+---");
     }
 
-    pub fn error(&self) {
+    pub fn error(&self, db : &Db) {
         log_error!("+--- Unable to resolve");
         log_error!("| location: `{}`", self.location);
-        log_error!("| referrer: `{}`", self.referrer.display());
+        let referrer = db
+            .get_file(&self.referrer)
+            .expect(&format!("unable to get file id 0x{:16x}", self.referrer));
+        log_warn!("","| referrer: `{}`", referrer.location.display());
         log_error!("+---");
     }
 

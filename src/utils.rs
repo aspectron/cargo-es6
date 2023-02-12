@@ -1,8 +1,14 @@
+use std::borrow::Cow;
+
 use regex::Regex;
+use path_dedot::*;
 use crate::prelude::*;
 
-pub async fn search_upwards(folder: &PathBuf, filename: &str) -> Option<PathBuf> {
-    let mut folder = folder.clone();
+pub fn search_upwards<P>(folder: P, filename: &str) -> Option<PathBuf> 
+where
+    P : AsRef<Path>
+{
+    let mut folder = folder.as_ref();
 
     loop {
         let file_path = folder.join(filename);
@@ -11,19 +17,19 @@ pub async fn search_upwards(folder: &PathBuf, filename: &str) -> Option<PathBuf>
         }
 
         if let Some(parent) = folder.parent() {
-            folder = parent.to_path_buf();
+            folder = parent;
         } else {
             return None;
         }
     }
 }
 
-pub async fn current_dir() -> PathBuf {
+pub fn current_dir() -> PathBuf {
     std::env::current_dir().unwrap().into()
 }
 
 // pub async fn find_file(folder: &Path,files: &[&str]) -> Result<PathBuf> {
-pub async fn find_file(folder: &Path,files: &[String]) -> Result<PathBuf> {
+pub fn find_file(folder: &Path,files: &[String]) -> Result<PathBuf> {
     for file in files {
         let path = folder.join(file);
         match path.canonicalize() {
@@ -69,7 +75,7 @@ where P : AsRef<Path>
     is_hidden
 }
 
-pub async fn get_files<P>(folder : P, aggregator : Option<&Filter>, filter : Option<&Filter>) -> Result<Vec<PathBuf>> 
+pub fn get_files<P>(folder : P, aggregator : Option<&Filter>, filter : Option<&Filter>) -> Result<Vec<PathBuf>> 
 where P: AsRef<Path> {
 
     // let path = 
@@ -79,7 +85,7 @@ where P: AsRef<Path> {
         .flatten()
         .filter_map(|entry|{
             let path = entry.path();
-            let relative = path.strip_prefix(folder.as_ref()).unwrap();
+            let relative = path.strip_prefix(folder.as_ref()).expect("get_files() failure");
             let relative_str = relative.to_string_lossy();
 
             if aggregator
@@ -97,3 +103,18 @@ where P: AsRef<Path> {
     Ok(list.collect())
 
 }
+
+
+pub trait NormalizePath {
+    fn normalize(&self) -> Result<Cow<Path>>;
+}
+
+impl NormalizePath for Path {
+    fn normalize(&self) -> Result<Cow<Path>> {
+        Ok(self.parse_dot()?)
+    }
+}
+
+// pub fn normalize<P : AsRef<Path>>(p: &P) -> Result<Cow<Path>> {
+//     Ok(p.as_ref().parse_dot()?)
+// }

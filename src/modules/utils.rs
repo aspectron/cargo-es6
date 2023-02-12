@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 
-pub fn gather_references<P:AsRef<Path>>(text: &str, referrer: P) -> Result<(Option<Vec<Reference>>, String)> {
+pub fn gather_references(text: &str, referrer: u64) -> Result<(Option<Vec<Reference>>, String)> {
 
     let mut references = Vec::new();
     // handle `import xxx from "xxx"`
@@ -15,7 +15,7 @@ pub fn gather_references<P:AsRef<Path>>(text: &str, referrer: P) -> Result<(Opti
         let location = captures[2].to_string();
         let import = Reference::new(
             ReferenceKind::Module,
-            referrer.as_ref(),
+            referrer, //.as_ref(),
             Some(&what),
             &location
         );
@@ -38,7 +38,7 @@ pub fn gather_references<P:AsRef<Path>>(text: &str, referrer: P) -> Result<(Opti
         // println!("| import location: {}", location);
         let import = Reference::new(
             ReferenceKind::Module,
-            referrer.as_ref(),
+            referrer,
             None,
             &location
         );
@@ -57,7 +57,7 @@ pub fn gather_references<P:AsRef<Path>>(text: &str, referrer: P) -> Result<(Opti
         let location = captures[2].to_string();
         let export = Reference::new(
             ReferenceKind::Export,
-            referrer.as_ref(),
+            referrer,
             Some(&what),
             &location
         );
@@ -75,7 +75,7 @@ pub fn gather_references<P:AsRef<Path>>(text: &str, referrer: P) -> Result<(Opti
         let location = captures[1].to_string();
         let import = Reference::new(
             ReferenceKind::Style,
-            referrer.as_ref(),
+            referrer,
             None,
             &location
         );
@@ -129,7 +129,7 @@ pub fn gather_references<P:AsRef<Path>>(text: &str, referrer: P) -> Result<(Opti
 
                 let import = Reference::new(
                     kind,
-                    referrer.as_ref(),
+                    referrer,
                     None,
                     &location
                 );
@@ -150,9 +150,26 @@ pub fn gather_references<P:AsRef<Path>>(text: &str, referrer: P) -> Result<(Opti
 
 }
 
-pub fn id_from_string(s: &str) -> Result<u64> {
+pub fn hex_str_to_u64(s: &str) -> Result<u64> {
     let without_prefix = s.trim_start_matches("0x");
     Ok(u64::from_str_radix(without_prefix, 16)?)
+}
+
+pub fn u64_to_hex_str(id: &u64) -> String {
+    format!("0x{:16x}",id)
+}
+
+pub trait GetHash {
+    fn u64_hash(&self) -> u64;
+}
+
+impl GetHash for String {
+    fn u64_hash(&self) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        self.hash(&mut hasher);
+        hasher.finish()
+    }
+
 }
 
 // FlowQRCode.define('flow-qrcode', [baseUrl+'resources/extern/qrcode/qrcode.js']);

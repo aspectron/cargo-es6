@@ -30,7 +30,7 @@ impl Builder {
 
         println!("");
 
-        let module = modules.file_content_by_absolute.get(&self.ctx.project_file);
+        let module = modules.file_content_by_location.get(&self.ctx.project_file);
         if let Some(module) = module {
             self.generate(&module, &modules).await?;
         } else {
@@ -53,7 +53,7 @@ impl Builder {
         Ok(())
     }
 
-    pub async fn get_references(self: &Arc<Builder>, files : &Vec<String>, modules: &Db) -> Result<Vec<Arc<Content>>> {
+    pub async fn get_references(self: &Arc<Builder>, files : &Vec<String>, db: &Db) -> Result<Vec<Arc<Content>>> {
         let mut targets = Vec::new();
         for file in files.iter() {
             let in_root = self.ctx.project_folder.join(file);
@@ -72,11 +72,12 @@ impl Builder {
 
         let mut references = Vec::new();
         for target in targets.iter() {
-            let module = modules.file_content_by_absolute.get(target); //modules.resolve(location, referrer)
+            let module = db.file_content_by_location.get(target); //modules.resolve(location, referrer)
             if let Some(module) = module {
 
-                let list = module.references();
-                references.extend_from_slice(&list);
+                if let Some(list) = module.references(db)? {
+                    references.extend_from_slice(&list);
+                }
                 // let mut components = Vec::new();
                 // for reference in references.iter() {
                 //     // components.push(reference.clone());
@@ -116,17 +117,17 @@ impl Builder {
         let ident_kind = IdentKind::Full;
         
         let mut collection = Collection::new();
-        root_module.gather(&mut collection)?;
+        root_module.gather(db, &mut collection)?;
         
 
         let mut content_rs = String::new();
         for content in collection.content.iter() {
-            // println!("{}",module.ident);            
-            content_rs += &format!("pub const {} : &'static str = r###\"\n", content.ident(&ident_kind));
-            // TODO - IMPORTS
-            content_rs += &content.content;
-            // TODO - EXPORTS
-            content_rs += &format!("\n\"###;\n\n");
+
+            if !content.external {
+                content_rs += &format!("pub const {} : &'static str = r###\"\n", content.ident(&ident_kind));
+                content_rs += content.content.as_ref().expect("missing content in internal instance");
+                content_rs += &format!("\n\"###;\n\n");
+            }
         }
 
         let lib_rs = r###"
@@ -199,35 +200,32 @@ impl Context {
             let mut references = Vec::new();
             if let Some(targets) = &content.references {
                 for reference in targets.iter() {
-                    match reference.content() {
-                        Some(content) => {
-                            match reference.kind {
-                                ReferenceKind::Style => {
-                                    references.push(format!("(Reference::Style,None,{})",content.id()));
-                                },
-                                ReferenceKind::Module => {
-                                    if let Some(what) = &reference.what {
-                                        references.push(format!("(Reference::Module,Some(\"{}\"),{})",what,content.id()));
-                                    } else {
-                                        references.push(format!("(Reference::Module,None,{})",content.id()));
-                                    }
-                                },
-                                ReferenceKind::Script => {
-                                    references.push(format!("(Reference::Script,None,{})",content.id()));
-                                },
-                                ReferenceKind::Export => {
-                                    references.push(format!("(Reference::Export,Some(\"{}\"),{})",reference.what.as_ref().unwrap(),content.id()));
+                    // match reference.kind {
+                    let target = reference.content();
+                    if let Some(target) = target {
+                        // references.push(target);
+                        match reference.kind {
+                            ReferenceKind::Style => {
+                                references.push(format!("(Reference::Style,None,{})",target.id()));
+                            },
+                            ReferenceKind::Module => {
+                                if let Some(what) = &reference.what {
+                                    references.push(format!("(Reference::Module,Some(\"{}\"),{})",what,target.id()));
+                                } else {
+                                    references.push(format!("(Reference::Module,None,{})",target.id()));
                                 }
+                            },
+                            ReferenceKind::Script => {
+                                references.push(format!("(Reference::Script,None,{})",target.id()));
+                            },
+                            ReferenceKind::Export => {
+                                references.push(format!("(Reference::Export,Some(\"{}\"),{})",reference.what.as_ref().unwrap(),target.id()));
                             }
-                        },
-                        None => {
-                            reference.error();
-                            // .expect(&format!("failure dereferencing `{}` -> `{}`", reference.referrer.display(),reference.location));
                         }
+                    } else {
+
+
                     }
-
-                    
-
                 }
             }
 
@@ -318,43 +316,50 @@ impl Context {
     pub fn update_manifest(&self, db : &Db, collection: &Collection) -> Result<()> {
 
         // manifest_toml += "[manifest]\n\n\n";
-        let mut manifest_modules = Vec::new();
-        let mut manifest_scripts = Vec::new();
-        let mut manifest_styles = Vec::new();
+        // let mut manifest_modules = Vec::new();
+        // let mut manifest_scripts = Vec::new();
+        // let mut manifest_styles = Vec::new();
 
         
-        for content in collection.content.iter() {
+        // for content in collection.content.iter() {
 
-            let manifest_entry = format!("{} = \"{}\"", 
-                // content.content_type.to_manifest_type(),
-                content.id(),
-                content.absolute.strip_prefix(&self.ctx.project_folder)?.to_str().unwrap()
-            );
+        //     let reference: ExternalContentReference = (&self.ctx,content).try_into()?;
 
-            match content.content_type {
-                ContentType::Module => {
-                    manifest_modules.push(manifest_entry);
-                },
-                ContentType::Script => {
-                    manifest_scripts.push(manifest_entry);
-                },
-                ContentType::Style => {
-                    manifest_styles.push(manifest_entry);
-                },
-            }
-        }
+
+        //     let manifest_entry = format!("{} = {}", 
+        //         // content.content_type.to_manifest_type(),
+        //         content.id(),
+        //         reference.to_string()
+        //         // content.absolute.strip_prefix(&self.ctx.project_folder)?.to_str().unwrap()
+        //     );
+
+        //     match content.content_type {
+        //         ContentType::Module => {
+        //             manifest_modules.push(manifest_entry);
+        //         },
+        //         ContentType::Script => {
+        //             manifest_scripts.push(manifest_entry);
+        //         },
+        //         ContentType::Style => {
+        //             manifest_styles.push(manifest_entry);
+        //         },
+        //     }
+        // }
 
         let mut manifest_node_modules = Vec::new();
 
         for node_module in db.node_modules.iter() {
-            if let Some(id) = node_module.id {
-                let manifest_entry = format!("0x{:16x} = \"{}\"", 
-                    id,
-                    node_module.full_name.as_ref().unwrap_or(&node_module.name)
+            // if let Some(id) = node_module.id {
+
+                // let reference: ExternalNodeModuleReference = (&self.ctx,node_module).try_into()?;
+
+                let manifest_entry = format!("{} = {}", 
+                    u64_to_hex_str(&node_module.id),
+                    node_module.to_string()
                 );
 
                 manifest_node_modules.push(manifest_entry);
-            }
+            // }
         }
         
         let mut manifest_toml = String::new();
@@ -362,9 +367,9 @@ impl Context {
         manifest_toml += &format!("\n\n\n{}\n",DO_NOT_EDIT);
         manifest_toml += &format!("# generated on {:?}\n\n", chrono::offset::Local::now());
         manifest_toml += &format!("[manifest.node_modules]\n{}\n\n", manifest_node_modules.join("\n"));
-        manifest_toml += &format!("[manifest.modules]\n{}\n\n", manifest_modules.join("\n"));
-        manifest_toml += &format!("[manifest.scripts]\n{}\n\n", manifest_scripts.join("\n"));
-        manifest_toml += &format!("[manifest.styles]\n{}\n\n", manifest_styles.join("\n"));
+        // manifest_toml += &format!("[manifest.modules]\n{}\n\n", manifest_modules.join("\n"));
+        // manifest_toml += &format!("[manifest.scripts]\n{}\n\n", manifest_scripts.join("\n"));
+        // manifest_toml += &format!("[manifest.styles]\n{}\n\n", manifest_styles.join("\n"));
 
         // let path_manifest_toml = self.ctx.target_folder.join("manifest.toml");
         // fs::write(&path_manifest_toml, &manifest_toml)?;
@@ -379,68 +384,70 @@ impl Context {
             }
             toml = slice.join("\n");
         }
+
         toml += &manifest_toml;
-        // fs::write(&self.ctx.manifest_folder.join("test-es6.toml"), toml)?;
-        fs::write(&self.ctx.manifest_toml, toml)?;
+        // let toml = manifest_toml;
+        fs::write(&self.ctx.manifest_folder.join("es6.lib.toml"), toml)?;
+        // fs::write(&self.ctx.manifest_toml, toml)?;
 
         Ok(())
     }
 
 
 
-    pub fn update_manifest2(&self, db : &Db, collection: &Collection) -> Result<()> {
+    // pub fn update_manifest2(&self, db : &Db, collection: &Collection) -> Result<()> {
 
-        // let mut manifest_toml = String::new();
-        // manifest_toml += "[manifest]\n\n\n";
-        // let mut manifest_modules = Vec::new();
-        // let mut manifest_scripts = Vec::new();
-        // let mut manifest_styles = Vec::new();
+    //     // let mut manifest_toml = String::new();
+    //     // manifest_toml += "[manifest]\n\n\n";
+    //     // let mut manifest_modules = Vec::new();
+    //     // let mut manifest_scripts = Vec::new();
+    //     // let mut manifest_styles = Vec::new();
 
-        let mut modules = value::Table::new();
-        let mut scripts = value::Table::new();
-        let mut styles = value::Table::new();
-        let mut node_modules = value::Table::new();
+    //     let mut modules = value::Table::new();
+    //     let mut scripts = value::Table::new();
+    //     let mut styles = value::Table::new();
+    //     let mut node_modules = value::Table::new();
 
-        for content in collection.content.iter() {
-            let path = content.absolute.strip_prefix(&self.ctx.project_folder)?.to_str().unwrap().to_string();
-            match content.content_type {
-                ContentType::Module => {
-                    modules.insert(content.id(),value::Value::String(path));
-                },
-                ContentType::Script => {
-                    scripts.insert(content.id(),value::Value::String(path));
-                },
-                ContentType::Style => {
-                    styles.insert(content.id(),value::Value::String(path));
-                },
-            }
-        }
+    //     for content in collection.content.iter() {
+    //         let path = content.absolute.strip_prefix(&self.ctx.project_folder)?.to_str().unwrap().to_string();
+    //         match content.content_type {
+    //             ContentType::Module => {
+    //                 modules.insert(content.id(),value::Value::String(path));
+    //             },
+    //             ContentType::Script => {
+    //                 scripts.insert(content.id(),value::Value::String(path));
+    //             },
+    //             ContentType::Style => {
+    //                 styles.insert(content.id(),value::Value::String(path));
+    //             },
+    //         }
+    //     }
 
-        for node_module in db.node_modules.iter() {
-            if let Some(id) = node_module.id {
-                node_modules.insert(format!("0x{:16x}",id),value::Value::String(node_module.name.clone()));
-            }
-        }
+    //     for node_module in db.node_modules.iter() {
+    //         if let Some(id) = node_module.id {
+    //             node_modules.insert(format!("0x{:16x}",id),value::Value::String(node_module.name.clone()));
+    //         }
+    //     }
 
-        let toml_text = fs::read_to_string(&self.ctx.manifest_toml)?;
-        let mut toml: Value = match toml::from_str(&toml_text) {
-            Ok(toml) => toml,
-            Err(err) => {
-                return Err(format!("Error loading es6.toml: {}", err).into());
-            }
-        };
+    //     let toml_text = fs::read_to_string(&self.ctx.manifest_toml)?;
+    //     let mut toml: Value = match toml::from_str(&toml_text) {
+    //         Ok(toml) => toml,
+    //         Err(err) => {
+    //             return Err(format!("Error loading es6.toml: {}", err).into());
+    //         }
+    //     };
 
-        let manifest = toml.as_table_mut().unwrap();
-        manifest.insert("manifest.modules".to_string(),value::Value::Table(modules));
-        manifest.insert("manifest.scripts".to_string(),value::Value::Table(scripts));
-        manifest.insert("manifest.styles".to_string(),value::Value::Table(styles));
-        manifest.insert("manifest.node-modules".to_string(),value::Value::Table(node_modules));
+    //     let manifest = toml.as_table_mut().unwrap();
+    //     manifest.insert("manifest.modules".to_string(),value::Value::Table(modules));
+    //     manifest.insert("manifest.scripts".to_string(),value::Value::Table(scripts));
+    //     manifest.insert("manifest.styles".to_string(),value::Value::Table(styles));
+    //     manifest.insert("manifest.node-modules".to_string(),value::Value::Table(node_modules));
 
-        let toml_text = toml::to_string(manifest)?;
-        // fs::write(&self.ctx.manifest_toml, toml_text)?;
-        fs::write(&self.ctx.manifest_folder.join("test-es6.toml"), toml_text)?;
+    //     let toml_text = toml::to_string(manifest)?;
+    //     // fs::write(&self.ctx.manifest_toml, toml_text)?;
+    //     fs::write(&self.ctx.manifest_folder.join("es6-lib.toml"), toml_text)?;
         
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
 }

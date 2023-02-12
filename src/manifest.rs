@@ -1,23 +1,16 @@
-use async_std::fs::*;
 use crate::prelude::*;
 
-// #[derive(Debug, Clone, Serialize, Deserialize)]
-// pub struct Dependency {
-//     pub dependencies : Vec<String>,
-//     pub settings : Vec<String>,
-//     pub dependencies : Vec<String>,
-// }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Manifest {
     pub settings : Settings,
-    pub manifest : HashMap<String,HashMap<String,String>>,
+    pub manifest : Option<HashMap<String,HashMap<String,HashMap<String,toml::Value>>>>,
 }
 
 impl Manifest {
-    pub async fn locate(location: Option<String>) -> Result<PathBuf> {
-        let cwd = current_dir().await;
+    pub fn locate(location: Option<String>) -> Result<PathBuf> {
+        let cwd = current_dir();
 
         let location = if let Some(location) = location {
             if location.starts_with("~/") {
@@ -54,8 +47,8 @@ impl Manifest {
         Err(format!("Unable to locate 'wahoo.toml' manifest").into())
     }
     
-    pub async fn load(toml_file : &PathBuf) -> Result<Manifest> {
-        let toml_text = read_to_string(toml_file).await?;
+    pub fn load(toml_file : &PathBuf) -> Result<Manifest> {
+        let toml_text = std::fs::read_to_string(toml_file)?;
         let manifest: Manifest = match toml::from_str(&toml_text) {
             Ok(manifest) => manifest,
             Err(err) => {
@@ -94,6 +87,7 @@ impl Into<ContentType> for ProjectType {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Settings {
+    pub name : String,
     pub project : String,
     #[serde(rename = "type")]
     pub project_type : ProjectType,
@@ -104,6 +98,10 @@ pub struct Settings {
     pub verbose : Option<bool>,
     pub enums : Option<Enums>,
     pub replace : Option<Vec<Replace>>,
+    // TODO
+    pub preload : Option<Vec<String>>,
+    // pub optimize : Option<bool>,
+    pub include_all_exports : Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
