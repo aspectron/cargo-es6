@@ -1,6 +1,5 @@
 use crate::prelude::*;
 
 pub struct Library {
-    pub id : u64,
+    pub id: u64,
 }
-

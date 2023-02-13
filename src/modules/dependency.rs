@@ -2,7 +2,6 @@
 
 // use crate::prelude::*;
 
-
 // #[derive(Debug, Clone, Serialize, Deserialize)]
 // pub struct ExternalContentReference {
 //     pub node_module : u64,
@@ -66,4 +65,3 @@
 //         format!("{{ {} }}", fields)
 //     }
 // }
-

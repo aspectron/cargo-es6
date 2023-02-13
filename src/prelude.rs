@@ -1,37 +1,36 @@
-
-pub use crate:: {
-    error::*,
-    result::*,
-    manifest::*,
-    context::*,
+pub use crate::{
     builder::*,
+    context::*,
+    error::*,
+    filter::*,
     filter::*,
     log::*,
-    utils::*,
-    filter::*,
-    modules::reference::*,
-    modules::content::*,
-    modules::node_module::*,
+    manifest::*,
     modules::collection::*,
+    modules::content::*,
     modules::dependency::*,
+    modules::node_module::*,
+    modules::reference::*,
     modules::utils::*,
     modules::*,
     // node_modules::*,
     // es6::*,
+    result::*,
+    utils::*,
 };
 
 pub use cfg_if::cfg_if;
+pub use console::style;
+pub use convert_case::{Case, Casing};
+pub use duct::cmd;
+pub use globset::{Glob, GlobMatcher};
+pub use regex::Regex;
+pub use serde::{Deserialize, Serialize};
+pub use std::collections::hash_map::DefaultHasher;
+pub use std::collections::{HashMap, HashSet};
+pub use std::fs;
+pub use std::hash::{Hash, Hasher};
+pub use std::path::{Component, Path, PathBuf};
 pub use std::sync::Arc;
 pub use std::sync::Mutex;
-pub use duct::cmd;
-pub use serde::{Serialize,Deserialize};
-pub use std::path::{Path,PathBuf,Component};
-pub use std::fs;
-pub use console::style;
-pub use globset::{Glob,GlobMatcher};
 pub use walkdir::WalkDir;
-pub use regex::Regex;
-pub use std::collections::{HashSet,HashMap};
-pub use convert_case::{Case, Casing};
-pub use std::hash::{Hash, Hasher};
-pub use std::collections::hash_map::DefaultHasher;

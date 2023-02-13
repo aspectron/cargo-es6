@@ -27,20 +27,20 @@ impl ToString for ReferenceKind {
 
 #[derive(Debug)]
 pub struct Reference {
-    pub kind : ReferenceKind,
+    pub kind: ReferenceKind,
     pub referrer: u64,
-    // pub referrer: PathBuf,
-    // pub referrer: Arc<Content>,
     pub what: Option<String>,
     pub location: String,
-    // pub component : String,
     pub content: Mutex<Option<Arc<Content>>>,
 }
 
 impl Reference {
-    pub fn new(kind: ReferenceKind, referrer: u64, what: Option<&str>, location: &str) -> Reference {
-
-
+    pub fn new(
+        kind: ReferenceKind,
+        referrer: u64,
+        what: Option<&str>,
+        location: &str,
+    ) -> Reference {
         // .from_case(Case::Kebab).to_case(Case::Title)
 
         let what = what.map(|s| s.trim().to_string());
@@ -59,29 +59,26 @@ impl Reference {
         self.content.lock().unwrap().as_ref().cloned()
     }
 
-    pub fn warn(&self, db : &Db) {
-        log_warn!("Warning","+--- Unable to resolve");
+    pub fn warn(&self, db: &Db) {
+        log_warn!("Warning", "+--- Unable to resolve");
         if let Some(what) = &self.what {
-            log_warn!("","| what: `{:?}`", what);
+            log_warn!("", "| what: `{:?}`", what);
         }
-        log_warn!("","| location: `{}`", self.location);
+        log_warn!("", "| location: `{}`", self.location);
         let referrer = db
             .get_file(&self.referrer)
             .expect(&format!("unable to get file id 0x{:16x}", self.referrer));
-        log_warn!("","| referrer: `{}`", referrer.location.display());
-        log_warn!("","+---");
+        log_warn!("", "| referrer: `{}`", referrer.location.display());
+        log_warn!("", "+---");
     }
 
-    pub fn error(&self, db : &Db) {
+    pub fn error(&self, db: &Db) {
         log_error!("+--- Unable to resolve");
         log_error!("| location: `{}`", self.location);
         let referrer = db
             .get_file(&self.referrer)
             .expect(&format!("unable to get file id 0x{:16x}", self.referrer));
-        log_warn!("","| referrer: `{}`", referrer.location.display());
+        log_warn!("", "| referrer: `{}`", referrer.location.display());
         log_error!("+---");
     }
-
-
-
 }

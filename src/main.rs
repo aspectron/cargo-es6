@@ -1,18 +1,18 @@
 // use std::{sync::Arc, env};
 // use async_std::path::PathBuf;
-use clap::{Parser,Subcommand};
+use clap::{Parser, Subcommand};
 use console::style;
 
-pub mod error;
-pub mod result;
-pub mod manifest;
-pub mod context;
 pub mod builder;
-pub mod log;
-pub mod utils;
+pub mod context;
+pub mod error;
 pub mod filter;
+pub mod log;
+pub mod manifest;
 pub mod modules;
 pub mod prelude;
+pub mod result;
+pub mod utils;
 
 use prelude::*;
 
@@ -45,28 +45,22 @@ struct Args {
     location: Option<String>,
     /// Action to execute (build,clean,init)
     #[clap(subcommand)]
-    action : Action,
+    action: Action,
     /// Enable verbose mode
     #[clap(short, long)]
-    verbose : bool,
+    verbose: bool,
 }
 
 #[derive(Subcommand, Debug)]
 enum Action {
-    Build {
-    },
-    Clean { 
-    },
+    Build {},
+    Clean {},
     /// Create NW package template
-    Init {
-    },
-    Publish {
-    },
+    Init {},
+    Publish {},
 }
 
-
 pub async fn async_main() -> Result<()> {
-    
     // let Args {
     //     location,
     //     action,
@@ -80,35 +74,23 @@ pub async fn async_main() -> Result<()> {
         verbose,
     }) = args;
 
-
     if verbose {
         log::enable_verbose();
     }
 
     match action {
-        Action::Build {
-        } => {
-
-            let ctx = Arc::new(Context::create(
-                location,
-                Options::default(),
-            )?);
+        Action::Build {} => {
+            let ctx = Arc::new(Context::create(location, Options::default())?);
 
             let build = Arc::new(Builder::new(ctx));
             build.execute().await?;
-        },
-        Action::Clean { 
-        } => {
-            let ctx = Arc::new(Context::create(
-                location,
-                Options::default()
-            )?);
+        }
+        Action::Clean {} => {
+            let ctx = Arc::new(Context::create(location, Options::default())?);
 
             ctx.clean().await?;
-
-        },
-        Action::Init {
-        } => {
+        }
+        Action::Init {} => {
             // // let arch = Architecture::default();
             // let folder : PathBuf = env::current_dir().unwrap().into();
             // let name = if let Some(name) = name {
@@ -123,11 +105,8 @@ pub async fn async_main() -> Result<()> {
             // let mut project = init::Project::try_new(name, folder)?;
 
             // project.generate(options).await?;
-
-        },
-        Action::Publish {
-        } => {
-        },
+        }
+        Action::Publish {} => {}
     }
 
     Ok(())
@@ -138,20 +117,21 @@ pub async fn async_main() -> Result<()> {
 async fn main() -> Result<()> {
     let result = async_main().await;
     match &result {
-        Err(Error::Warning(warn)) => println!("\nWarning: {}\n",style(format!("{}", warn)).yellow()),
+        Err(Error::Warning(warn)) => {
+            println!("\nWarning: {}\n", style(format!("{}", warn)).yellow())
+        }
         // Err(err) => println!("\n{}\n",style(format!("{}", err)).red()),
         // Err(err) => println!("\n{}\n",err),
         Err(err) => {
-            log_error!("{}",err);
+            log_error!("{}", err);
             println!("");
-        },
-        Ok(_) => { }
+        }
+        Ok(_) => {}
     };
 
     if result.is_err() {
         std::process::exit(1);
     }
-    
+
     Ok(())
 }
-

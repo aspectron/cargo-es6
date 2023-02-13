@@ -1,65 +1,65 @@
 use crate::prelude::*;
 
 #[derive(Debug)]
-pub struct Options {
-}
+pub struct Options {}
 
 impl Default for Options {
     fn default() -> Self {
-        Options {
-        }
+        Options {}
     }
 }
 
 #[derive(Debug)]
 pub enum Replace {
     Location {
-        regex : Option<Regex>,
-        from : Option<String>,
-        to : String,
-    }
-} 
+        regex: Option<Regex>,
+        from: Option<String>,
+        to: String,
+    },
+}
 
 #[derive(Debug)]
 pub struct Context {
-
-    pub manifest : Manifest,
-    pub manifest_toml : PathBuf,
-    pub manifest_folder : PathBuf,
+    pub manifest: Manifest,
+    pub manifest_toml: PathBuf,
+    pub manifest_folder: PathBuf,
     // pub target_file : PathBuf,
-    pub target_folder : PathBuf,
+    pub target_folder: PathBuf,
     // pub target_folder_src : PathBuf,
-    pub project_file : PathBuf,
-    pub project_folder : PathBuf,
-    pub node_modules : PathBuf,
-    pub ignore : Filter,
-    pub replace : Option<Vec<Replace>>,
+    pub project_file: PathBuf,
+    pub project_folder: PathBuf,
+    pub node_modules: PathBuf,
+    pub package_json: PathBuf,
+    pub ignore: Filter,
+    pub replace: Option<Vec<Replace>>,
 }
 
 impl Context {
     pub fn create(
-        location : Option<String>,
+        location: Option<String>,
         // output : Option<String>,
         _options: Options,
     ) -> Result<Context> {
-
         let manifest_toml = Manifest::locate(location)?;
-        log_info!("Manifest","`{}`",manifest_toml.to_str().unwrap());
+        log_info!("Manifest", "`{}`", manifest_toml.to_str().unwrap());
         let manifest = Manifest::load(&manifest_toml)?;
         let manifest_folder = manifest_toml.parent().unwrap().to_path_buf();
 
-        let project_file = manifest_folder.join(&manifest.settings.project).canonicalize()?;
+        let project_file = manifest_folder
+            .join(&manifest.settings.project)
+            .canonicalize()?;
         let project_folder = project_file.parent().unwrap().to_path_buf();
         let node_modules = project_folder.join("node_modules");
-        let target_folder = manifest_folder.join(&manifest.settings.target);//.canonicalize().await?;
-        // let target_folder_src = target_folder.join("src");//.canonicalize().await?;
-        // let target_file = manifest_folder.join(&manifest.settings.target);//.canonicalize().await?;
-        // let target_folder = target_file.parent().unwrap().canonicalize().await?;//to_path_buf();
-        log_info!("Project","`{}`",project_folder.to_str().unwrap());
-        log_info!("Target","`{}`",target_folder.to_str().unwrap());
+        let package_json = project_folder.join("package.json");
+        let target_folder = manifest_folder.join(&manifest.settings.target); //.canonicalize().await?;
+                                                                             // let target_folder_src = target_folder.join("src");//.canonicalize().await?;
+                                                                             // let target_file = manifest_folder.join(&manifest.settings.target);//.canonicalize().await?;
+                                                                             // let target_folder = target_file.parent().unwrap().canonicalize().await?;//to_path_buf();
+        log_info!("Project", "`{}`", project_folder.to_str().unwrap());
+        log_info!("Target", "`{}`", target_folder.to_str().unwrap());
 
         let ignore = if let Some(ignore) = &manifest.settings.ignore {
-            Filter::new(&ignore.iter().map(|s|s.as_str()).collect::<Vec<_>>())
+            Filter::new(&ignore.iter().map(|s| s.as_str()).collect::<Vec<_>>())
         } else {
             Filter::default()
         };
@@ -68,17 +68,16 @@ impl Context {
         if let Some(items) = &manifest.settings.replace {
             for item in items {
                 match item {
-                    crate::manifest::Replace::Location { 
-                        regex, 
-                        from,
-                        to } => {
-                        
+                    crate::manifest::Replace::Location { regex, from, to } => {
                         if regex.is_none() && from.is_none() {
-                            return Err(format!("[settings].replace must contain `regex` or `from`").into());
+                            return Err(format!(
+                                "[settings].replace must contain `regex` or `from`"
+                            )
+                            .into());
                         }
 
                         let r = if let Some(regex) = regex {
-                            let r = Regex::new(regex).map_err(|err|{
+                            let r = Regex::new(regex).map_err(|err| {
                                 println!("");
                                 println!("Error compiling replace Regex expression: `{}`", regex);
                                 println!("");
@@ -91,8 +90,8 @@ impl Context {
 
                         replace.push(Replace::Location {
                             regex: r,
-                            from : from.clone(),
-                            to : to.clone()
+                            from: from.clone(),
+                            to: to.clone(),
                         });
                     }
                 }
@@ -115,6 +114,7 @@ impl Context {
             project_file,
             project_folder,
             node_modules,
+            package_json,
             ignore,
             replace,
         };
@@ -123,9 +123,7 @@ impl Context {
     }
 
     pub async fn ensure_folders(&self) -> Result<()> {
-        let folders = [
-            &self.target_folder,
-        ];
+        let folders = [&self.target_folder];
         for folder in folders {
             if !std::path::Path::new(folder).exists() {
                 std::fs::create_dir_all(folder)?;
@@ -148,19 +146,17 @@ impl Context {
         if let Some(replace) = &self.replace {
             for r in replace.iter() {
                 match r {
-                    crate::context::Replace::Location {
-                        regex, from, to
-                    } => {
+                    crate::context::Replace::Location { regex, from, to } => {
                         if let Some(regex) = regex {
-                            text = regex.replace_all(&text,to).to_string();
+                            text = regex.replace_all(&text, to).to_string();
                         } else if let Some(from) = from {
                             // TODO: CLEANUP
                             // if text.starts_with("$") {
                             //     println!("replacing {}",l);
-                            //     l = location.replace(from,to);                            
+                            //     l = location.replace(from,to);
                             //     println!("result {}",l);
                             // } else {
-                                text = text.replace(from,to);                            
+                            text = text.replace(from, to);
                             // }
                         } else {
                             panic!("replace directivec has no regex or from values");
@@ -172,6 +168,4 @@ impl Context {
 
         text
     }
-
 }
-

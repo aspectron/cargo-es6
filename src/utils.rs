@@ -1,12 +1,12 @@
 use std::borrow::Cow;
 
-use regex::Regex;
-use path_dedot::*;
 use crate::prelude::*;
+use path_dedot::*;
+use regex::Regex;
 
-pub fn search_upwards<P>(folder: P, filename: &str) -> Option<PathBuf> 
+pub fn search_upwards<P>(folder: P, filename: &str) -> Option<PathBuf>
 where
-    P : AsRef<Path>
+    P: AsRef<Path>,
 {
     let mut folder = folder.as_ref();
 
@@ -29,7 +29,7 @@ pub fn current_dir() -> PathBuf {
 }
 
 // pub async fn find_file(folder: &Path,files: &[&str]) -> Result<PathBuf> {
-pub fn find_file(folder: &Path,files: &[String]) -> Result<PathBuf> {
+pub fn find_file(folder: &Path, files: &[String]) -> Result<PathBuf> {
     for file in files {
         let path = folder.join(file);
         match path.canonicalize() {
@@ -37,11 +37,16 @@ pub fn find_file(folder: &Path,files: &[String]) -> Result<PathBuf> {
                 if path.is_file() {
                     return Ok(path);
                 }
-            },
-            _ => { }
+            }
+            _ => {}
         }
     }
-    return Err(format!("Unable to locate any of the files: {} \nfrom {:?} directory", files.join(", "), folder.to_str().unwrap_or("")).into())
+    return Err(format!(
+        "Unable to locate any of the files: {} \nfrom {:?} directory",
+        files.join(", "),
+        folder.to_str().unwrap_or("")
+    )
+    .into());
 }
 
 pub fn get_env_defs(strings: &Vec<String>) -> Result<Vec<(String, String)>> {
@@ -63,34 +68,42 @@ pub fn get_env_defs(strings: &Vec<String>) -> Result<Vec<(String, String)>> {
     Ok(parsed_strings)
 }
 
-pub fn is_hidden<P>(path: P) -> bool 
-where P : AsRef<Path>
+pub fn is_hidden<P>(path: P) -> bool
+where
+    P: AsRef<Path>,
 {
     let is_hidden = path
         .as_ref()
         .components()
-        .find(|f|f.as_os_str().to_string_lossy().starts_with("."))
+        .find(|f| f.as_os_str().to_string_lossy().starts_with("."))
         .is_some();
 
     is_hidden
 }
 
-pub fn get_files<P>(folder : P, aggregator : Option<&Filter>, filter : Option<&Filter>) -> Result<Vec<PathBuf>> 
-where P: AsRef<Path> {
-
-    // let path = 
+pub fn get_files<P>(
+    folder: P,
+    aggregator: Option<&Filter>,
+    filter: Option<&Filter>,
+) -> Result<Vec<PathBuf>>
+where
+    P: AsRef<Path>,
+{
+    // let path =
 
     let list = WalkDir::new(folder.as_ref())
         .into_iter()
         .flatten()
-        .filter_map(|entry|{
+        .filter_map(|entry| {
             let path = entry.path();
-            let relative = path.strip_prefix(folder.as_ref()).expect("get_files() failure");
+            let relative = path
+                .strip_prefix(folder.as_ref())
+                .expect("get_files() failure");
             let relative_str = relative.to_string_lossy();
 
             if aggregator
-                .map(|f|f.is_match(&relative_str))
-                .and(filter.map(|f|f.is_match(&relative_str)))
+                .map(|f| f.is_match(&relative_str))
+                .and(filter.map(|f| f.is_match(&relative_str)))
                 .unwrap_or(false)
                 && path.is_file()
             {
@@ -101,9 +114,7 @@ where P: AsRef<Path> {
         });
 
     Ok(list.collect())
-
 }
-
 
 pub trait NormalizePath {
     fn normalize(&self) -> Result<Cow<Path>>;

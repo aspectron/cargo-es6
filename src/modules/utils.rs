@@ -1,23 +1,26 @@
 use crate::prelude::*;
 
-
 pub fn gather_references(text: &str, referrer: u64) -> Result<(Option<Vec<Reference>>, String)> {
-
     let mut references = Vec::new();
     // handle `import xxx from "xxx"`
     let import_re = Regex::new(r###"import[^;]*from\s*["'][^"']+["'];"###).unwrap();
     let import_reference_re = Regex::new(r###"import\s*(.+)\s*from\s*["'](.+)["']"###).unwrap();
-    let import_matches = import_re.find_iter(&text).map(|m| m.as_str().to_string()).collect::<Vec<_>>();
+    let import_matches = import_re
+        .find_iter(&text)
+        .map(|m| m.as_str().to_string())
+        .collect::<Vec<_>>();
     for import in import_matches.iter() {
-        let import = import.replace("\n"," ");
-        let captures = import_reference_re.captures(&import).expect(&format!("unable to capture `{}`",import));
+        let import = import.replace("\n", " ");
+        let captures = import_reference_re
+            .captures(&import)
+            .expect(&format!("unable to capture `{}`", import));
         let what = captures[1].to_string();
         let location = captures[2].to_string();
         let import = Reference::new(
             ReferenceKind::Module,
             referrer, //.as_ref(),
             Some(&what),
-            &location
+            &location,
         );
         references.push(import);
     }
@@ -27,21 +30,21 @@ pub fn gather_references(text: &str, referrer: u64) -> Result<(Option<Vec<Refere
     // let import_re = Regex::new(r###"^\s*import\s*["'][^"']+["'];"###).unwrap();
     let import_re = Regex::new(r###"import\s*["'][^"']+["'];"###).unwrap();
     let import_reference_re = Regex::new(r###"import\s*["'](.+)["']"###).unwrap();
-    let import_matches = import_re.find_iter(&text).map(|m| m.as_str().to_string()).collect::<Vec<_>>();
+    let import_matches = import_re
+        .find_iter(&text)
+        .map(|m| m.as_str().to_string())
+        .collect::<Vec<_>>();
     for import in import_matches.iter() {
         // println!("| import len: {}", import.len());
         // println!("| import match: {} {}", import,import.len());
-        let import = import.replace("\n"," ");
-        let captures = import_reference_re.captures(&import).expect(&format!("unable to capture `{}`",import));
+        let import = import.replace("\n", " ");
+        let captures = import_reference_re
+            .captures(&import)
+            .expect(&format!("unable to capture `{}`", import));
         // let what = "*".to_string();
         let location = captures[1].to_string();
         // println!("| import location: {}", location);
-        let import = Reference::new(
-            ReferenceKind::Module,
-            referrer,
-            None,
-            &location
-        );
+        let import = Reference::new(ReferenceKind::Module, referrer, None, &location);
         references.push(import);
     }
     let text = import_re.replace_all(&text, "");
@@ -49,36 +52,39 @@ pub fn gather_references(text: &str, referrer: u64) -> Result<(Option<Vec<Refere
     // let mut exports = Vec::new();
     let export_re = Regex::new(r###"export[^;]*from\s*["']+[^"']+["']+;"###).unwrap();
     let export_reference_re = Regex::new(r###"export\s*(.+)\s*from\s*["'](.+)["']"###).unwrap();
-    let export_matches = export_re.find_iter(&text).map(|m| m.as_str().to_string()).collect::<Vec<_>>();
+    let export_matches = export_re
+        .find_iter(&text)
+        .map(|m| m.as_str().to_string())
+        .collect::<Vec<_>>();
     for export in export_matches.iter() {
-        let export = export.replace("\n"," ");
-        let captures = export_reference_re.captures(&export).expect(&format!("unable to capture `{}`",export));
+        let export = export.replace("\n", " ");
+        let captures = export_reference_re
+            .captures(&export)
+            .expect(&format!("unable to capture `{}`", export));
         let what = captures[1].to_string();
         let location = captures[2].to_string();
-        let export = Reference::new(
-            ReferenceKind::Export,
-            referrer,
-            Some(&what),
-            &location
-        );
+        let export = Reference::new(ReferenceKind::Export, referrer, Some(&what), &location);
         references.push(export);
     }
     let text = export_re.replace_all(&text, "");
 
     // let mut links = Vec::new();
-    let link_re = Regex::new(r###"<link\s+rel=["']stylesheet["']\s+(type=["'][^"']+["']\s+)?href=["'][^"]+["']\s*/?>"###).unwrap();
+    let link_re = Regex::new(
+        r###"<link\s+rel=["']stylesheet["']\s+(type=["'][^"']+["']\s+)?href=["'][^"]+["']\s*/?>"###,
+    )
+    .unwrap();
     let link_reference_re = Regex::new(r###"href=["']([^"']+)["']"###).unwrap();
-    let link_matches = link_re.find_iter(&text).map(|m| m.as_str().to_string()).collect::<Vec<_>>();
+    let link_matches = link_re
+        .find_iter(&text)
+        .map(|m| m.as_str().to_string())
+        .collect::<Vec<_>>();
     for link in link_matches.iter() {
-        let link = link.replace("\n"," ");
-        let captures = link_reference_re.captures(&link).expect(&format!("unable to capture `{}`",link));
+        let link = link.replace("\n", " ");
+        let captures = link_reference_re
+            .captures(&link)
+            .expect(&format!("unable to capture `{}`", link));
         let location = captures[1].to_string();
-        let import = Reference::new(
-            ReferenceKind::Style,
-            referrer,
-            None,
-            &location
-        );
+        let import = Reference::new(ReferenceKind::Style, referrer, None, &location);
         references.push(import);
     }
     let text = link_re.replace_all(&text, "");
@@ -87,36 +93,42 @@ pub fn gather_references(text: &str, referrer: u64) -> Result<(Option<Vec<Refere
     // FlowQRCode.define('flow-qrcode', [baseUrl+'resources/extern/qrcode/qrcode.js']);
 
     let text = {
-
         let mut text = text.to_string();
         // let define_re = Regex::new(r###"\w+.define\(["'][^"']+["'],\s*(\[[^]]+\])?\)"###).unwrap();
-        let define_re = Regex::new(r###"\w+\.define\(["'][^"']+["'],\s*["'\[]([^]]+\])?"###).unwrap();
+        let define_re =
+            Regex::new(r###"\w+\.define\(["'][^"']+["'],\s*["'\[]([^]]+\])?"###).unwrap();
         let define_list_re = Regex::new(r###"\[([^\]]+)]"###).unwrap();
         let define_replace_re = Regex::new(r###"(,\s*\[([^\]]+)]\s*)"###).unwrap();
         let define_reference_re = Regex::new(r###"["']([^"']+)["']"###).unwrap();
-        let define_matches = define_re.find_iter(&text).map(|m| m.as_str().to_string()).collect::<Vec<_>>();
+        let define_matches = define_re
+            .find_iter(&text)
+            .map(|m| m.as_str().to_string())
+            .collect::<Vec<_>>();
         for define in define_matches.iter() {
-
             // println!("A:{}",define);
-            let replace = define_replace_re.captures(&define).expect(&format!("unable to capture replace for `{}`",define));
-            text = text.replace(&replace[1].to_string(),"");
-            let define = define.replace("\n","");
-            let captures = define_list_re.captures(&define).expect(&format!("unable to capture list`{}`",define));
+            let replace = define_replace_re
+                .captures(&define)
+                .expect(&format!("unable to capture replace for `{}`", define));
+            text = text.replace(&replace[1].to_string(), "");
+            let define = define.replace("\n", "");
+            let captures = define_list_re
+                .captures(&define)
+                .expect(&format!("unable to capture list`{}`", define));
             let define = captures[1].to_string();
             let items = define.split(",").collect::<Vec<_>>();
-            let items = items.iter().map(|s|{
-                // println!("capturing: `{}`",s);
-                match define_reference_re.captures(&s) {
-                    Some(captures) => {
-                        Some(captures[1].to_string())
-                    },
-                    None => None
-                }
-                // let captures = define_reference_re.captures(&s).expect(&format!("unable to capture item`{}`",define));
-                // captures[1].to_string()
-            })
-            .flatten()
-            .collect::<Vec<_>>();
+            let items = items
+                .iter()
+                .map(|s| {
+                    // println!("capturing: `{}`",s);
+                    match define_reference_re.captures(&s) {
+                        Some(captures) => Some(captures[1].to_string()),
+                        None => None,
+                    }
+                    // let captures = define_reference_re.captures(&s).expect(&format!("unable to capture item`{}`",define));
+                    // captures[1].to_string()
+                })
+                .flatten()
+                .collect::<Vec<_>>();
             // println!("");
 
             for location in items.iter() {
@@ -127,12 +139,7 @@ pub fn gather_references(text: &str, referrer: u64) -> Result<(Option<Vec<Refere
                     ReferenceKind::Script
                 };
 
-                let import = Reference::new(
-                    kind,
-                    referrer,
-                    None,
-                    &location
-                );
+                let import = Reference::new(kind, referrer, None, &location);
                 references.push(import);
             }
         }
@@ -147,7 +154,6 @@ pub fn gather_references(text: &str, referrer: u64) -> Result<(Option<Vec<Refere
     };
 
     Ok((references, text))
-
 }
 
 pub fn hex_str_to_u64(s: &str) -> Result<u64> {
@@ -156,7 +162,7 @@ pub fn hex_str_to_u64(s: &str) -> Result<u64> {
 }
 
 pub fn u64_to_hex_str(id: &u64) -> String {
-    format!("0x{:16x}",id)
+    format!("0x{:16x}", id)
 }
 
 pub trait GetHash {
@@ -169,7 +175,6 @@ impl GetHash for String {
         self.hash(&mut hasher);
         hasher.finish()
     }
-
 }
 
 // FlowQRCode.define('flow-qrcode', [baseUrl+'resources/extern/qrcode/qrcode.js']);

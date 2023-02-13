@@ -1,8 +1,8 @@
 use crate::prelude::*;
 
 pub struct FileContext {
-    pub base_folder : PathBuf,
-    pub absolute : PathBuf,
+    pub base_folder: PathBuf,
+    pub absolute: PathBuf,
 }
 
 impl FileContext {
@@ -16,53 +16,61 @@ impl FileContext {
 // impl From<(&Arc<NodeModule>, )
 
 pub struct Dependencies {
-    pub file_content : HashMap<String,Arc<Content>>,
-    pub node_modules : HashMap<String,Arc<Content>>,
+    pub file_content: HashMap<String, Arc<Content>>,
+    pub node_modules: HashMap<String, Arc<Content>>,
 }
 impl Dependencies {
     pub fn new() -> Dependencies {
         Dependencies {
-            file_content : HashMap::new(),
-            node_modules : HashMap::new(),
+            file_content: HashMap::new(),
+            node_modules: HashMap::new(),
         }
     }
 }
 
 pub struct Db {
-    pub ctx : Arc<Context>,
+    pub ctx: Arc<Context>,
     // pub project_folder : PathBuf,
-    pub node_modules : Vec<Arc<NodeModule>>,
-    pub node_modules_by_id : HashMap<u64, Arc<NodeModule>>,
-    pub node_modules_by_name : HashMap<String, Arc<NodeModule>>,
+    pub node_modules: Vec<Arc<NodeModule>>,
+    pub node_modules_by_id: HashMap<u64, Arc<NodeModule>>,
+    pub node_modules_by_name: HashMap<String, Arc<NodeModule>>,
+    pub node_modules_by_location: HashMap<PathBuf, Arc<NodeModule>>,
     // pub node_modules_by_absolute : HashMap<PathBuf, Arc<NodeModule>>,
-    pub file_content : Vec<Arc<Content>>,
-    pub file_content_by_id : HashMap<u64, Arc<Content>>,
-    pub file_content_by_location : HashMap<PathBuf, Arc<Content>>,
+    pub file_content: Vec<Arc<Content>>,
+    pub file_content_by_id: HashMap<u64, Arc<Content>>,
+    pub file_content_by_location: HashMap<PathBuf, Arc<Content>>,
+    // pub file_content_by_absolute : HashMap<PathBuf, Arc<Content>>,
     // pub dependencies : Dependencies,
 }
 
 impl Db {
-
     pub fn get_file(&self, id: &u64) -> Option<&Arc<Content>> {
         self.file_content_by_id.get(id)
     }
 
     pub fn get_node_module(&self, id: &u64) -> Option<&Arc<NodeModule>> {
-        self.node_modules_by_id
-            .get(id)
+        self.node_modules_by_id.get(id)
     }
 
+    pub fn get_node_module_by_name(&self, name: &str) -> Option<&Arc<NodeModule>> {
+        self.node_modules_by_name.get(name)
+    }
 
-    pub fn insert_file(&mut self, content: &Arc<Content>) -> Result<()>{
+    pub fn insert_file(&mut self, content: &Arc<Content>) -> Result<()> {
         self.file_content.push(content.clone());
         self.file_content_by_id.insert(content.id, content.clone());
         let location = self
             .get_node_module(&content.node_module_id)
-            .expect(&format!("Unable to locate node module for `{}`", content.location.display()))
-            .base_folder()?
+            .expect(&format!(
+                "Unable to locate node module for `{}`",
+                content.location.display()
+            ))
+            .base_folder()
             .join(&content.location);
+        // println!("inserting file: {}", location.display());
         // self.file_content_by_location.insert(content.location.clone(), content.clone());
-        self.file_content_by_location.insert(location, content.clone());
+        self.file_content_by_location
+            .insert(location, content.clone());
         Ok(())
     }
 
@@ -81,46 +89,451 @@ impl Db {
 
     pub fn new(ctx: &Arc<Context>) -> Db {
         Db {
-            ctx : ctx.clone(),
-            node_modules : Vec::new(),
-            node_modules_by_id : HashMap::new(),
-            node_modules_by_name : HashMap::new(),
+            ctx: ctx.clone(),
+            node_modules: Vec::new(),
+            node_modules_by_id: HashMap::new(),
+            node_modules_by_name: HashMap::new(),
+            node_modules_by_location: HashMap::new(),
             // node_modules_by_absolute : HashMap::new(),
-            file_content : Vec::new(),
-            file_content_by_id : HashMap::new(),
-            file_content_by_location : HashMap::new(),
+            file_content: Vec::new(),
+            file_content_by_id: HashMap::new(),
+            file_content_by_location: HashMap::new(),
             // dependencies
         }
     }
 
     pub fn insert_node_module(&mut self, node_module: &Arc<NodeModule>) -> Result<()> {
+        // self.node_modules_by_absolute.insert(node_module.base_folder().clone(), node_module.clone());
+        self.node_modules_by_location
+            .insert(node_module.base_folder().clone(), node_module.clone());
 
-        for file in node_module.files.iter() {
-            self.insert_file(&file)?;
-        }
+        // for file in node_module.files.iter() {
+        //     self.insert_file(&file)?;
+        // }
 
-        // TODO
-        for (target,exports) in node_module.exports.iter() {
-            for (name, content) in exports.iter() {
-                self.insert_file(content)?;
-            }
-        }
+        // // TODO
+        // for (target,exports) in node_module.exports.iter() {
+        //     for (name, content) in exports.iter() {
+        //         self.insert_file(content)?;
+        //     }
+        // }
 
         self.node_modules.push(node_module.clone());
-        self.node_modules_by_id.insert(node_module.id, node_module.clone());
+        self.node_modules_by_id
+            .insert(node_module.id, node_module.clone());
         if node_module.name == node_module.alt_name {
-            self.node_modules_by_name.insert(node_module.name.clone(),node_module.clone());
+            self.node_modules_by_name
+                .insert(node_module.name.clone(), node_module.clone());
         } else {
-            self.node_modules_by_name.insert(node_module.name.clone(),node_module.clone());
-            self.node_modules_by_name.insert(node_module.alt_name.clone(),node_module.clone());
+            self.node_modules_by_name
+                .insert(node_module.name.clone(), node_module.clone());
+            self.node_modules_by_name
+                .insert(node_module.alt_name.clone(), node_module.clone());
         }
 
         Ok(())
     }
 
-    pub async fn load(ctx: &Arc<Context>) -> Result<Db> {
+    pub fn get_node_module_by_location(&self, location: &PathBuf) -> Option<&Arc<NodeModule>> {
+        self.node_modules_by_location.get(location)
+    }
 
+    pub async fn load(ctx: &Arc<Context>) -> Result<Db> {
         let mut db = Db::new(ctx);
+
+        let node_module = Arc::new(NodeModule::load(&mut db, &ctx.project_folder)?);
+        db.insert_node_module(&node_module)?;
+        let resolved_node_modules = db.resolve_dependencies(&node_module)?;
+        // if let Some(dependencies) = &node_module.package_json.dependencies {
+        //     for (dependency, _) in dependencies.iter() {
+        //         println!("loading {}", dependency);
+        //         let module = Arc::new(NodeModule::load(&mut db, &ctx.node_modules.join(dependency))?);
+        //         db.insert_node_module(&module)?;
+        //     }
+
+        // }
+
+        for node_module in resolved_node_modules.iter() {
+
+            if let Some(location) = node_module.main_file(&db.ctx) {
+                let content = Arc::new(Content::load(
+                    &mut db,
+                    ContentType::Module,
+                    node_module.id,
+                    node_module.base_folder(),
+                    &location,
+                )?);
+        
+                db.insert_file(&content)?;
+                db.resolve_references(&content)?;
+        
+            }
+        }
+
+
+        let location = node_module
+            .main_file(&db.ctx)
+            .expect("Missing main file in the project module");
+
+        let content = Arc::new(Content::load(
+            &mut db,
+            ContentType::Module,
+            node_module.id,
+            node_module.base_folder(),
+            &location,
+        )?);
+
+        db.insert_file(&content)?;
+        db.resolve_references(&content)?;
+
+
+        Ok(db)
+    }
+
+    pub fn resolve_dependencies(&mut self, node_module: &NodeModule) -> Result<Vec<Arc<NodeModule>>> {
+        let mut resolved = vec![];
+        if let Some(dependencies) = node_module.dependencies() {
+            for dependency in dependencies {
+                if self
+                    .get_node_module_by_location(&PathBuf::from(&dependency))
+                    .is_none()
+                {
+                    resolved.extend(self.resolve_dependency(node_module, dependency)?);
+                }
+            }
+        }
+
+        Ok(resolved)
+    }
+
+    pub fn resolve_dependency(&mut self, referrer: &NodeModule, dependency: &str) -> Result<Vec<Arc<NodeModule>>> {
+        // println!(
+        //     "resolving dependency: {} -> {}",
+        //     referrer.package_json.name.as_ref().unwrap(),
+        //     dependency
+        // );
+
+        let mut list = vec![];
+        let absolute_folder = self.ctx.node_modules.join(dependency);
+        let location = absolute_folder
+            .strip_prefix(&self.ctx.project_folder)?
+            .to_path_buf();
+        if self.get_node_module_by_location(&location).is_none() {
+            if !absolute_folder.is_dir() {
+                return Err(format!(
+                    "Unable to resolve {} while processing {}",
+                    dependency,
+                    referrer.package_json.name.as_ref().unwrap()
+                )
+                .into());
+            }
+
+            // println!("loading {}", dependency);
+            let node_module = Arc::new(NodeModule::load(self, &absolute_folder)?);
+            self.insert_node_module(&node_module)?;
+            list.push(node_module.clone());
+
+            // if let Some(location) = node_module.main_file(&self.ctx) {
+            //     let content = Arc::new(Content::load(
+            //         self,
+            //         ContentType::Module,
+            //         node_module.id,
+            //         node_module.base_folder(),
+            //         &location,
+            //     )?);
+        
+            //     self.insert_file(&content)?;
+        
+            // }
+            // module.resolve(self)?;
+        }
+
+        let mut resolved = vec![];
+        for node_module in list.iter() {
+            resolved.push(node_module.clone());
+            resolved.extend(self.resolve_dependencies(node_module)?);
+        }
+
+        Ok(resolved)
+    }
+
+    pub fn resolve_references(&mut self, content: &Content) -> Result<()> {
+        if let Some(references) = content.unresolved_references() {
+            let mut list = vec![];
+
+            for reference in references {
+                let resolved = self.resolve(reference)?;
+                *reference.content.lock().unwrap() = Some(resolved.clone());
+                list.push(resolved);
+            }
+
+            for resolved in list.iter() {
+                self.resolve_references(resolved)?;
+            }
+        }
+
+
+        Ok(())
+    }
+
+    pub fn resolve(&mut self, reference: &Reference) -> Result<Arc<Content>> {
+        let Reference {
+            kind,
+            referrer,
+            what,
+            location,
+            content,
+        } = reference;
+
+        // if let Some(content) = self.file_content_by_location.get(Path::new(location)) {
+        //     println!("found `{location}`");
+        //     return Ok(content.clone());
+        // }
+
+        let referrer = self.get_file(referrer).unwrap().clone();
+        let referrer_node_module = referrer.node_module(self);
+
+        // println!("{} :: {} -> {:?}", referrer_node_module.name, referrer.location.display(), reference.location);
+
+        let content =
+            self.locate_content(&referrer_node_module, &referrer, location)?;
+
+        // let file = self.ctx.project_folder.join(location);
+
+        // "TODO - DETERMINE NODE MODULE";
+
+        // todo!();
+        Ok(content)
+    }
+
+    pub fn locate_or_create_existing(
+        &mut self,
+        content_type: ContentType,
+        node_module: &NodeModule,
+        absolute_path: &Path
+
+    ) -> Result<Arc<Content>> {
+        let project_relative = absolute_path.strip_prefix(&self.ctx.project_folder)?;
+
+        // println!(" ---- looking for {}", project_relative.display());
+        if let Some(content) = self.file_content_by_location.get(project_relative) {
+            // println!("+++++++++++++++++++++++++ found `{}`",project_relative.display());
+            return Ok(content.clone());
+        }
+
+        let node_module_absolute = node_module.get_absolute_path(self);
+        let node_module_relative = absolute_path.strip_prefix(&node_module_absolute)?;
+
+        let content = Arc::new(Content::load(
+            self,
+            content_type,
+            node_module.id,
+            node_module.base_folder(),
+            &node_module_relative.to_path_buf()
+        )?);
+
+        self.insert_file(&content)?;
+        return Ok(content);
+    }
+
+
+
+    fn locate_content(
+        &mut self,
+        referrer_node_module: &NodeModule,
+        referrer_content: &Content,
+        location: &String,
+    ) -> Result<Arc<Content>> {
+        // println!("? location: {}", location);
+        
+
+        let relative_regex = Regex::new(r"^\.\.?/").unwrap();
+        // if let Ok(location) = location.strip_prefix("./") {
+        if relative_regex.is_match(location) {
+
+            let absolute = referrer_content.get_absolute_path(self)?;
+            let parent = absolute.parent().ok_or_else(||format!("Unable to get parent of `{}`",absolute.display()))?;
+            // println!(".. looking for {} in {}", location, parent.display());
+            if let Ok(absolute_path) = parent.join(location).canonicalize() {
+
+                let content = self.locate_or_create_existing(ContentType::Module, referrer_node_module, &absolute_path)?;
+
+                // let location = absolute.strip_prefix(&referrer_node_module.get_absolute_path(self))?;
+                // // println!("! found: {}", location.display());
+                // let content = Arc::new(Content::load(
+                //     self,
+                //     ContentType::Module,
+                //     referrer_node_module.id,
+                //     referrer_node_module.base_folder(),
+                //     &PathBuf::from(location),
+                // )?);
+        
+                // self.insert_file(&content)?;
+                
+        
+                return Ok(content) 
+            }
+            
+
+        }
+
+        let location = Path::new(location);
+
+        // if !location.starts_with("/") {
+
+            let relative_location = if location.starts_with("/") {
+                location.strip_prefix("/").unwrap()
+            } else {
+                location
+            };
+
+            // let location = location.strip_prefix("/").expect("strip prefix failure...");
+
+            let absolute = referrer_node_module.get_absolute_path(self);
+            // let parent = absolute.parent().ok_or_else(||format!("Unable to get parent of `{}`",absolute.display()))?;
+            // println!(".. looking for {} in {}", relative_location.display(), absolute.display());
+            if let Ok(absolute_path) = absolute.join(relative_location).canonicalize() {
+
+                let content = self.locate_or_create_existing(ContentType::Module, referrer_node_module,
+                    &absolute_path)?;
+
+                // let location = absolute.strip_prefix(&referrer_node_module.get_absolute_path(self))?;
+                // // println!("! found: {}", location.display());
+                // let content = Arc::new(Content::load(
+                //     self,
+                //     ContentType::Module,
+                //     referrer_node_module.id,
+                //     referrer_node_module.base_folder(),
+                //     &PathBuf::from(location),
+                // )?);
+        
+                // self.insert_file(&content)?;
+                
+        
+                return Ok(content) 
+            }
+            
+
+
+        // }
+
+
+
+        let mut parts = location.components().map(|c|c.as_os_str().to_str().unwrap()).collect::<Vec<_>>();
+
+        // if parts.len() >= 2 {
+        if !parts.is_empty() {
+
+            let node_module = if parts.get(0).unwrap().starts_with("@") {
+                if parts.len() < 2 {
+                    return Err(format!(
+                        "Unable to resolve {} referred by {}",
+                        location.display(),
+                        // TODO - track absolute!!!
+                        referrer_content.location.display()
+                    ).into());
+
+                }
+                format!("{}/{}",parts.remove(0),parts.remove(0))
+            } else {
+                parts.remove(0).to_string()
+            };
+
+            let node_module_instance = self.get_node_module_by_name(&node_module).cloned();
+            if let Some(node_module) = node_module_instance { //self.get_node_module_by_name(&node_module) {
+                let location = if parts.is_empty() {
+                    node_module.main_file(&self.ctx).unwrap()
+                } else {
+                    PathBuf::from(parts.join("/"))
+                };
+
+                let absolute_path = node_module.get_absolute_path(self).join(&location);
+                if !absolute_path.is_file() {
+                    return Err(format!(
+                        "Unable to find {} in {}",
+                        location.display(),
+                        node_module.get_absolute_path(self).display()
+                    ).into());
+                }
+
+                let content = self.locate_or_create_existing(ContentType::Module, &node_module, &absolute_path)?;
+
+                // let content = Arc::new(Content::load(
+                //     self,
+                //     ContentType::Module,
+                //     node_module.id,
+                //     node_module.clone().base_folder(),
+                //     &PathBuf::from(location),
+                // )?);
+        
+                // self.insert_file(&content)?;
+                
+        
+                return Ok(content) 
+
+
+            } else {
+                println!("\n\n --------- unable to locate module {}\n\n", node_module);
+            }
+
+            // let filename =
+
+        }
+
+
+
+        todo!()
+        // if let Some(node_module) = self.node_modules_by_name.get(location) {
+        //     Ok((node_module.clone(),node_module.main()))
+        // }
+
+
+        // if let Ok(location) = location.strip_prefix("/node_modules/") {
+
+        //     // if
+
+        //     let parts = location.components().map(|c|c.as_os_str().to_str().unwrap()).collect::<Vec<_>>();
+
+        //     if parts.len() >= 2 {
+
+        //         let node_module = if parts.get(0).unwrap().starts_with("@") {
+        //             format!("{}/{}",parts.remove(0),parts.remove(0))
+        //         } else {
+        //             parts.remove(0).to_string()
+        //         };
+
+        //         if let Some(node_module) = self.get_node_module_by_name(&node_module) {
+        //             let filename =
+        //         }
+
+        //         // let filename =
+
+        //     }
+
+        // }
+
+        // if let Some(node_module) = self.get_node_module_by_name(location) {
+        // //    Ok(node_module)
+        // }
+
+        // // ./ - current folder
+        // // / - root
+        // // xyz - node module
+        // // xyz - local file
+
+        // let path = Path::new(location);
+        // let parts = path
+        //     .components()
+        //     .map(|c| c.as_os_str().to_str().unwrap())
+        //     .collect::<Vec<_>>();
+
+        // let
+
+        // todo!()
+    }
+
+    /*
+    pub async fn load_v1(ctx: &Arc<Context>) -> Result<Db> {
 
         let node_modules = &ctx.node_modules;
 
@@ -232,7 +645,7 @@ impl Db {
         //                 "scripts" => {
         //                     Arc::new(Content::external(ctx, ContentType::Script, id, reference)?)
         //                 },
-        //                 "styles" => { 
+        //                 "styles" => {
         //                     Arc::new(Content::external(ctx, ContentType::Style, id, reference)?)
         //                 },
         //                 _ => { }
@@ -247,21 +660,18 @@ impl Db {
         Ok(db)
 
     }
+    */
 
     // pub fn load_dependencies()
 
     pub fn locate_file(&self, location: &str) -> Result<Option<FileContext>> {
-
-
-
         let absolute = self.ctx.node_modules.join(location);
         if absolute.canonicalize().is_ok() {
-
             let node_module_name = NodeModule::get_name_from_location(location);
 
             let node_module = self.node_modules_by_name.get(&node_module_name);
             if let Some(node_module) = node_module {
-                let file_context = FileContext::new(node_module.base_folder()?, absolute);
+                let file_context = FileContext::new(node_module.base_folder().clone(), absolute);
                 Ok(Some(file_context))
             } else {
                 Ok(None)
@@ -274,18 +684,16 @@ impl Db {
         // let absolute = self.ctx.node_modules.join(location);
         // let folder = absolute.parent().unwrap();
         // let package_json = search_upwards(folder, "package.json").unwrap();
-
     }
 
     pub fn locate(
         &self,
         // ctx: &Context,
-        location : &str,
-        referrer : &Arc<Content>,
+        location: &str,
+        referrer: &Arc<Content>,
         // node_module : u64,
         // referrer: P
     ) -> Result<Option<Arc<Content>>> {
-
         // check if location matches any node modules
         if let Some(node_module) = self.node_modules_by_name.get(location) {
             if let Some(default) = &node_module.default {
@@ -297,7 +705,7 @@ impl Db {
             // .node_modules_by_id
             .get_node_module(&referrer.node_module_id)
             .expect(&format!("Unable to locate node module for `{}`", location))
-            .base_folder()?
+            .base_folder()
             .join(location);
 
         if let Some(file) = self.file_content_by_location.get(&base_location) {
@@ -306,10 +714,6 @@ impl Db {
 
         // reference.referrer.parent().unwrap().join(location),
 
-        
-
-
         Ok(None)
     }
 }
-

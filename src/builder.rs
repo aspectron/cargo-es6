@@ -2,58 +2,70 @@ use crate::prelude::*;
 use toml::*;
 
 pub struct Builder {
-    ctx : Arc<Context>
+    ctx: Arc<Context>,
 }
 
 impl Builder {
-
-    pub fn new(ctx : Arc<Context>) -> Builder {
-        Builder {
-            ctx
-        }
+    pub fn new(ctx: Arc<Context>) -> Builder {
+        Builder { ctx }
     }
 
     pub async fn execute(self: Arc<Builder>) -> Result<()> {
+        if !self.ctx.package_json.exists() {
+            return Err(format!(
+                "`package.json` file not found at `{}`",
+                self.ctx.package_json.display()
+            )
+            .into());
+        }
 
         if !self.ctx.node_modules.exists() {
-            cmd!("npm install").dir(&self.ctx.project_folder).run()?;
+            cmd!("npm", "install").dir(&self.ctx.project_folder).run()?;
         }
 
-        async_std::fs::create_dir_all(&self.ctx.target_folder).await.unwrap();
+        async_std::fs::create_dir_all(&self.ctx.target_folder)
+            .await
+            .unwrap();
 
         let mut modules = Db::load(&self.ctx).await?;
-        for node_module in modules.node_modules.iter() {
-            log_info!("Module","`{}` files: {} explicit exports: {}", style(&node_module.name).cyan(), node_module.files.len(), node_module.exports.len());
-        }
 
-        self.resolve(&mut modules).await?;
 
-        println!("");
+        println!("ready...");
+        // for node_module in modules.node_modules.iter() {
+        //     log_info!("Module","`{}` files: {} explicit exports: {}", style(&node_module.name).cyan(), node_module.files.len(), node_module.exports.len());
+        // }
 
-        let module = modules.file_content_by_location.get(&self.ctx.project_file);
-        if let Some(module) = module {
-            self.generate(&module, &modules).await?;
-        } else {
-            return Err(format!("Unabel to resolve project file: `{}`", self.ctx.project_file.display()).into());
-        }
+        // self.resolve(&mut modules).await?;
 
-        self.build_wasm().await?;
+        // println!("");
 
-        Ok(())
-    }
+        // let module = modules.file_content_by_location.get(&self.ctx.project_file);
+        // if let Some(module) = module {
+        //     self.generate(&module, &modules).await?;
+        // } else {
+        //     return Err(format!("Unabel to resolve project file: `{}`", self.ctx.project_file.display()).into());
+        // }
 
-    pub async fn resolve(self: &Arc<Builder>, db: &mut Db) -> Result<()> {
-
-        let file_content = db.file_content.clone();
-        for content in file_content.iter() {
-            content.resolve(db)?;
-            // self.resolve_module(module,modules).await?;
-        }
+        // self.build_wasm().await?;
 
         Ok(())
     }
 
-    pub async fn get_references(self: &Arc<Builder>, files : &Vec<String>, db: &Db) -> Result<Vec<Arc<Content>>> {
+    // pub async fn resolve(self: &Arc<Builder>, db: &mut Db) -> Result<()> {
+    //     let file_content = db.file_content.clone();
+    //     for content in file_content.iter() {
+    //         content.resolve(db)?;
+    //         // self.resolve_module(module,modules).await?;
+    //     }
+
+    //     Ok(())
+    // }
+
+    pub async fn get_references(
+        self: &Arc<Builder>,
+        files: &Vec<String>,
+        db: &Db,
+    ) -> Result<Vec<Arc<Content>>> {
         let mut targets = Vec::new();
         for file in files.iter() {
             let in_root = self.ctx.project_folder.join(file);
@@ -64,17 +76,19 @@ impl Builder {
                 if in_node_modules.canonicalize().is_ok() {
                     targets.push(in_node_modules);
                 } else {
-                    return Err(format!("get_references(): unable to locate `{}` in project root or node modules", file).into());
+                    return Err(format!(
+                        "get_references(): unable to locate `{}` in project root or node modules",
+                        file
+                    )
+                    .into());
                 }
             }
         }
-
 
         let mut references = Vec::new();
         for target in targets.iter() {
             let module = db.file_content_by_location.get(target); //modules.resolve(location, referrer)
             if let Some(module) = module {
-
                 if let Some(list) = module.references(db)? {
                     references.extend_from_slice(&list);
                 }
@@ -84,23 +98,29 @@ impl Builder {
 
                 // }
                 // references.iter().map(|reference| {}).collect::
-
             } else {
-                return Err(format!("get_references(): unable to resolve module `{}`",target.display()).into());
+                return Err(format!(
+                    "get_references(): unable to resolve module `{}`",
+                    target.display()
+                )
+                .into());
             }
         }
 
         Ok(references)
     }
 
-    pub async fn generate(self: &Arc<Builder>, root_module : &Arc<Content>, db: &Db) -> Result<()> {
-// std::process::exit(1);
+    pub async fn generate(self: &Arc<Builder>, root_module: &Arc<Content>, db: &Db) -> Result<()> {
+        // std::process::exit(1);
         let module_id_repr = "u64";
 
         let enums = if let Some(enums) = &self.ctx.manifest.settings.enums {
             let references = self.get_references(&enums.exports, db).await?;
             let mut text = String::new();
-            text.push_str(&format!("\n#[allow(dead_code)]\n#[repr({})]\npub enum Modules {{\n", module_id_repr));
+            text.push_str(&format!(
+                "\n#[allow(dead_code)]\n#[repr({})]\npub enum Modules {{\n",
+                module_id_repr
+            ));
             text.push_str("\tAll = 0,\n");
             for content in references.iter() {
                 text.push_str(&format!("\t{} = {},\n", content.component, content.id()));
@@ -112,20 +132,24 @@ impl Builder {
         };
 
         // log_info!("Generating","`{}`",self.ctx.target_file.display());
-        log_info!("Generating","`{}`",self.ctx.target_folder.display());
+        log_info!("Generating", "`{}`", self.ctx.target_folder.display());
         // let ident_kind = IdentKind::HexFull;
         let ident_kind = IdentKind::Full;
-        
+
         let mut collection = Collection::new();
         root_module.gather(db, &mut collection)?;
-        
 
         let mut content_rs = String::new();
         for content in collection.content.iter() {
-
             if !content.external {
-                content_rs += &format!("pub const {} : &'static str = r###\"\n", content.ident(&ident_kind));
-                content_rs += content.content.as_ref().expect("missing content in internal instance");
+                content_rs += &format!(
+                    "pub const {} : &'static str = r###\"\n",
+                    content.ident(&ident_kind)
+                );
+                content_rs += content
+                    .contents
+                    .as_ref()
+                    .expect("missing content in internal instance");
                 content_rs += &format!("\n\"###;\n\n");
             }
         }
@@ -158,7 +182,7 @@ pub use workflow_dom::result::Result;
 pub use workflow_dom::error::Error;
 use super::content;
 "###;
-        context_rs += &format!("\nconst ROOT: Id = {};\n",root_module.id());
+        context_rs += &format!("\nconst ROOT: Id = {};\n", root_module.id());
 
         context_rs += r###"
 pub struct Context {
@@ -189,14 +213,13 @@ impl Context {
         "###;
 
         if !self.ctx.manifest.settings.verbose.unwrap_or(false) {
-            context_rs = context_rs.replace("log_info","// log_info");
+            context_rs = context_rs.replace("log_info", "// log_info");
         }
 
         context_rs += &enums;
 
         let mut table = Vec::new();
         for content in collection.content.iter() {
-
             let mut references = Vec::new();
             if let Some(targets) = &content.references {
                 for reference in targets.iter() {
@@ -206,25 +229,33 @@ impl Context {
                         // references.push(target);
                         match reference.kind {
                             ReferenceKind::Style => {
-                                references.push(format!("(Reference::Style,None,{})",target.id()));
-                            },
+                                references.push(format!("(Reference::Style,None,{})", target.id()));
+                            }
                             ReferenceKind::Module => {
                                 if let Some(what) = &reference.what {
-                                    references.push(format!("(Reference::Module,Some(\"{}\"),{})",what,target.id()));
+                                    references.push(format!(
+                                        "(Reference::Module,Some(\"{}\"),{})",
+                                        what,
+                                        target.id()
+                                    ));
                                 } else {
-                                    references.push(format!("(Reference::Module,None,{})",target.id()));
+                                    references
+                                        .push(format!("(Reference::Module,None,{})", target.id()));
                                 }
-                            },
+                            }
                             ReferenceKind::Script => {
-                                references.push(format!("(Reference::Script,None,{})",target.id()));
-                            },
+                                references
+                                    .push(format!("(Reference::Script,None,{})", target.id()));
+                            }
                             ReferenceKind::Export => {
-                                references.push(format!("(Reference::Export,Some(\"{}\"),{})",reference.what.as_ref().unwrap(),target.id()));
+                                references.push(format!(
+                                    "(Reference::Export,Some(\"{}\"),{})",
+                                    reference.what.as_ref().unwrap(),
+                                    target.id()
+                                ));
                             }
                         }
                     } else {
-
-
                     }
                 }
             }
@@ -232,10 +263,11 @@ impl Context {
             let references = if references.is_empty() {
                 "None".to_string()
             } else {
-                format!("Some(&[\n\t\t{}\n\t])",references.join(",\n\t\t"))
+                format!("Some(&[\n\t\t{}\n\t])", references.join(",\n\t\t"))
             };
 
-            let definition = format!("Arc::new(Content {{\n\
+            let definition = format!(
+                "Arc::new(Content {{\n\
                 \tcontent_type : {},\n\
                 \turl : Mutex::new(None),\n\
                 \tid : {},\n\
@@ -243,7 +275,7 @@ impl Context {
                 \tcontent : content::{},\n\
                 \treferences : {},\n\
                 \tis_loaded : AtomicBool::new(false),\n\
-            }})", 
+            }})",
                 content.content_type.to_string(),
                 content.id(),
                 content.ident(&ident_kind).to_lowercase(),
@@ -251,7 +283,7 @@ impl Context {
                 references,
             );
 
-            table.push(format!("(0x{:x},{})",content.id,definition));
+            table.push(format!("(0x{:x},{})", content.id, definition));
         }
         let table = table.join(",\n");
         context_rs += r###"
@@ -269,7 +301,6 @@ impl Context {
         }
         "###;
 
-        
         let path_lib_rs = self.ctx.target_folder.join("mod.rs");
         let path_content_rs = self.ctx.target_folder.join("content.rs");
         let path_modules_rs = self.ctx.target_folder.join("context.rs");
@@ -283,21 +314,24 @@ impl Context {
         // file_size += std::fs::metadata(&path_lib_rs)?.len() as f64 / 1024.0;
         file_size += std::fs::metadata(&path_content_rs)?.len() as f64 / 1024.0;
         // file_size += std::fs::metadata(&path_modules_rs)?.len() as f64 / 1024.0;
-        log_info!("Generating","... modules: {} content file size: {:1.0} Kb", collection.content.len(), file_size);
+        log_info!(
+            "Generating",
+            "... modules: {} content file size: {:1.0} Kb",
+            collection.content.len(),
+            file_size
+        );
 
         Ok(())
     }
 
     pub async fn build_wasm(&self) -> Result<()> {
-
         if let Some(wasm) = &self.ctx.manifest.settings.wasm {
-
             // wasm-pack build --dev --target web --out-name $NAME --out-dir root/wasm
             // wasm-pack build --target web --out-name $NAME --out-dir root/wasm
 
             let folder = self.ctx.project_folder.join(&wasm.folder).canonicalize()?;
 
-            let outdir = folder.join(&wasm.outdir);//.join(wasm.name);
+            let outdir = folder.join(&wasm.outdir); //.join(wasm.name);
             let outdir = outdir.to_str().unwrap();
 
             let mut args = Vec::new();
@@ -305,28 +339,32 @@ impl Context {
             if wasm.dev.unwrap_or(false) {
                 args.push("--dev");
             }
-            args.extend_from_slice(&["--target","web","--out-name",&wasm.name,"--out-dir",outdir]);
+            args.extend_from_slice(&[
+                "--target",
+                "web",
+                "--out-name",
+                &wasm.name,
+                "--out-dir",
+                outdir,
+            ]);
 
-            cmd("wasm-pack",&args).dir(folder).run()?;
+            cmd("wasm-pack", &args).dir(folder).run()?;
         }
 
         Ok(())
     }
 
-    pub fn update_manifest(&self, db : &Db, collection: &Collection) -> Result<()> {
-
+    pub fn update_manifest(&self, db: &Db, collection: &Collection) -> Result<()> {
         // manifest_toml += "[manifest]\n\n\n";
         // let mut manifest_modules = Vec::new();
         // let mut manifest_scripts = Vec::new();
         // let mut manifest_styles = Vec::new();
 
-        
         // for content in collection.content.iter() {
 
         //     let reference: ExternalContentReference = (&self.ctx,content).try_into()?;
 
-
-        //     let manifest_entry = format!("{} = {}", 
+        //     let manifest_entry = format!("{} = {}",
         //         // content.content_type.to_manifest_type(),
         //         content.id(),
         //         reference.to_string()
@@ -351,22 +389,26 @@ impl Context {
         for node_module in db.node_modules.iter() {
             // if let Some(id) = node_module.id {
 
-                // let reference: ExternalNodeModuleReference = (&self.ctx,node_module).try_into()?;
+            // let reference: ExternalNodeModuleReference = (&self.ctx,node_module).try_into()?;
 
-                let manifest_entry = format!("{} = {}", 
-                    u64_to_hex_str(&node_module.id),
-                    node_module.to_string()
-                );
+            let manifest_entry = format!(
+                "{} = {}",
+                u64_to_hex_str(&node_module.id),
+                node_module.to_string()
+            );
 
-                manifest_node_modules.push(manifest_entry);
+            manifest_node_modules.push(manifest_entry);
             // }
         }
-        
+
         let mut manifest_toml = String::new();
         const DO_NOT_EDIT: &str = "# es6 manifest - do not edit below this line";
-        manifest_toml += &format!("\n\n\n{}\n",DO_NOT_EDIT);
+        manifest_toml += &format!("\n\n\n{}\n", DO_NOT_EDIT);
         manifest_toml += &format!("# generated on {:?}\n\n", chrono::offset::Local::now());
-        manifest_toml += &format!("[manifest.node_modules]\n{}\n\n", manifest_node_modules.join("\n"));
+        manifest_toml += &format!(
+            "[manifest.node_modules]\n{}\n\n",
+            manifest_node_modules.join("\n")
+        );
         // manifest_toml += &format!("[manifest.modules]\n{}\n\n", manifest_modules.join("\n"));
         // manifest_toml += &format!("[manifest.scripts]\n{}\n\n", manifest_scripts.join("\n"));
         // manifest_toml += &format!("[manifest.styles]\n{}\n\n", manifest_styles.join("\n"));
@@ -379,8 +421,8 @@ impl Context {
         let index = lines.iter().position(|&l| l.contains(DO_NOT_EDIT));
         if let Some(index) = index {
             let mut slice = lines[0..index].to_vec();
-            while slice.len() > 0 && slice[slice.len()-1].trim().is_empty() {
-                slice.remove(slice.len()-1);
+            while slice.len() > 0 && slice[slice.len() - 1].trim().is_empty() {
+                slice.remove(slice.len() - 1);
             }
             toml = slice.join("\n");
         }
@@ -392,8 +434,6 @@ impl Context {
 
         Ok(())
     }
-
-
 
     // pub fn update_manifest2(&self, db : &Db, collection: &Collection) -> Result<()> {
 
@@ -446,8 +486,7 @@ impl Context {
     //     let toml_text = toml::to_string(manifest)?;
     //     // fs::write(&self.ctx.manifest_toml, toml_text)?;
     //     fs::write(&self.ctx.manifest_folder.join("es6-lib.toml"), toml_text)?;
-        
+
     //     Ok(())
     // }
-
 }
