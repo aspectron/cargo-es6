@@ -121,13 +121,13 @@ impl Db {
         let project_node_module = Arc::new(NodeModule::load(&mut db, &ctx.project_folder)?);
         db.project_module = Some(project_node_module.clone());
         db.insert_node_module(&project_node_module)?;
-        log_info!("Resolving", "`{}`", ctx.project_folder.display());
+        log_info!("Analyzing", "`{}`", ctx.project_folder.display());
         let resolved_node_modules = db.resolve_dependencies(&project_node_module)?;
 
-        log_info!("Deps", "`{}`", ctx.project_folder.display());
+        log_info!("Dependencies", "`{}`", ctx.project_folder.display());
         // iterate over all node module dependencies and resolve references
         for node_module in resolved_node_modules.iter() {
-            // log_info!("Module","{}",node_module.name);
+            log_info!("Processing","{} ...",node_module.name);
             if let Some(location) = node_module.main_file_relative(&db.ctx)? {
                 let content = Arc::new(Content::load(
                     &mut db,
@@ -141,6 +141,8 @@ impl Db {
                 db.resolve_references(&content)?;
             }
         }
+
+        // log_state_clear();
 
         let location = project_node_module
             .main_file_relative(&db.ctx)?
@@ -292,6 +294,7 @@ impl Db {
         referrer_content: &Content,
         location: &String,
     ) -> Result<Arc<Content>> {
+        // println!("? location: {}", location);
         let relative_regex = Regex::new(r"^\.\.?/").unwrap();
         if relative_regex.is_match(location) {
             let absolute = referrer_content.get_absolute_path(self)?;

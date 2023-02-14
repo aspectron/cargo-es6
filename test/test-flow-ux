@@ -1,0 +1,1 @@
+cargo run --release -- es6 ./es6.toml build

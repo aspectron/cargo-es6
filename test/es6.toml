@@ -1,6 +1,7 @@
 [settings]
 name = "flow-ux-rs"
-project = "../../flow-ux-rs/flow-ux/flow-ux.js"
+project = "../../flow-ux-rs/flow-ux" #/flow-ux.js"
+module = "flow-ux-rs"
 # main = "lib"
 type = "module"
 # output = { type = "module", target = "../../flow-ux-rs/src/flow-ux", folder = "src/flow-ux" }

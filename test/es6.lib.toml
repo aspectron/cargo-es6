@@ -1,6 +1,7 @@
 [settings]
 name = "flow-ux-rs"
-project = "../../flow-ux-rs/flow-ux/flow-ux.js"
+project = "../../flow-ux-rs/flow-ux" #/flow-ux.js"
+module = "flow-ux-rs"
 # main = "lib"
 type = "module"
 # output = { type = "module", target = "../../flow-ux-rs/src/flow-ux", folder = "src/flow-ux" }
@@ -28,16 +29,16 @@ enums = { exports = ["node_modules/@aspectron/flow-ux/flow-ux.js"] }
 
 
 # es6 manifest - do not edit below this line
-# generated on 2023-02-13T09:30:38.377189-05:00
+# generated on 2023-02-14T04:09:45.134751-05:00
 
 [manifest.node_modules]
 0x59029d591e535585 = { name = "flow-ux-rs" }
-0x1b4929eb65040d01 = { name = "@aspectron/flow-ux", version = "1.1.0" }
-0x92b3dc82918e2265 = { name = "@webcomponents/webcomponentsjs", version = "2.7.0" }
 0x7e1651bd8d57eb85 = { name = "lit", version = "2.6.1" }
-0x1bd8796a8d1cad0b = { name = "lit-html", version = "2.6.1" }
-0x87c79fffc7cfc576 = { name = "@types/trusted-types", version = "2.0.2" }
 0x636183c50448948d = { name = "lit-element", version = "3.2.2" }
 0xa72991920fdf529a = { name = "@lit/reactive-element", version = "1.6.1" }
 0xf9ce28de2b731be7 = { name = "@lit-labs/ssr-dom-shim", version = "1.0.0" }
+0x1bd8796a8d1cad0b = { name = "lit-html", version = "2.6.1" }
+0x87c79fffc7cfc576 = { name = "@types/trusted-types", version = "2.0.2" }
+0x1b4929eb65040d01 = { name = "@aspectron/flow-ux", version = "1.1.0" }
+0x92b3dc82918e2265 = { name = "@webcomponents/webcomponentsjs", version = "2.7.0" }
 

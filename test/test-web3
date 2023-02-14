@@ -1,1 +1,1 @@
-cargo run -- es6 ./web3.toml build
+cargo run --release -- es6 ./web3.toml build

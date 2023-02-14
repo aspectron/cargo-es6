@@ -146,6 +146,10 @@ impl NodeModule {
 
     pub fn resolve_exports_absolute(&self, mut location: PathBuf) -> PathBuf {
         while let Some(l) = self.exports.get(&location) {
+            // println!("l: {}", l.display());
+            if &location == l {
+                break;
+            }
             location = l.clone();
         }
 
