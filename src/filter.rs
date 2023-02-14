@@ -1,20 +1,20 @@
 use crate::prelude::*;
 // pub use globset::{Glob,GlobMatcher};
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Filter {
     matchers: Vec<GlobMatcher>,
     negators: Vec<GlobMatcher>,
 }
 
-impl Default for Filter {
-    fn default() -> Self {
-        Filter {
-            matchers: Vec::new(),
-            negators: Vec::new(),
-        }
-    }
-}
+// impl Default for Filter {
+//     fn default() -> Self {
+//         Filter {
+//             matchers: Vec::new(),
+//             negators: Vec::new(),
+//         }
+//     }
+// }
 
 impl Filter {
     pub fn new(globs: &[&str]) -> Filter {
@@ -28,13 +28,13 @@ impl Filter {
                 let glob = negator_prefix.replace(glob, ""); //&glob[1..];
                 negators.push(
                     Glob::new(&glob)
-                        .expect(&format!("Error compiling glob: {}", glob))
+                        .unwrap_or_else(|_| panic!("Error compiling glob: {glob}"))
                         .compile_matcher(),
                 );
             } else {
                 matchers.push(
                     Glob::new(glob)
-                        .expect(&format!("Error compiling glob: {}", glob))
+                        .unwrap_or_else(|_| panic!("Error compiling glob: {glob}"))
                         .compile_matcher(),
                 );
             };
@@ -43,14 +43,7 @@ impl Filter {
     }
 
     pub fn is_match(&self, text: &str) -> bool {
-        self.negators
-            .iter()
-            .find(|filter| filter.is_match(text))
-            .is_none()
-            && self
-                .matchers
-                .iter()
-                .find(|filter| filter.is_match(text))
-                .is_some()
+        !self.negators.iter().any(|filter| filter.is_match(text))
+            && self.matchers.iter().any(|filter| filter.is_match(text))
     }
 }

@@ -1,0 +1,1 @@
+cargo run -- es6 ./web3.toml build

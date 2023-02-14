@@ -1,13 +1,13 @@
 use crate::prelude::*;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Options {}
 
-impl Default for Options {
-    fn default() -> Self {
-        Options {}
-    }
-}
+// impl Default for Options {
+//     fn default() -> Self {
+//         Options {}
+//     }
+// }
 
 #[derive(Debug)]
 pub enum Replace {
@@ -23,10 +23,7 @@ pub struct Context {
     pub manifest: Manifest,
     pub manifest_toml: PathBuf,
     pub manifest_folder: PathBuf,
-    // pub target_file : PathBuf,
     pub target_folder: PathBuf,
-    // pub target_folder_src : PathBuf,
-    // pub project_file: PathBuf,
     pub project_folder: PathBuf,
     pub project_node_module: Option<String>,
     pub node_modules: PathBuf,
@@ -36,29 +33,21 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn create(
-        location: Option<String>,
-        // output : Option<String>,
-        _options: Options,
-    ) -> Result<Context> {
+    pub fn create(location: Option<String>, _options: Options) -> Result<Context> {
         let manifest_toml = Manifest::locate(location)?;
         log_info!("Manifest", "`{}`", manifest_toml.to_str().unwrap());
         let manifest = Manifest::load(&manifest_toml)?;
         let manifest_folder = manifest_toml.parent().unwrap().to_path_buf();
 
-        // let project_file = manifest_folder
         let project_folder = manifest_folder
             .join(&manifest.settings.project)
             .canonicalize()?;
 
-        let project_node_module = manifest.settings.module.clone();//.expect("Manifest is missing [settings.module] option");
-        // let project_folder = project_file.parent().unwrap().to_path_buf();
+        let project_node_module = manifest.settings.module.clone(); //.expect("Manifest is missing [settings.module] option");
         let node_modules = project_folder.join("node_modules");
         let package_json = project_folder.join("package.json");
-        let target_folder = manifest_folder.join(&manifest.settings.target); //.canonicalize().await?;
-                                                                             // let target_folder_src = target_folder.join("src");//.canonicalize().await?;
-                                                                             // let target_file = manifest_folder.join(&manifest.settings.target);//.canonicalize().await?;
-                                                                             // let target_folder = target_file.parent().unwrap().canonicalize().await?;//to_path_buf();
+        let target_folder = manifest_folder.join(&manifest.settings.target);
+
         log_info!("Project", "`{}`", project_folder.to_str().unwrap());
         log_info!("Target", "`{}`", target_folder.to_str().unwrap());
 
@@ -74,17 +63,14 @@ impl Context {
                 match item {
                     crate::manifest::Replace::Location { regex, from, to } => {
                         if regex.is_none() && from.is_none() {
-                            return Err(format!(
-                                "[settings].replace must contain `regex` or `from`"
-                            )
-                            .into());
+                            return Err("[settings].replace must contain `regex` or `from`".into());
                         }
 
                         let r = if let Some(regex) = regex {
                             let r = Regex::new(regex).map_err(|err| {
-                                println!("");
-                                println!("Error compiling replace Regex expression: `{}`", regex);
-                                println!("");
+                                println!();
+                                println!("Error compiling replace Regex expression: `{regex}`");
+                                println!();
                                 err
                             })?;
                             Some(r)
@@ -112,11 +98,7 @@ impl Context {
             manifest,
             manifest_toml,
             manifest_folder,
-            // target_file,
             target_folder,
-            // target_folder_src,
-            // project_file,
-
             project_folder,
             project_node_module,
             node_modules,

@@ -58,12 +58,12 @@ impl From<String> for Error {
 
 impl From<OsString> for Error {
     fn from(os_str: OsString) -> Error {
-        Error::OsString(format!("{:?}", os_str))
+        Error::OsString(format!("{os_str:?}"))
     }
 }
 
 impl<T> From<PoisonError<T>> for Error {
-    fn from(e: PoisonError<T>) -> Error {
-        Error::PoisonError(format!("{:?}", e))
+    fn from(err: PoisonError<T>) -> Error {
+        Error::PoisonError(format!("{err:?}"))
     }
 }

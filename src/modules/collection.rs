@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Collection {
     pub idents: HashSet<String>,
     pub groups: Vec<Vec<Arc<Content>>>,

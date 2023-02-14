@@ -12,11 +12,10 @@ impl Manifest {
         let cwd = current_dir();
 
         let location = if let Some(location) = location {
-            if location.starts_with("~/") {
+            if let Some(stripped) = location.strip_prefix("~/") {
                 home::home_dir()
                     .expect("unable to get home directory")
-                    .join(&location[2..])
-                    .into()
+                    .join(stripped)
             } else {
                 let location = Path::new(&location).to_path_buf();
                 if location.is_absolute() {
@@ -36,17 +35,14 @@ impl Manifest {
         ];
 
         for location in locations.iter() {
-            match location.canonicalize() {
-                Ok(location) => {
-                    if location.is_file() {
-                        return Ok(location);
-                    }
+            if let Ok(location) = location.canonicalize() {
+                if location.is_file() {
+                    return Ok(location);
                 }
-                _ => {}
             }
         }
 
-        Err(format!("Unable to locate 'wahoo.toml' manifest").into())
+        Err("Unable to locate 'es6.toml' manifest".into())
     }
 
     pub fn load(toml_file: &PathBuf) -> Result<Manifest> {
@@ -54,7 +50,7 @@ impl Manifest {
         let manifest: Manifest = match toml::from_str(&toml_text) {
             Ok(manifest) => manifest,
             Err(err) => {
-                return Err(format!("Error loading es6.toml: {}", err).into());
+                return Err(format!("Error loading es6.toml: {err}").into());
             }
         };
         // println!("{:#?}",manifest.manifest);
@@ -76,9 +72,9 @@ pub enum ProjectType {
     Script,
 }
 
-impl Into<ContentType> for ProjectType {
-    fn into(self) -> ContentType {
-        match self {
+impl From<ProjectType> for ContentType {
+    fn from(project_type: ProjectType) -> Self {
+        match project_type {
             ProjectType::Module => ContentType::Module,
             ProjectType::Script => ContentType::Script,
         }

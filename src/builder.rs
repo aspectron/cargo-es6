@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use toml::*;
 
 pub struct Builder {
     ctx: Arc<Context>,
@@ -29,7 +28,6 @@ impl Builder {
 
         let db = Db::load(&self.ctx).await?;
 
-
         // println!("ready...");
         // for node_module in modules.node_modules.iter() {
         //     log_info!("Module","`{}` files: {} explicit exports: {}", style(&node_module.name).cyan(), node_module.files.len(), node_module.exports.len());
@@ -49,7 +47,7 @@ impl Builder {
         if let Some(module) = module {
             self.generate(&module, &db).await?;
         } else {
-            return Err(format!("Unabel to resolve project main module file").into());
+            return Err("Unabel to resolve project main module file".into());
         }
 
         self.build_wasm().await?;
@@ -69,10 +67,9 @@ impl Builder {
 
     pub async fn gather_references(
         self: &Arc<Builder>,
-        files: &Vec<String>,
+        files: &[String],
         db: &Db,
     ) -> Result<Vec<Arc<Content>>> {
-
         let mut targets = vec![];
 
         for file in files.iter() {
@@ -82,63 +79,60 @@ impl Builder {
                 }
                 // targets.push(content.clone());
             } else {
-                return Err(format!("Unabel to resolve: `{}`", file).into());
+                return Err(format!("Unabel to resolve: `{file}`").into());
             }
         }
 
         Ok(targets)
-
     }
 
-    pub async fn get_references_v1(
-        self: &Arc<Builder>,
-        files: &Vec<String>,
-        db: &Db,
-    ) -> Result<Vec<Arc<Content>>> {
+    // pub async fn get_references_v1(
+    //     self: &Arc<Builder>,
+    //     files: &Vec<String>,
+    //     db: &Db,
+    // ) -> Result<Vec<Arc<Content>>> {
+    //     let mut targets = Vec::new();
+    //     for file in files.iter() {
+    //         let in_root = self.ctx.project_folder.join(file);
+    //         if in_root.canonicalize().is_ok() {
+    //             targets.push(in_root);
+    //         } else {
+    //             let in_node_modules = self.ctx.node_modules.join(file);
+    //             if in_node_modules.canonicalize().is_ok() {
+    //                 targets.push(in_node_modules);
+    //             } else {
+    //                 return Err(format!(
+    //                     "get_references(): unable to locate `{file}` in project root or node modules"
+    //                 )
+    //                 .into());
+    //             }
+    //         }
+    //     }
 
-        let mut targets = Vec::new();
-        for file in files.iter() {
-            let in_root = self.ctx.project_folder.join(file);
-            if in_root.canonicalize().is_ok() {
-                targets.push(in_root);
-            } else {
-                let in_node_modules = self.ctx.node_modules.join(file);
-                if in_node_modules.canonicalize().is_ok() {
-                    targets.push(in_node_modules);
-                } else {
-                    return Err(format!(
-                        "get_references(): unable to locate `{}` in project root or node modules",
-                        file
-                    )
-                    .into());
-                }
-            }
-        }
+    //     let mut references = Vec::new();
+    //     for target in targets.iter() {
+    //         let module = db.file_content_by_location.get(target); //modules.resolve(location, referrer)
+    //         if let Some(module) = module {
+    //             if let Some(list) = module.references(db)? {
+    //                 references.extend_from_slice(&list);
+    //             }
+    //             // let mut components = Vec::new();
+    //             // for reference in references.iter() {
+    //             //     // components.push(reference.clone());
 
-        let mut references = Vec::new();
-        for target in targets.iter() {
-            let module = db.file_content_by_location.get(target); //modules.resolve(location, referrer)
-            if let Some(module) = module {
-                if let Some(list) = module.references(db)? {
-                    references.extend_from_slice(&list);
-                }
-                // let mut components = Vec::new();
-                // for reference in references.iter() {
-                //     // components.push(reference.clone());
+    //             // }
+    //             // references.iter().map(|reference| {}).collect::
+    //         } else {
+    //             return Err(format!(
+    //                 "get_references(): unable to resolve module `{}`",
+    //                 target.display()
+    //             )
+    //             .into());
+    //         }
+    //     }
 
-                // }
-                // references.iter().map(|reference| {}).collect::
-            } else {
-                return Err(format!(
-                    "get_references(): unable to resolve module `{}`",
-                    target.display()
-                )
-                .into());
-            }
-        }
-
-        Ok(references)
-    }
+    //     Ok(references)
+    // }
 
     pub async fn generate(self: &Arc<Builder>, root_module: &Arc<Content>, db: &Db) -> Result<()> {
         // std::process::exit(1);
@@ -148,8 +142,8 @@ impl Builder {
             let references = self.gather_references(&enums.exports, db).await?;
             let mut text = String::new();
             text.push_str(&format!(
-                "\n#[allow(dead_code)]\n#[repr({})]\npub enum Modules {{\n",
-                module_id_repr
+                "\n#[allow(dead_code)]\n#[repr({module_id_repr})]\npub enum Modules {{\n"
+                
             ));
             text.push_str("\tAll = 0,\n");
             for content in references.iter() {
@@ -169,9 +163,9 @@ impl Builder {
         let mut collection = Collection::new();
         root_module.gather(db, &mut collection)?;
 
-// println!("{:#?}", collection);
-// println!("TESTING ... ABORTING ...");
-// return Ok(());
+        // println!("{:#?}", collection);
+        // println!("TESTING ... ABORTING ...");
+        // return Ok(());
 
         let mut content_rs = String::new();
         for content in collection.content.iter() {
@@ -185,7 +179,7 @@ impl Builder {
                     .contents
                     .as_ref()
                     .expect("missing content in internal instance");
-                content_rs += &format!("\n\"###;\n\n");
+                content_rs += "\n\"###;\n\n";
             }
         }
 
@@ -327,7 +321,7 @@ impl Context {
 
         "###;
         // context_rs += &format!("\nlet content : ContentList = [\n{}\n].into_iter().collect();\n", table);
-        context_rs += &format!("\nlet content : ContentList = &[\n{}\n];\n", table);
+        context_rs += &format!("\nlet content : ContentList = &[\n{table}\n];\n");
         context_rs += r###"
                 Context {
                     inner : declare(content)
@@ -343,7 +337,7 @@ impl Context {
         async_std::fs::write(&path_content_rs, &content_rs).await?;
         async_std::fs::write(&path_modules_rs, &context_rs).await?;
 
-        self.update_manifest(&db, &collection)?;
+        self.update_manifest(db, &collection)?;
 
         let mut file_size = 0.0;
         // file_size += std::fs::metadata(&path_lib_rs)?.len() as f64 / 1024.0;
@@ -389,7 +383,7 @@ impl Context {
         Ok(())
     }
 
-    pub fn update_manifest(&self, db: &Db, collection: &Collection) -> Result<()> {
+    pub fn update_manifest(&self, db: &Db, _collection: &Collection) -> Result<()> {
         // manifest_toml += "[manifest]\n\n\n";
         // let mut manifest_modules = Vec::new();
         // let mut manifest_scripts = Vec::new();
@@ -438,7 +432,7 @@ impl Context {
 
         let mut manifest_toml = String::new();
         const DO_NOT_EDIT: &str = "# es6 manifest - do not edit below this line";
-        manifest_toml += &format!("\n\n\n{}\n", DO_NOT_EDIT);
+        manifest_toml += &format!("\n\n\n{DO_NOT_EDIT}\n", );
         manifest_toml += &format!("# generated on {:?}\n\n", chrono::offset::Local::now());
         manifest_toml += &format!(
             "[manifest.node_modules]\n{}\n\n",
@@ -452,11 +446,11 @@ impl Context {
         // fs::write(&path_manifest_toml, &manifest_toml)?;
 
         let mut toml = fs::read_to_string(&self.ctx.manifest_toml)?;
-        let lines = toml.split("\n").collect::<Vec<_>>();
+        let lines = toml.split('\n').collect::<Vec<_>>();
         let index = lines.iter().position(|&l| l.contains(DO_NOT_EDIT));
         if let Some(index) = index {
             let mut slice = lines[0..index].to_vec();
-            while slice.len() > 0 && slice[slice.len() - 1].trim().is_empty() {
+            while !slice.is_empty() && slice[slice.len() - 1].trim().is_empty() {
                 slice.remove(slice.len() - 1);
             }
             toml = slice.join("\n");
@@ -464,7 +458,7 @@ impl Context {
 
         toml += &manifest_toml;
         // let toml = manifest_toml;
-        fs::write(&self.ctx.manifest_folder.join("es6.lib.toml"), toml)?;
+        fs::write(self.ctx.manifest_folder.join("es6.lib.toml"), toml)?;
         // fs::write(&self.ctx.manifest_toml, toml)?;
 
         Ok(())

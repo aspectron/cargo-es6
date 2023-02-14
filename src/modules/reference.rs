@@ -52,16 +52,13 @@ impl Reference {
         what: Option<&str>,
         location: &str,
     ) -> Reference {
-        // .from_case(Case::Kebab).to_case(Case::Title)
-
         let what = what.map(|s| s.trim().to_string());
 
         Reference {
             kind,
-            referrer, //: referrer.to_path_buf(),
+            referrer,
             what,
             location: location.trim().to_string(),
-            // component,
             content: Mutex::new(None),
         }
     }
@@ -78,7 +75,7 @@ impl Reference {
         log_warn!("", "| location: `{}`", self.location);
         let referrer = db
             .get_file(&self.referrer)
-            .expect(&format!("unable to get file id 0x{:16x}", self.referrer));
+            .unwrap_or_else(|| panic!("unable to get file id 0x{:16x}", self.referrer));
         log_warn!("", "| referrer: `{}`", referrer.location.display());
         log_warn!("", "+---");
     }
@@ -88,7 +85,7 @@ impl Reference {
         log_error!("| location: `{}`", self.location);
         let referrer = db
             .get_file(&self.referrer)
-            .expect(&format!("unable to get file id 0x{:16x}", self.referrer));
+            .unwrap_or_else(|| panic!("unable to get file id 0x{:16x}", self.referrer));
         log_warn!("", "| referrer: `{}`", referrer.location.display());
         log_error!("+---");
     }

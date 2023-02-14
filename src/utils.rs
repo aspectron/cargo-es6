@@ -1,8 +1,6 @@
-use std::borrow::Cow;
-
 use crate::prelude::*;
-use path_dedot::*;
 use regex::Regex;
+use std::borrow::Cow;
 
 pub fn search_upwards<P>(folder: P, filename: &str) -> Option<PathBuf>
 where
@@ -25,20 +23,17 @@ where
 }
 
 pub fn current_dir() -> PathBuf {
-    std::env::current_dir().unwrap().into()
+    std::env::current_dir().unwrap()
 }
 
 // pub async fn find_file(folder: &Path,files: &[&str]) -> Result<PathBuf> {
 pub fn find_file(folder: &Path, files: &[String]) -> Result<PathBuf> {
     for file in files {
         let path = folder.join(file);
-        match path.canonicalize() {
-            Ok(path) => {
-                if path.is_file() {
-                    return Ok(path);
-                }
+        if let Ok(path) = path.canonicalize() {
+            if path.is_file() {
+                return Ok(path);
             }
-            _ => {}
         }
     }
     return Err(format!(
@@ -55,7 +50,7 @@ pub fn get_env_defs(strings: &Vec<String>) -> Result<Vec<(String, String)>> {
     let mut parsed_strings = Vec::new();
 
     for string in strings {
-        let captures = regex.captures(&string).unwrap();
+        let captures = regex.captures(string).unwrap();
         if captures.len() != 2 {
             return Err(format!("Error parsing the environment string: '{string}'").into());
         }
@@ -75,8 +70,7 @@ where
     let is_hidden = path
         .as_ref()
         .components()
-        .find(|f| f.as_os_str().to_string_lossy().starts_with("."))
-        .is_some();
+        .any(|f| f.as_os_str().to_string_lossy().starts_with('.'));
 
     is_hidden
 }
