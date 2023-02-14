@@ -26,8 +26,9 @@ pub struct Context {
     // pub target_file : PathBuf,
     pub target_folder: PathBuf,
     // pub target_folder_src : PathBuf,
-    pub project_file: PathBuf,
+    // pub project_file: PathBuf,
     pub project_folder: PathBuf,
+    pub project_node_module: Option<String>,
     pub node_modules: PathBuf,
     pub package_json: PathBuf,
     pub ignore: Filter,
@@ -45,10 +46,13 @@ impl Context {
         let manifest = Manifest::load(&manifest_toml)?;
         let manifest_folder = manifest_toml.parent().unwrap().to_path_buf();
 
-        let project_file = manifest_folder
+        // let project_file = manifest_folder
+        let project_folder = manifest_folder
             .join(&manifest.settings.project)
             .canonicalize()?;
-        let project_folder = project_file.parent().unwrap().to_path_buf();
+
+        let project_node_module = manifest.settings.module.clone();//.expect("Manifest is missing [settings.module] option");
+        // let project_folder = project_file.parent().unwrap().to_path_buf();
         let node_modules = project_folder.join("node_modules");
         let package_json = project_folder.join("package.json");
         let target_folder = manifest_folder.join(&manifest.settings.target); //.canonicalize().await?;
@@ -111,8 +115,10 @@ impl Context {
             // target_file,
             target_folder,
             // target_folder_src,
-            project_file,
+            // project_file,
+
             project_folder,
+            project_node_module,
             node_modules,
             package_json,
             ignore,

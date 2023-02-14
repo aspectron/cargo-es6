@@ -89,6 +89,7 @@ impl Into<ContentType> for ProjectType {
 pub struct Settings {
     pub name: String,
     pub project: String,
+    pub module: Option<String>,
     #[serde(rename = "type")]
     pub project_type: ProjectType,
     // pub generate : RustOutput,

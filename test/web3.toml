@@ -1,0 +1,30 @@
+[settings]
+name = "solana-web3-es6"
+# project = "../../solana-web3-es6/solana-web3/node_modules/@solana/web3.js/lib/index.browser.esm.js"
+# project = "../../solana-web3-es6/solana-web3/node_modules/@solana/web3.js"
+project = "../../solana-web3-es6/solana-web3"
+
+module = "@solana/web3.js"
+# main = "lib"
+type = "module"
+# output = { type = "module", target = "../../flow-ux-rs/src/flow-ux", folder = "src/flow-ux" }
+target = "../../solana-web3-es6/src/solana-web3" # modules.rs"
+wasm = { name = "solana-web3-rs", folder="../", outdir = "test/solana-web3-rs", dev=true }
+ignore = [
+    # "**/xterm*",
+    # "**/webcomponents-{sd,ce}*",
+    # "**/custom-elements-es5-adapter*",
+    # "**/development/*",
+    # "**/webcomponentsjs/src/platform/{symbol,promise}.js",
+
+]
+replace = [
+    # { location = { regex = "^\\$\\{baseUrl\\}/", to ="" }}
+    # { location = { from = "${baseUrl}", to ="" }}
+]
+verbose = true
+enums = { exports = ["node_modules/@solana/web3.js/lib/index.browser.esm.js"] }
+
+# [dependencies]
+# flow-ux = { git = "git@github.com:aspectron/flow-ux-rs" }
+

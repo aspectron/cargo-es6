@@ -6,7 +6,7 @@ use crate::prelude::*;
 //     pub development : Option<String>,
 // }
 
-pub type Exports = HashMap<String, serde_json::Value>;
+// pub type Exports = HashMap<String, serde_json::Value>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PackageJson {
@@ -14,7 +14,10 @@ pub struct PackageJson {
     pub name: Option<String>,
     // pub exports : Option<HashMap<String,HashMap<String,String>>>,
     pub exports: Option<HashMap<String, serde_json::Value>>,
+    // pub exports: Option<HashMap<String, String>>,
     pub dependencies: Option<HashMap<String, String>>,
+    // pub browser: Option<HashMap<String, serde_json::Value>>,
+    pub browser: Option<serde_json::Value>,
     pub files: Option<Vec<String>>,
     pub module: Option<String>,
     pub main: Option<String>,
@@ -32,10 +35,10 @@ pub struct NodeModule {
     pub name: String,
     pub alt_name: String,
     pub default: Option<Arc<Content>>,
-    pub exports: HashMap<String, HashMap<String, Arc<Content>>>,
+    pub exports: HashMap<PathBuf, PathBuf>,
     pub files: Vec<Arc<Content>>,
     pub package_json: PackageJson,
-    // pub module_folder: PathBuf,
+    pub module_folder: PathBuf,
     pub base_folder: PathBuf,
 }
 
@@ -100,24 +103,78 @@ impl NodeModule {
             .clone()
             .strip_prefix(&db.ctx.project_folder)?
             .to_path_buf();
-
+// println!("base_folder: {}", base_folder.display());
         // let mut files = Vec::new();
         // for relative in relative_files.iter() {
         //     files.push(Arc::new(Content::load(ctx,ContentType::Module,folder,relative).await?));
         // }
 
-        let mut node_module = NodeModule {
+        let mut exports = HashMap::new();
+        if let Some(package_json_exports) = &package_json.exports {
+
+            for (k,v) in package_json_exports.iter() {
+                if v.is_string() {
+                    let k = module_folder.join(k).parse_dot()?.to_path_buf();
+                    let v = module_folder.join(v.as_str().unwrap()).parse_dot()?.to_path_buf();
+                    exports.insert(k, v);
+                } else if v.is_object() {
+                    
+                    let map = v.as_object().unwrap();
+
+                    let path = if let Some(path) = map.get("import") {
+                        path
+                    } else if let Some(path) = map.get("default") {
+                        path
+                    } else {
+                        return Err(format!("error parsing export `{}` in `{}`", k, name).into());
+                    };
+                    
+                    if let Some(path) = path.as_str() {
+                        let k = module_folder.join(k).parse_dot()?.to_path_buf();
+                        let v = module_folder.join(path).parse_dot()?.to_path_buf();
+                        println!("{} -> {}", k.display(), v.display());
+                        exports.insert(k, v);
+                    } else {
+                        return Err(format!("error parsing export `{}` in `{}` (must be a string)", k, name).into());
+                    }
+                }
+            }
+        }
+
+        if let Some(browser) = &package_json.browser {
+            if browser.is_string() {
+                let k = module_folder.join("index.js");
+                let v = PathBuf::from(browser.to_string());
+                exports.insert(k, v);
+            } else if browser.is_object() {
+                let browser = browser.as_object().unwrap();
+                for (k,v) in browser.iter() {
+                    if !v.is_string() {
+                        continue;
+                    }
+                    let k = module_folder.join(k).parse_dot()?.to_path_buf();
+                    let v = module_folder.join(v.as_str().unwrap()).parse_dot()?.to_path_buf();
+        
+                    exports.insert(k, v);
+                }
+            } else {
+                return Err(format!("error parsing `browser` option in `{}`", name).into());
+            }
+        }
+
+
+        let node_module = NodeModule {
             id,
             is_project: false,
             default: None,
             version: package_json.version.clone(),
             name: name.clone(),
             alt_name,
-            exports: HashMap::new(),
+            exports,//: HashMap::new(),
             files: Vec::new(),
             package_json,
             base_folder,
-            // module_folder : module_folder.clone(),
+            module_folder : module_folder.clone(),
         };
 
         // if let Some(exports) = package_json.exports {
@@ -173,7 +230,56 @@ impl NodeModule {
         Ok(node_module)
     }
 
-    pub fn main_file(&self, ctx: &Context) -> Option<PathBuf> {
+    // TODO...
+
+    pub fn resolve_absolute_content(&self, db: &Db, location: PathBuf) -> Result<PathBuf> {
+        let absolute_path_reference = self.get_absolute_path(db).join(&location);
+        let absolute_path = self.resolve_exports_absolute(absolute_path_reference.clone());
+
+        if !absolute_path.is_file() {
+            println!("absolute: {}", absolute_path_reference.display());
+            println!("absolute: {}", absolute_path.display());
+            println!("exports: {:#?}", self.exports);
+            return Err(format!(
+                "Unable to find `{}` in `{}` at `{}`",
+                location.display(),
+                self.name,
+                self.module_folder.display(),
+            ).into());
+        } else {
+            Ok(absolute_path)
+        }
+}
+
+    pub fn resolve_exports_absolute(&self, mut location: PathBuf) -> PathBuf {
+
+        while let Some(l) = self.exports.get(&location) {
+            location = l.clone(); //.to_str().unwrap().to_string();
+        }
+
+        location
+    }
+
+    // pub fn resolve_exports_relative(&self, location: PathBuf) -> PathBuf {
+
+    //     let location = self.module_folder.join(location);
+    //     let location = self.resolve_exports_absolute(location);
+
+
+    // }
+
+    // pub fn dereference_export(&self, location: String) -> String {
+    //     if let Some(map) = &self.package_json.browser {
+    //         let location = format!("./{}", location);
+    //         if let Some(v) = map.get(&location) {
+    //             return v.clone();
+    //         }
+    //     }
+
+    //     location
+    // }
+
+    pub fn main_file_absolute(&self, _ctx: &Context) -> Result<Option<PathBuf>> {
         let mut main_file = self
             .package_json
             .module
@@ -184,11 +290,26 @@ impl NodeModule {
             main_file = "index.js".to_string();
         }
 
-        let main_file_absolute = ctx.project_folder.join(&self.base_folder).join(&main_file);
+        let main_file_absolute = self.module_folder.join(main_file).parse_dot()?.to_path_buf();
+        // println!("dereferencing main_file: {}", main_file_absolute.display());
+        // let main_file = self.dereference_export(main_file);
+        let main_file_absolute = self.resolve_exports_absolute(main_file_absolute);
+        // println!("dereferenced main_file: {}", main_file_absolute.display());
+
+        // let main_file_absolute = ctx.project_folder.join(&self.base_folder).join(&main_file);
         if main_file_absolute.exists() {
-            Some(PathBuf::from(main_file))
+            Ok(Some(main_file_absolute))
         } else {
-            None
+            Ok(None)
+        }
+    }
+
+    pub fn main_file_relative(&self, ctx: &Context) -> Result<Option<PathBuf>> {
+        if let Some(main_file_absolute) = self.main_file_absolute(ctx)? {
+            let main_file = main_file_absolute.strip_prefix(&self.module_folder)?.to_path_buf();
+            Ok(Some(main_file))
+        } else {
+            Ok(None)
         }
     }
 

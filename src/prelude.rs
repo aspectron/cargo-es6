@@ -34,3 +34,4 @@ pub use std::path::{Component, Path, PathBuf};
 pub use std::sync::Arc;
 pub use std::sync::Mutex;
 pub use walkdir::WalkDir;
+pub use path_dedot::*;

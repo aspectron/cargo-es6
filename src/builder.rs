@@ -19,18 +19,18 @@ impl Builder {
             .into());
         }
 
-        if !self.ctx.node_modules.exists() {
-            cmd!("npm", "install").dir(&self.ctx.project_folder).run()?;
-        }
+        // if !self.ctx.node_modules.exists() {
+        //     cmd!("npm", "install").dir(&self.ctx.project_folder).run()?;
+        // }
 
         async_std::fs::create_dir_all(&self.ctx.target_folder)
             .await
             .unwrap();
 
-        let mut modules = Db::load(&self.ctx).await?;
+        let db = Db::load(&self.ctx).await?;
 
 
-        println!("ready...");
+        // println!("ready...");
         // for node_module in modules.node_modules.iter() {
         //     log_info!("Module","`{}` files: {} explicit exports: {}", style(&node_module.name).cyan(), node_module.files.len(), node_module.exports.len());
         // }
@@ -39,14 +39,20 @@ impl Builder {
 
         // println!("");
 
-        // let module = modules.file_content_by_location.get(&self.ctx.project_file);
-        // if let Some(module) = module {
-        //     self.generate(&module, &modules).await?;
-        // } else {
-        //     return Err(format!("Unabel to resolve project file: `{}`", self.ctx.project_file.display()).into());
-        // }
+        // let project_file_relative = self.ctx.project_file.strip_prefix(&self.ctx.project_folder).map_err(|_err|
+        //     format!("Unable to locate project file `{}` in `{}`",self.ctx.project_file.display(),self.ctx.project_folder.display())
+        // )?;
 
-        // self.build_wasm().await?;
+        let module = db.project_main.clone();
+
+        // let module = db.file_content_by_location.get(project_file_relative);
+        if let Some(module) = module {
+            self.generate(&module, &db).await?;
+        } else {
+            return Err(format!("Unabel to resolve project main module file").into());
+        }
+
+        self.build_wasm().await?;
 
         Ok(())
     }
@@ -61,11 +67,35 @@ impl Builder {
     //     Ok(())
     // }
 
-    pub async fn get_references(
+    pub async fn gather_references(
         self: &Arc<Builder>,
         files: &Vec<String>,
         db: &Db,
     ) -> Result<Vec<Arc<Content>>> {
+
+        let mut targets = vec![];
+
+        for file in files.iter() {
+            if let Some(content) = db.file_content_by_location.get(Path::new(file)) {
+                if let Some(references) = content.references(db)? {
+                    targets.extend(references);
+                }
+                // targets.push(content.clone());
+            } else {
+                return Err(format!("Unabel to resolve: `{}`", file).into());
+            }
+        }
+
+        Ok(targets)
+
+    }
+
+    pub async fn get_references_v1(
+        self: &Arc<Builder>,
+        files: &Vec<String>,
+        db: &Db,
+    ) -> Result<Vec<Arc<Content>>> {
+
         let mut targets = Vec::new();
         for file in files.iter() {
             let in_root = self.ctx.project_folder.join(file);
@@ -115,7 +145,7 @@ impl Builder {
         let module_id_repr = "u64";
 
         let enums = if let Some(enums) = &self.ctx.manifest.settings.enums {
-            let references = self.get_references(&enums.exports, db).await?;
+            let references = self.gather_references(&enums.exports, db).await?;
             let mut text = String::new();
             text.push_str(&format!(
                 "\n#[allow(dead_code)]\n#[repr({})]\npub enum Modules {{\n",
@@ -139,9 +169,14 @@ impl Builder {
         let mut collection = Collection::new();
         root_module.gather(db, &mut collection)?;
 
+// println!("{:#?}", collection);
+// println!("TESTING ... ABORTING ...");
+// return Ok(());
+
         let mut content_rs = String::new();
         for content in collection.content.iter() {
             if !content.external {
+                // println!("processing internal content {}", content.id());
                 content_rs += &format!(
                     "pub const {} : &'static str = r###\"\n",
                     content.ident(&ident_kind)

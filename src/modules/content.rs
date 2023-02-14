@@ -198,7 +198,7 @@ impl Content {
             .to_case(Case::Pascal);
         let ident = Self::get_ident(&db.ctx, &location)?;
 
-        let external = contents.is_some();
+        let external = contents.is_none();
         let module = Content {
             id,
             ident,

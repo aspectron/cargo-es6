@@ -20,6 +20,17 @@ impl ToString for ReferenceKind {
     }
 }
 
+impl From<&ReferenceKind> for ContentType {
+    fn from(kind: &ReferenceKind) -> Self {
+        match kind {
+            ReferenceKind::Style => ContentType::Style,
+            ReferenceKind::Module => ContentType::Module,
+            ReferenceKind::Script => ContentType::Script,
+            ReferenceKind::Export => ContentType::Module,
+        }
+    }
+}
+
 // #[derive(Debug)]
 // pub struct Referrer {
 
